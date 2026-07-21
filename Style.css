@@ -1,0 +1,62 @@
+body {
+    background: radial-gradient(circle at center,
+        #ff00ff,
+        #00ffff,
+        #ffff00,
+        #ff8800,
+        #ff0000,
+        #000000 70%
+    );
+    background-size: 400% 400%;
+    animation: tyeDye 15s ease infinite;
+    font-family: Arial, sans-serif;
+    color: #fff;
+    margin: 0;
+    padding: 20px;
+}
+
+h1 {
+    color: #ff0000;
+    text-align: center;
+}
+
+p {
+    text-align: center;
+    font-size: 1.2rem;
+}
+/* NAVIGATION UPGRADE */
+nav {
+    background-color: rgba(0, 0, 0, 0.6);
+    padding: 15px;
+    text-align: center;
+    backdrop-filter: blur(5px);
+    border-bottom: 2px solid #ff0000;
+}
+
+nav ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+nav ul li {
+    display: inline-block;
+    margin: 0 20px;
+}
+
+nav ul li a {
+    color: #ffffff;
+    text-decoration: none;
+    font-size: 1.3rem;
+    font-weight: bold;
+    padding: 8px 12px;
+    transition: 0.3s ease;
+    border-radius: 6px;
+}
+
+nav ul li a:hover {
+    background-color: #ff0000;
+    color: #000;
+    box-shadow: 0 0 10px #ff0000;
+    transform: scale(1.1);
+}

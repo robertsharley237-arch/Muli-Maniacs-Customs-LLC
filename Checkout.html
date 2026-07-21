@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Checkout</title>
+    <link rel="stylesheet" href="css/style.css">
+    <script src="cart.js"></script>
+</head>
+
+<body>
+
+    <nav>
+        <img src="images/mmc-logo.png" alt="MMC Logo"
+             style="height:60px; display:block; margin:auto; margin-bottom:10px;">
+        <ul>
+            <li><a href="index.html">Home</a></li>
+            <li><a href="shop.html">Shop</a></li>
+            <li><a href="cart.html">Cart</a></li>
+        </ul>
+    </nav>
+
+    <h1 style="text-align:center; color:#ff0000; margin-top:40px;">Checkout</h1>
+
+    <p style="text-align:center; max-width:900px; margin:auto; font-size:1.3rem;">
+        Enter your information below to complete your order.
+    </p>
+
+    <div style="width:80%; margin:auto; margin-top:40px; background:rgba(0,0,0,0.7); padding:20px; border:1px solid #fff;">
+
+        <form action="https://docs.google.com/forms/d/e/YOUR_GOOGLE_FORM_ID/formResponse" method="POST">
+
+            <label style="color:#fff;">Full Name</label>
+            <input name="entry.123456" required style="width:100%; padding:10px; margin-bottom:15px;">
+
+            <label style="color:#fff;">Email</label>
+            <input name="entry.234567" required style="width:100%; padding:10px; margin-bottom:15px;">
+
+            <label style="color:#fff;">Address</label>
+            <input name="entry.345678" required style="width:100%; padding:10px; margin-bottom:15px;">
+
+            <label style="color:#fff;">Order Details</label>
+            <textarea id="orderDetails" name="entry.456789" style="width:100%; height:150px; padding:10px;"></textarea>
+
+            <button type="submit"
+                    style="background:#ff0000; color:#fff; padding:15px 30px; font-size:1.3rem;
+                           border:none; border-radius:8px; cursor:pointer; margin-top:20px;">
+                Submit Order
+            </button>
+        </form>
+    </div>
+
+    <script>
+        // Fill order details automatically
+        const cart = JSON.parse(localStorage.getItem("MMC_CART")) || [];
+        const box = document.getElementById("orderDetails");
+
+        let text = "";
+        cart.forEach(item => {
+            text += `${item.name} x${item.quantity} — $${item.price * item.quantity}\n`;
+        });
+
+        box.value = text;
+    </script>
+
+</body>
+</html>

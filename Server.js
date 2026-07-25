@@ -1,49 +1,33 @@
-require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
-const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
+const mongoose = require("mongoose");
+const path = require("path");
+
+const productRoutes = require("./routes/productRoutes");
+const categoryRoutes = require("./routes/categoryRoutes");
+const clientIntakeRoutes = require("./routes/clientIntakeRoutes");
 
 const app = express();
-const PORT = process.env.PORT || 10000;
 
 app.use(cors());
 app.use(express.json());
 
-// Create Stripe Checkout Session
-app.post("/create-checkout-session", async (req, res) => {
-  try {
-    const cart = req.body.cart || [];
+// Serve uploaded images
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
-    const line_items = cart.map(item => ({
-      price_data: {
-        currency: "usd",
-        product_data: {
-          name: item.name,
-        },
-        unit_amount: Math.round(item.price * 100),
-      },
-      quantity: item.quantity,
-    }));
+// Routes
+app.use("/products", productRoutes);
+app.use("/categories", categoryRoutes);
+app.use("/intake", clientIntakeRoutes);
 
-    const session = await stripe.checkout.sessions.create({
-      payment_method_types: ["card"],
-      mode: "payment",
-      line_items,
-      success_url: "https://your-frontend-url.com/success.html",
-      cancel_url: "https://your-frontend-url.com/cancel.html",
-    });
-
-    res.json({ url: session.url });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Failed to create checkout session" });
-  }
-});
+// MongoDB
+mongoose.connect(process.env.MONGO_URL)
+  .then(() => console.log("MongoDB Connected"))
+  .catch(err => console.log("MongoDB Error:", err));
 
 app.get("/", (req, res) => {
-  res.send("MMC Stripe backend is running.");
+  res.send("MMC Backend Running");
 });
 
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
+const port = process.env.PORT || 3000;
+app.listen(port, () => console.log(`Server running on port ${port}`));

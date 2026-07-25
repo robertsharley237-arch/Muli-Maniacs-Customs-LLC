@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Edit Product</title>
+    <style>
+        body { background:#111; color:white; font-family:Arial; padding:20px; }
+        .container { max-width:500px; margin:auto; background:#222; padding:20px; border-radius:10px; }
+        input, textarea { width:100%; padding:10px; margin-top:10px; border-radius:6px; border:none; }
+        button { width:100%; padding:12px; margin-top:15px; background:#2196F3; border:none; color:white; font-size:16px; border-radius:6px; cursor:pointer; }
+        button:hover { background:#1976D2; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Edit Product</h2>
+
+    <input type="text" id="id" placeholder="Product ID" required>
+    <input type="text" id="name" placeholder="New Product Name">
+    <input type="number" id="price" placeholder="New Price">
+    <textarea id="description" placeholder="New Description"></textarea>
+
+    <button onclick="editProduct()">Update Product</button>
+
+    <p id="message"></p>
+</div>
+
+<script>
+async function editProduct() {
+    const id = document.getElementById("id").value;
+    const name = document.getElementById("name").value;
+    const price = document.getElementById("price").value;
+    const description = document.getElementById("description").value;
+
+    const res = await fetch("https://multi-maniacs-customs-backend.onrender.com/products/edit", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id, name, price, description })
+    });
+
+    const data = await res.json();
+    document.getElementById("message").innerText = data.message || data.error;
+}
+</script>
+
+</body>
+</html>

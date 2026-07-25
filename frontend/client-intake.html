@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Client Intake - Multi-Maniacs Customs LLC</title>
+  <style>
+    body { margin:0; background:#000; color:#fff; font-family:Arial; }
+    header, footer { background:#111; padding:15px 20px; }
+    nav a { color:#fff; margin-right:15px; text-decoration:none; }
+    nav a:hover { text-decoration:underline; }
+    .content { max-width:700px; margin:40px auto; padding:0 20px; }
+    input, textarea, select { width:100%; padding:10px; margin-top:10px; border-radius:6px; border:none; }
+    button { margin-top:15px; padding:10px 20px; background:red; color:#fff; border:none; border-radius:6px; cursor:pointer; }
+    #message { margin-top:15px; }
+  </style>
+</head>
+<body>
+
+<header>
+  <nav>
+    <a href="index.html">Home</a>
+    <a href="about.html">About</a>
+    <a href="services.html">Services</a>
+    <a href="gallery.html">Gallery</a>
+    <a href="shop.html">Shop</a>
+    <a href="cart.html">Cart</a>
+    <a href="client-intake.html">Client Intake</a>
+    <a href="contact.html">Contact</a>
+  </nav>
+</header>
+
+<div class="content">
+  <h1>Client Intake Form</h1>
+
+  <input id="name" type="text" placeholder="Full Name">
+  <input id="phone" type="text" placeholder="Phone Number">
+  <input id="email" type="email" placeholder="Email Address">
+
+  <select id="contactMethod">
+    <option value="">Preferred Contact Method</option>
+    <option value="Phone">Phone</option>
+    <option value="Email">Email</option>
+    <option value="Text">Text</option>
+  </select>
+
+  <input id="projectType" type="text" placeholder="Project Type">
+  <textarea id="description" placeholder="Describe your project"></textarea>
+
+  <input id="budget" type="text" placeholder="Budget">
+  <input id="timeline" type="text" placeholder="Timeline">
+  <input id="location" type="text" placeholder="Location">
+
+  <input id="image" type="file">
+
+  <button id="submitBtn">Submit Intake</button>
+
+  <p id="message"></p>
+</div>
+
+<footer>
+  <p>&copy; 2026 Multi-Maniacs Customs LLC</p>
+</footer>
+
+<script>
+document.getElementById("submitBtn").addEventListener("click", async () => {
+  const formData = new FormData();
+  formData.append("image", document.getElementById("image").files[0]);
+  formData.append("name", document.getElementById("name").value);
+  formData.append("phone", document.getElementById("phone").value);
+  formData.append("email", document.getElementById("email").value);
+  formData.append("contactMethod", document.getElementById("contactMethod").value);
+  formData.append("projectType", document.getElementById("projectType").value);
+  formData.append("description", document.getElementById("description").value);
+  formData.append("budget", document.getElementById("budget").value);
+  formData.append("timeline", document.getElementById("timeline").value);
+  formData.append("location", document.getElementById("location").value);
+
+  const res = await fetch("https://multi-maniacs-customs-backend.onrender.com/intake/submit", {
+    method: "POST",
+    body: formData
+  });
+
+  const data = await res.json();
+  document.getElementById("message").innerText = data.message || data.error;
+});
+</script>
+
+</body>
+</html>

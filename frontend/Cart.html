@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Your Cart - Multi-Maniacs Customs LLC</title>
+  <style>
+    body { margin:0; background:#000; color:#fff; font-family:Arial; }
+    header, footer { background:#111; padding:15px 20px; }
+    nav a { color:#fff; margin-right:15px; text-decoration:none; }
+    nav a:hover { text-decoration:underline; }
+    .content { max-width:800px; margin:40px auto; padding:0 20px; }
+    .cart-item { background:#111; padding:10px; margin-bottom:10px; border-radius:6px; display:flex; justify-content:space-between; align-items:center; }
+    .cart-item button { padding:5px 10px; background:red; border:none; color:#fff; border-radius:6px; cursor:pointer; }
+    #checkoutBtn { margin-top:20px; padding:10px 20px; background:#4CAF50; border:none; color:#fff; border-radius:6px; cursor:pointer; }
+  </style>
+</head>
+<body>
+
+<header>
+  <nav>
+    <a href="index.html">Home</a>
+    <a href="about.html">About</a>
+    <a href="services.html">Services</a>
+    <a href="gallery.html">Gallery</a>
+    <a href="shop.html">Shop</a>
+    <a href="cart.html">Cart</a>
+    <a href="client-intake.html">Client Intake</a>
+    <a href="contact.html">Contact</a>
+  </nav>
+</header>
+
+<div class="content">
+  <h1>Your Cart</h1>
+  <p>These are the items selected for your custom project.</p>
+
+  <div id="cart-items"></div>
+
+  <p>Total: <span id="total">$0.00</span></p>
+
+  <button id="checkoutBtn">Proceed to Checkout</button>
+</div>
+
+<footer>
+  <p>&copy; 2026 Multi-Maniacs Customs LLC · Custom products for clients</p>
+</footer>
+
+<script src="Cart.js"></script>
+<script>
+  document.getElementById("checkoutBtn").addEventListener("click", () => {
+    window.location.href = "Checkout.html";
+  });
+</script>
+
+</body>
+</html>

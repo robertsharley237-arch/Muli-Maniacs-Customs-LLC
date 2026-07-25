@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Edit Product - MMC Admin</title>
+  <style>
+    body { background:#000; color:#fff; font-family:Arial; padding:20px; }
+    input, textarea { width:100%; padding:10px; margin-top:10px; border-radius:6px; border:none; }
+    button { margin-top:15px; padding:10px 20px; background:red; color:#fff; border:none; border-radius:6px; cursor:pointer; }
+    #message { margin-top:15px; }
+  </style>
+</head>
+<body>
+
+<h1>Edit Product</h1>
+
+<input id="id" type="text" placeholder="Product ID">
+<input id="name" type="text" placeholder="Product Name">
+<input id="price" type="number" placeholder="Price">
+<textarea id="description" placeholder="Description"></textarea>
+<input id="category" type="text" placeholder="Category">
+<input id="image" type="file">
+
+<button onclick="editProduct()">Save Changes</button>
+
+<p id="message"></p>
+
+<script>
+async function editProduct() {
+  const id = document.getElementById("id").value;
+  const name = document.getElementById("name").value;
+  const price = document.getElementById("price").value;
+  const description = document.getElementById("description").value;
+  const category = document.getElementById("category").value;
+  const imageFile = document.getElementById("image").files[0];
+
+  let imageUrl = "";
+
+  if (imageFile) {
+    const formData = new FormData();
+    formData.append("image", imageFile);
+
+    const uploadRes = await fetch("https://multi-maniacs-customs-backend.onrender.com/products/upload-image", {
+      method: "POST",
+      body: formData
+    });
+
+    const uploadData = await uploadRes.json();
+    imageUrl = uploadData.imageUrl;
+  }
+
+  const res = await fetch("https://multi-maniacs-customs-backend.onrender.com/products/edit", {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ id, name, price, description, category, imageUrl })
+  });
+
+  const data = await res.json();
+  document.getElementById("message").innerText = data.message || data.error;
+}
+</script>
+
+</body>
+</html>

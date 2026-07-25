@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Admin Dashboard</title>
+    <style>
+        body {
+            font-family: Arial;
+            background: #111;
+            color: white;
+            padding: 20px;
+        }
+        .container {
+            max-width: 600px;
+            margin: auto;
+            background: #222;
+            padding: 20px;
+            border-radius: 10px;
+        }
+        button {
+            width: 100%;
+            padding: 12px;
+            margin-top: 10px;
+            background: #4CAF50;
+            border: none;
+            color: white;
+            font-size: 16px;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #45a049;
+        }
+        h2 {
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h2>Admin Dashboard</h2>
+
+        <button onclick="location.href='add-product.html'">Add Product</button>
+        <button onclick="location.href='edit-product.html'">Edit Product</button>
+        <button onclick="location.href='delete-product.html'">Delete Product</button>
+
+        <button onclick="location.href='add-category.html'">Add Category</button>
+        <button onclick="location.href='edit-category.html'">Edit Category</button>
+        <button onclick="location.href='delete-category.html'">Delete Category</button>
+
+        <button onclick="logout()">Logout</button>
+    </div>
+
+    <script>
+        function logout() {
+            alert("Logged out");
+            location.href = "admin-login.html";
+        }
+    </script>
+
+</body>
+</html>

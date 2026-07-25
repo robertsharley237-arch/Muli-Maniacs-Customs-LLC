@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Add Category</title>
+    <style>
+        body { background:#111; color:white; font-family:Arial; padding:20px; }
+        .container { max-width:500px; margin:auto; background:#222; padding:20px; border-radius:10px; }
+        input { width:100%; padding:10px; margin-top:10px; border-radius:6px; border:none; }
+        button { width:100%; padding:12px; margin-top:15px; background:#4CAF50; border:none; color:white; font-size:16px; border-radius:6px; cursor:pointer; }
+        button:hover { background:#43A047; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Add Category</h2>
+
+    <input type="text" id="name" placeholder="Category Name" required>
+
+    <button onclick="addCategory()">Add Category</button>
+
+    <p id="message"></p>
+</div>
+
+<script>
+async function addCategory() {
+    const name = document.getElementById("name").value;
+
+    const res = await fetch("https://multi-maniacs-customs-backend.onrender.com/categories/add", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name })
+    });
+
+    const data = await res.json();
+    document.getElementById("message").innerText = data.message || data.error;
+}
+</script>
+
+</body>
+</html>

@@ -1,48 +1,61 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Contact - Multi-Maniacs Customs LLC</title>
-  <style>
-    body { margin:0; background:#000; color:#fff; font-family:Arial; }
-    header, footer { background:#111; padding:15px 20px; }
-    nav a { color:#fff; margin-right:15px; text-decoration:none; }
-    nav a:hover { text-decoration:underline; }
-    .content { max-width:600px; margin:40px auto; padding:0 20px; }
-    input, textarea { width:100%; padding:10px; margin-top:10px; border-radius:6px; border:none; }
-    button { margin-top:15px; padding:10px 20px; background:red; color:#fff; border:none; border-radius:6px; cursor:pointer; }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contact • Multi-Maniacs Customs LLC</title>
+    <link href="https://fonts.googleapis.com/css2?family=Anton&family=Bangers&family=Orbitron:wght@500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-<header>
-  <nav>
-    <a href="index.html">Home</a>
-    <a href="about.html">About</a>
-    <a href="services.html">Services</a>
-    <a href="gallery.html">Gallery</a>
-    <a href="shop.html">Shop</a>
-    <a href="cart.html">Cart</a>
-    <a href="client-intake.html">Client Intake</a>
-    <a href="contact.html">Contact</a>
-  </nav>
-</header>
+<nav class="navbar">
+    <ul>
+        <li><a href="index.html">Home</a></li>
+        <li><a href="about.html">About</a></li>
+        <li><a href="services.html">Services</a></li>
+        <li><a href="gallery.html">Gallery</a></li>
+        <li><a href="shop.html">Shop</a></li>
+        <li><a href="cart.html">Cart</a></li>
+        <li><a href="contact.html">Contact</a></li>
+    </ul>
+</nav>
 
-<div class="content">
-  <h1>Contact Multi-Maniacs Customs LLC</h1>
-  <p>We work with clients of all walks of life. Reach out to begin your custom project.</p>
+<div class="page">
+    <h1>Contact</h1>
+    <p>
+        Use this form to tell us about your project, idea, or custom request. The more detail you share,
+        the better we can respond with options and pricing.
+    </p>
 
-  <p><strong>Phone:</strong> (606) 220-0185 · (606) 212-4695</p>
-  <p><strong>Email:</strong> multimaniacscustoms@gmail.com</p>
+    <form action="#" method="post">
+        <label for="name">Name</label>
+        <input id="name" name="name" type="text" required>
 
-  <input type="text" placeholder="Your Name">
-  <input type="email" placeholder="Your Email">
-  <textarea placeholder="Your Message"></textarea>
-  <button>Send (placeholder)</button>
+        <label for="email">Email</label>
+        <input id="email" name="email" type="email" required>
+
+        <label for="phone">Phone</label>
+        <input id="phone" name="phone" type="text">
+
+        <label for="details">Project Details</label>
+        <textarea id="details" name="details" rows="5" required></textarea>
+
+        <button type="submit" class="btn">Submit</button>
+    </form>
+
+    <p>
+        You can also reach us directly:<br>
+        Phone: (606) 220-0185 • (606) 212-4695<br>
+        Email: multimaniacscustoms@gmail.com
+    </p>
 </div>
 
 <footer>
-  <p>&copy; 2026 Multi-Maniacs Customs LLC · Multi-industry customization & freelance</p>
+    <p>
+        &copy; 2026 Multi-Maniacs Customs LLC • Essie, KY • Clients accepted anywhere in the U.S. •
+        Phone: (606) 220-0185 • (606) 212-4695 • Email: multimaniacscustoms@gmail.com
+    </p>
 </footer>
 
 </body>

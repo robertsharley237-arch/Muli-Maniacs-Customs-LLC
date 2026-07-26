@@ -1,50 +1,58 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Shop - Multi-Maniacs Customs LLC</title>
-  <style>
-    body { background:#000; color:#fff; font-family:Arial; margin:0; }
-    header, footer { background:#111; padding:15px 20px; }
-    nav a { color:#fff; margin-right:15px; text-decoration:none; }
-    nav a:hover { text-decoration:underline; }
-    .content { max-width:1000px; margin:40px auto; padding:0 20px; }
-    .product-card { background:#111; padding:15px; border-radius:8px; margin-bottom:20px; }
-    .product-card img { width:100%; border-radius:8px; }
-    button { padding:10px 20px; background:red; color:#fff; border:none; border-radius:6px; cursor:pointer; }
-    select { padding:10px; border-radius:6px; margin-bottom:20px; }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shop • Multi-Maniacs Customs LLC</title>
+    <link href="https://fonts.googleapis.com/css2?family=Anton&family=Bangers&family=Orbitron:wght@500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-<header>
-  <nav>
-    <a href="index.html">Home</a>
-    <a href="about.html">About</a>
-    <a href="services.html">Services</a>
-    <a href="gallery.html">Gallery</a>
-    <a href="shop.html">Shop</a>
-    <a href="cart.html">Cart</a>
-    <a href="client-intake.html">Client Intake</a>
-    <a href="contact.html">Contact</a>
-  </nav>
-</header>
+<nav class="navbar">
+    <ul>
+        <li><a href="index.html">Home</a></li>
+        <li><a href="about.html">About</a></li>
+        <li><a href="services.html">Services</a></li>
+        <li><a href="gallery.html">Gallery</a></li>
+        <li><a href="shop.html">Shop</a></li>
+        <li><a href="cart.html">Cart</a></li>
+        <li><a href="contact.html">Contact</a></li>
+    </ul>
+</nav>
 
-<div class="content">
-  <h1>Shop</h1>
+<div class="page">
+    <h1>Shop</h1>
+    <p>
+        Browse available custom products, accessories, and limited-run items. Many products are made in
+        small batches or as one-offs.
+    </p>
 
-  <select id="categoryFilter">
-    <option value="">All Categories</option>
-  </select>
-
-  <div id="product-list"></div>
+    <div class="grid">
+        <div class="card">
+            <h3>Custom MMC Decal Pack</h3>
+            <p>High-quality vinyl decals with MMC branding.</p>
+            <a href="cart.html" class="btn">Add to Cart</a>
+        </div>
+        <div class="card">
+            <h3>Garage Wall Art</h3>
+            <p>Custom printed and hand-finished wall pieces.</p>
+            <a href="cart.html" class="btn">Add to Cart</a>
+        </div>
+        <div class="card">
+            <h3>Limited-Run Custom Item</h3>
+            <p>Unique piece, built once and never repeated.</p>
+            <a href="cart.html" class="btn">Add to Cart</a>
+        </div>
+    </div>
 </div>
 
 <footer>
-  <p>&copy; 2026 Multi-Maniacs Customs LLC</p>
+    <p>
+        &copy; 2026 Multi-Maniacs Customs LLC • Essie, KY • Clients accepted anywhere in the U.S. •
+        Phone: (606) 220-0185 • (606) 212-4695 • Email: multimaniacscustoms@gmail.com
+    </p>
 </footer>
-
-<script src="Products.js"></script>
 
 </body>
 </html>

@@ -1,62 +1,96 @@
+/* FULL MMC TIE-DYE BACKGROUND */
 body {
-    background: radial-gradient(circle at center,
-        #ff00ff,
-        #00ffff,
-        #ffff00,
-        #ff8800,
-        #ff0000,
+    margin: 0;
+    padding: 0;
+    font-family: 'Orbitron', sans-serif;
+    color: white;
+    text-align: center;
+
+    background: radial-gradient(circle,
+        #FF00FF,
+        #00FFFF,
+        #00FF66,
+        #FFFF00,
+        #FF8800,
+        #FF0000,
         #000000 70%
     );
     background-size: 400% 400%;
-    animation: tyeDye 15s ease infinite;
-    font-family: Arial, sans-serif;
-    color: #fff;
-    margin: 0;
-    padding: 20px;
+    animation: tieDye 18s ease infinite;
 }
 
-h1 {
-    color: #ff0000;
-    text-align: center;
+@keyframes tieDye {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
 }
 
-p {
-    text-align: center;
-    font-size: 1.2rem;
+/* LOGO */
+.logo {
+    width: 260px;
+    margin-top: 40px;
+    filter: drop-shadow(0 0 20px #FF00FF);
 }
-/* NAVIGATION UPGRADE */
-nav {
-    background-color: rgba(0, 0, 0, 0.6);
+
+/* NAVIGATION BAR */
+.navbar {
+    background: black;
     padding: 15px;
     text-align: center;
-    backdrop-filter: blur(5px);
-    border-bottom: 2px solid #ff0000;
+    border-bottom: 4px solid #FF00FF;
 }
 
-nav ul {
+.navbar ul {
     list-style: none;
     padding: 0;
     margin: 0;
 }
 
-nav ul li {
+.navbar li {
     display: inline-block;
-    margin: 0 20px;
+    margin: 0 18px;
 }
 
-nav ul li a {
-    color: #ffffff;
+.navbar a {
+    color: white;
     text-decoration: none;
-    font-size: 1.3rem;
-    font-weight: bold;
-    padding: 8px 12px;
-    transition: 0.3s ease;
-    border-radius: 6px;
+    font-size: 20px;
+    font-family: 'Anton', sans-serif;
+    transition: 0.3s;
 }
 
-nav ul li a:hover {
-    background-color: #ff0000;
-    color: #000;
-    box-shadow: 0 0 10px #ff0000;
-    transform: scale(1.1);
+.navbar a:hover {
+    color: #00FFFF;
+    text-shadow: 0 0 10px #00FFFF, 0 0 20px #00FFFF;
+}
+
+/* HERO SECTION */
+.hero {
+    margin-top: 40px;
+    padding: 20px;
+}
+
+.hero h1 {
+    font-size: 60px;
+    margin-bottom: 20px;
+    font-family: 'Bangers', cursive;
+    text-shadow: 0 0 10px #FF00FF, 0 0 20px #00FFFF, 0 0 30px #FF0000;
+}
+
+.hero p {
+    font-size: 22px;
+    max-width: 900px;
+    margin: auto;
+    line-height: 1.6;
+    text-shadow: 0 0 5px black;
+}
+
+/* FOOTER */
+footer {
+    margin-top: 80px;
+    padding: 20px;
+    background: black;
+    color: white;
+    font-size: 14px;
+    border-top: 4px solid #FF00FF;
 }

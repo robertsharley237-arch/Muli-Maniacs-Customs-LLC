@@ -1,44 +1,24 @@
-async function loadCategories() {
-  const res = await fetch("https://multi-maniacs-customs-backend.onrender.com/categories/all");
-  const categories = await res.json();
-
-  const filter = document.getElementById("categoryFilter");
-  categories.forEach(cat => {
-    const opt = document.createElement("option");
-    opt.value = cat.name;
-    opt.textContent = cat.name;
-    filter.appendChild(opt);
-  });
-}
-
-async function loadProducts(category = "") {
-  const res = await fetch("https://multi-maniacs-customs-backend.onrender.com/products/all");
-  const products = await res.json();
-
-  const container = document.getElementById("product-list");
-  container.innerHTML = "";
-
-  products
-    .filter(p => !category || p.category === category)
-    .forEach(p => {
-      const div = document.createElement("div");
-      div.classList.add("product-card");
-
-      div.innerHTML = `
-        <img src="${p.imageUrl || 'default.jpg'}">
-        <h3>${p.name}</h3>
-        <p>${p.description}</p>
-        <p>$${p.price}</p>
-        <button onclick="addToCart('${p.name}', ${p.price})">Add to Cart</button>
-      `;
-
-      container.appendChild(div);
-    });
-}
-
-document.getElementById("categoryFilter").addEventListener("change", e => {
-  loadProducts(e.target.value);
-});
-
-loadCategories();
-loadProducts();
+// Product list for MMC Shop
+const products = [
+    {
+        id: 1,
+        name: "MMC Decal Pack",
+        price: 15.00,
+        description: "High-quality vinyl decals with MMC branding.",
+        image: "img/decalpack.jpg"
+    },
+    {
+        id: 2,
+        name: "Garage Wall Art",
+        price: 45.00,
+        description: "Custom printed and hand-finished wall pieces.",
+        image: "img/wallart.jpg"
+    },
+    {
+        id: 3,
+        name: "Limited-Run Custom Item",
+        price: 120.00,
+        description: "Unique piece, built once and never repeated.",
+        image: "img/customitem.jpg"
+    }
+];

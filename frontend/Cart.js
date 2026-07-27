@@ -1,81 +1,106 @@
 // Load cart from localStorage
-let cart = JSON.parse(localStorage.getItem("MMC_CART")) || [];
+let cart = JSON.parse(localStorage.getItem("cart")) || [];
 
-// Save cart back to localStorage
+// Save cart
 function saveCart() {
-    localStorage.setItem("MMC_CART", JSON.stringify(cart));
+    localStorage.setItem("cart", JSON.stringify(cart));
 }
 
 // Add item to cart
-function addToCart(name, price) {
-    const item = cart.find(i => i.name === name);
+function addToCart(id) {
+    const product = products.find(p => p.id === id);
+    if (!product) {
+        alert("Product not found.");
+        return;
+    }
 
-    if (item) {
-        item.quantity += 1;
+    const existing = cart.find(item => item.id === id);
+
+    if (existing) {
+        existing.quantity++;
     } else {
         cart.push({
-            name,
-            price,
+            id: product.id,
+            name: product.name,
+            price: product.price,
             quantity: 1
         });
     }
 
     saveCart();
-    alert("Item added to cart!");
+    alert(product.name + " added to cart!");
 }
 
-// Remove item from cart
-function removeFromCart(name) {
-    cart = cart.filter(item => item.name !== name);
+// Remove item
+function removeItem(id) {
+    cart = cart.filter(item => item.id !== id);
     saveCart();
+    renderCart();
 }
 
-// Display cart items on cart.html
-function displayCart() {
+// Render cart items
+function renderCart() {
     const container = document.getElementById("cart-items");
+    const totalEl = document.getElementById("cart-total");
+
+    if (!container || !totalEl) return;
+
     container.innerHTML = "";
 
+    if (cart.length === 0) {
+        container.innerHTML = "<p>Your cart is empty.</p>";
+        totalEl.innerText = "Total: $0.00";
+        return;
+    }
+
+    let total = 0;
+
     cart.forEach(item => {
-        const div = document.createElement("div");
-        div.classList.add("cart-item");
+        total += item.price * item.quantity;
 
-        div.innerHTML = `
-            <p>${item.name}</p>
-            <p>$${item.price}</p>
-            <p>Qty: ${item.quantity}</p>
-            <button onclick="removeFromCart('${item.name}')">Remove</button>
+        container.innerHTML += `
+            <div class="cart-item card">
+                <h3>${item.name}</h3>
+                <p>Price: $${item.price.toFixed(2)}</p>
+                <p>Quantity: ${item.quantity}</p>
+                <button onclick="removeItem(${item.id})" class="btn">Remove</button>
+            </div>
         `;
-
-        container.appendChild(div);
     });
 
-    updateTotal();
+    totalEl.innerText = "Total: $" + total.toFixed(2);
 }
 
-// Update total price
-function updateTotal() {
-    const total = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
-    document.getElementById("total").innerText = `$${total.toFixed(2)}`;
-}
-
-// Checkout button → sends cart to backend
+// Checkout
 async function checkout() {
-    const response = await fetch("https://multi-maniacs-customs-backend.onrender.com/create-checkout-session", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ items: cart })   // IMPORTANT: must be "items"
-    });
+    if (cart.length === 0) {
+        alert("Your cart is empty.");
+        return;
+    }
 
-    const data = await response.json();
+    try {
+        const response = await fetch("https://multi-maniacs-customs-backend.onrender.com/create-checkout-session", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ cart })
+        });
 
-    if (data.url) {
-        window.location.href = data.url; // Redirect to Stripe
-    } else {
-        alert("Checkout failed: " + data.error);
+        const data = await response.json();
+
+        if (data.url) {
+            window.location.href = data.url;
+        } else {
+            alert("Checkout session failed.");
+        }
+    } catch (error) {
+        console.error(error);
+        alert("Error connecting to checkout.");
     }
 }
 
-// Load cart on page load
-if (document.getElementById("cart-items")) {
-    displayCart();
-}
+// Auto-render cart on cart page
+document.addEventListener("DOMContentLoaded", () => {
+    if (document.getElementById("cart-items")) {
+        renderCart();
+    }
+});

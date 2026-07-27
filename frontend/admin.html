@@ -1,62 +1,46 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Admin Dashboard</title>
-    <style>
-        body {
-            font-family: Arial;
-            background: #111;
-            color: white;
-            padding: 20px;
-        }
-        .container {
-            max-width: 600px;
-            margin: auto;
-            background: #222;
-            padding: 20px;
-            border-radius: 10px;
-        }
-        button {
-            width: 100%;
-            padding: 12px;
-            margin-top: 10px;
-            background: #4CAF50;
-            border: none;
-            color: white;
-            font-size: 16px;
-            border-radius: 6px;
-            cursor: pointer;
-        }
-        button:hover {
-            background: #45a049;
-        }
-        h2 {
-            text-align: center;
-        }
-    </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard • Multi-Maniacs Customs LLC</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-    <div class="container">
-        <h2>Admin Dashboard</h2>
+<nav class="navbar">
+    <ul>
+        <li><a href="index.html">Home</a></li>
+        <li><a href="shop.html">Shop</a></li>
+        <li><a href="Cart.html">Cart</a></li>
+        <li><a href="admin.html" class="active">Admin</a></li>
+    </ul>
+</nav>
 
-        <button onclick="location.href='add-product.html'">Add Product</button>
-        <button onclick="location.href='edit-product.html'">Edit Product</button>
-        <button onclick="location.href='delete-product.html'">Delete Product</button>
+<div class="page">
+    <h1>Admin Dashboard</h1>
 
-        <button onclick="location.href='add-category.html'">Add Category</button>
-        <button onclick="location.href='edit-category.html'">Edit Category</button>
-        <button onclick="location.href='delete-category.html'">Delete Category</button>
+    <h2>Add New Product</h2>
+    <div class="admin-box">
+        <input id="p-name" placeholder="Product Name">
+        <input id="p-sku" placeholder="SKU (MMC-001)">
+        <input id="p-price" placeholder="Base Price">
+        <input type="file" id="p-image-file">
+<button onclick="uploadImage()" class="btn-small">Upload Image</button>
+<input id="p-image" placeholder="Image URL (auto-filled)">
 
-        <button onclick="logout()">Logout</button>
+        <input id="p-stock" placeholder="Stock">
+        <input id="p-category" placeholder="Category">
+        <textarea id="p-desc" placeholder="Description"></textarea>
+
+        <button onclick="addProduct()" class="btn">Add Product</button>
     </div>
 
-    <script>
-        function logout() {
-            alert("Logged out");
-            location.href = "admin-login.html";
-        }
-    </script>
+    <h2>Products</h2>
+    <div id="admin-products"></div>
+</div>
+
+<script src="admin.js"></script>
 
 </body>
 </html>

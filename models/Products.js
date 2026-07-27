@@ -1,24 +1,14 @@
-// Product list for MMC Shop
-const products = [
-    {
-        id: 1,
-        name: "MMC Decal Pack",
-        price: 15.00,
-        description: "High-quality vinyl decals with MMC branding.",
-        image: "img/decalpack.jpg"
-    },
-    {
-        id: 2,
-        name: "Garage Wall Art",
-        price: 45.00,
-        description: "Custom printed and hand-finished wall pieces.",
-        image: "img/wallart.jpg"
-    },
-    {
-        id: 3,
-        name: "Limited-Run Custom Item",
-        price: 120.00,
-        description: "Unique piece, built once and never repeated.",
-        image: "img/customitem.jpg"
-    }
-];
+// Load products from MMC backend (with inventory + variants)
+let products = [];
+
+async function loadProducts() {
+  try {
+    const res = await fetch("https://multi-maniacs-customs-backend.onrender.com/products");
+    products = await res.json();
+  } catch (err) {
+    console.error("Failed to load products:", err);
+  }
+}
+
+// Call on page load
+loadProducts();

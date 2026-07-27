@@ -1,77 +1,139 @@
-// Load cart from localStorage
-let cart = JSON.parse(localStorage.getItem("cart")) || [];
+// ================================
+// CART + SAVE-FOR-LATER SYSTEM
+// ================================
 
-// Save cart
+// Load cart + save-for-later from localStorage
+let cart = JSON.parse(localStorage.getItem("cart")) || [];
+let savedForLater = JSON.parse(localStorage.getItem("savedForLater")) || [];
+
 function saveCart() {
     localStorage.setItem("cart", JSON.stringify(cart));
+    localStorage.setItem("savedForLater", JSON.stringify(savedForLater));
+    updateCartBadge();
 }
 
-// Add item to cart
-function addToCart(id) {
-    const product = products.find(p => p.id === id);
-    if (!product) {
-        alert("Product not found.");
-        return;
-    }
+// ================================
+// UPDATE CART BADGE
+// ================================
+function updateCartBadge() {
+    const badge = document.getElementById("cart-count");
+    if (badge) badge.textContent = cart.length;
+}
+updateCartBadge();
 
-    const existing = cart.find(item => item.id === id);
+// ================================
+// ADD TO CART (supports variants)
+// ================================
+async function addToCart(id, variantIndex = null) {
+    try {
+        const res = await fetch(`https://multi-maniacs-customs-backend.onrender.com/products/${id}`);
+        const product = await res.json();
 
-    if (existing) {
-        existing.quantity++;
-    } else {
+        let variant = null;
+
+        if (variantIndex !== null && variantIndex !== undefined) {
+            variant = product.variants[variantIndex];
+        }
+
+        if (variant && variant.stock <= 0) {
+            alert("This variant is out of stock.");
+            return;
+        }
+
         cart.push({
-            id: product.id,
+            id: product._id,
             name: product.name,
-            price: product.price,
-            quantity: 1
+            price: variant ? variant.price : product.price,
+            sku: variant ? variant.sku : product.sku,
+            image: product.image,
+            variantIndex: variantIndex,
+            variantName: variant ? variant.name : null
         });
-    }
 
-    saveCart();
-    alert(product.name + " added to cart!");
+        saveCart();
+        alert("Added to cart!");
+    } catch (err) {
+        console.error("Add to cart failed:", err);
+        alert("Error adding to cart.");
+    }
 }
 
-// Remove item
-function removeItem(id) {
-    cart = cart.filter(item => item.id !== id);
+// ================================
+// REMOVE FROM CART
+// ================================
+function removeFromCart(index) {
+    cart.splice(index, 1);
     saveCart();
     renderCart();
 }
 
-// Render cart items
-function renderCart() {
-    const container = document.getElementById("cart-items");
-    const totalEl = document.getElementById("cart-total");
+// ================================
+// SAVE FOR LATER
+// ================================
+function moveToSaved(index) {
+    savedForLater.push(cart[index]);
+    cart.splice(index, 1);
+    saveCart();
+    renderCart();
+}
 
-    if (!container || !totalEl) return;
+// ================================
+// MOVE BACK TO CART
+// ================================
+function moveBackToCart(index) {
+    cart.push(savedForLater[index]);
+    savedForLater.splice(index, 1);
+    saveCart();
+    renderCart();
+}
 
-    container.innerHTML = "";
+// ================================
+// RENDER CART PAGE
+// ================================
+async function renderCart() {
+    const cartContainer = document.getElementById("cart-items");
+    const savedContainer = document.getElementById("saved-items");
 
-    if (cart.length === 0) {
-        container.innerHTML = "<p>Your cart is empty.</p>";
-        totalEl.innerText = "Total: $0.00";
-        return;
-    }
+    if (!cartContainer || !savedContainer) return;
 
-    let total = 0;
+    cartContainer.innerHTML = "";
+    savedContainer.innerHTML = "";
 
-    cart.forEach(item => {
-        total += item.price * item.quantity;
-
-        container.innerHTML += `
-            <div class="cart-item card">
-                <h3>${item.name}</h3>
-                <p>Price: $${item.price.toFixed(2)}</p>
-                <p>Quantity: ${item.quantity}</p>
-                <button onclick="removeItem(${item.id})" class="btn">Remove</button>
+    cart.forEach((item, index) => {
+        cartContainer.innerHTML += `
+            <div class="cart-row">
+                <img src="${item.image}" class="cart-img">
+                <div class="cart-info">
+                    <p><b>${item.name}</b></p>
+                    <p>${item.variantName ? item.variantName : ""}</p>
+                    <p>$${item.price}</p>
+                </div>
+                <button onclick="removeFromCart(${index})" class="remove-btn-small">Remove</button>
+                <button onclick="moveToSaved(${index})" class="btn-small">Save for later</button>
             </div>
         `;
     });
 
-    totalEl.innerText = "Total: $" + total.toFixed(2);
+    savedForLater.forEach((item, index) => {
+        savedContainer.innerHTML += `
+            <div class="cart-row saved">
+                <img src="${item.image}" class="cart-img">
+                <div class="cart-info">
+                    <p><b>${item.name}</b></p>
+                    <p>${item.variantName ? item.variantName : ""}</p>
+                    <p>$${item.price}</p>
+                </div>
+                <button onclick="moveBackToCart(${index})" class="btn-small">Move to cart</button>
+            </div>
+        `;
+    });
 }
 
-// Checkout
+document.addEventListener("DOMContentLoaded", renderCart);
+
+// ================================
+// CHECKOUT — USE RENDER BACKEND
+// ================================
 async function checkout() {
     if (cart.length === 0) {
         alert("Your cart is empty.");
@@ -90,17 +152,10 @@ async function checkout() {
         if (data.url) {
             window.location.href = data.url;
         } else {
-            alert("Checkout session failed.");
+            alert("Checkout failed.");
         }
-    } catch (error) {
-        console.error(error);
-        alert("Error connecting to checkout.");
+    } catch (err) {
+        console.error("Checkout error:", err);
+        alert("Checkout failed.");
     }
 }
-
-// Auto-render cart on cart page
-document.addEventListener("DOMContentLoaded", () => {
-    if (document.getElementById("cart-items")) {
-        renderCart();
-    }
-});

@@ -12,55 +12,66 @@
 <nav class="navbar">
     <ul>
         <li><a href="index.html">Home</a></li>
-        <li><a href="about.html">About</a></li>
-        <li><a href="services.html">Services</a></li>
-        <li><a href="gallery.html">Gallery</a></li>
         <li><a href="shop.html">Shop</a></li>
-        <li><a href="cart.html">Cart</a></li>
-        <li><a href="contact.html">Contact</a></li>
+        <li class="cart-nav">
+            <a href="Cart.html">
+                Cart <span id="cart-count" class="cart-badge">0</span>
+            </a>
+            <div id="mini-cart" class="mini-cart-dropdown"></div>
+        </li>
     </ul>
 </nav>
 
 <div class="page">
     <h1>Shop</h1>
-    <p>
-        Browse available custom products, accessories, and limited-run items. Many products are made in
-        small batches or as one-offs.
-    </p>
+    <p>Browse available custom products, accessories, and limited-run items.</p>
 
-    <div class="grid">
-        <div class="card">
-            <h3>MMC Decal Pack</h3>
-            <p>High-quality vinyl decals with MMC branding.</p>
-            <p>$15.00</p>
-            <a onclick="addToCart(1)" class="btn">Add to Cart</a>
-        </div>
-
-        <div class="card">
-            <h3>Garage Wall Art</h3>
-            <p>Custom printed and hand-finished wall pieces.</p>
-            <p>$45.00</p>
-            <a onclick="addToCart(2)" class="btn">Add to Cart</a>
-        </div>
-
-        <div class="card">
-            <h3>Limited-Run Custom Item</h3>
-            <p>Unique piece, built once and never repeated.</p>
-            <p>$120.00</p>
-            <a onclick="addToCart(3)" class="btn">Add to Cart</a>
-        </div>
-    </div>
+    <div id="shop-grid" class="grid"></div>
 </div>
 
 <footer>
     <p>
-        &copy; 2026 Multi-Maniacs Customs LLC • Essie, KY • Clients accepted anywhere in the U.S. •
-        Phone: (606) 220-0185 • (606) 212-4695 • Email: multimaniacscustoms@gmail.com
+        &copy; 2026 Multi-Maniacs Customs LLC • Essie, KY • Clients accepted anywhere in the U.S.
     </p>
 </footer>
 
 <script src="products.js"></script>
 <script src="cart.js"></script>
+<script>
+    async function renderShop() {
+        await loadProducts();
+
+        const grid = document.getElementById("shop-grid");
+        grid.innerHTML = "";
+
+        products.forEach((p, index) => {
+            if (!p.active) return;
+            if (p.stock <= 0 && (!p.variants || p.variants.length === 0)) return;
+
+            let stockText = "";
+            if (p.variants && p.variants.length > 0) {
+                stockText = "Multiple variants available";
+            } else {
+                stockText = "In stock: " + p.stock;
+            }
+
+            grid.innerHTML += `
+                <div class="card">
+                    <img src="${p.image}" class="cart-img" alt="${p.name}">
+                    <h3>${p.name}</h3>
+                    <p>$${p.price.toFixed(2)}</p>
+                    <p>${stockText}</p>
+                    <a onclick="addToCart('${p._id}')" class="btn">Add to Cart</a>
+                </div>
+            `;
+        });
+
+        updateCartBadge();
+        renderMiniCart();
+    }
+
+    document.addEventListener("DOMContentLoaded", renderShop);
+</script>
 
 </body>
 </html>

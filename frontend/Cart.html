@@ -1,71 +1,47 @@
-// =========================
-// Multi-Maniacs Customs LLC
-// FULL WORKING SERVER.JS
-// =========================
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Your Cart • Multi-Maniacs Customs LLC</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
 
-require("dotenv").config();
-const express = require("express");
-const cors = require("cors");
-const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
+<nav class="navbar">
+    <ul>
+        <li><a href="index.html">Home</a></li>
+        <li><a href="shop.html">Shop</a></li>
 
-const app = express();
+        <li class="cart-nav">
+            <a href="Cart.html">
+                Cart <span id="cart-count" class="cart-badge">0</span>
+            </a>
+            <div id="mini-cart" class="mini-cart-dropdown"></div>
+        </li>
+    </ul>
+</nav>
 
-// =========================
-// Middleware
-// =========================
-app.use(cors());
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+<div class="page">
+    <h1>Your Cart</h1>
 
-// =========================
-// Test Route
-// =========================
-app.get("/", (req, res) => {
-    res.send("MMC Backend Running");
-});
+    <div id="cart-items"></div>
 
-// =========================
-// Stripe Checkout Session
-// =========================
-app.post("/create-checkout-session", async (req, res) => {
-    try {
-        const cart = req.body.cart || [];
+    <div class="totals-box">
+        <p>Subtotal: <span id="subtotal">$0.00</span></p>
+        <p>Tax (6%): <span id="tax">$0.00</span></p>
+        <h2>Total: <span id="total">$0.00</span></h2>
 
-        if (!Array.isArray(cart) || cart.length === 0) {
-            return res.status(400).json({ error: "Cart is empty or invalid." });
-        }
+        <button onclick="checkout()" class="btn">Proceed to Checkout</button>
+        <a href="shop.html" class="btn">Back to Shop</a>
+    </div>
 
-        const line_items = cart.map(item => ({
-            price_data: {
-                currency: "usd",
-                product_data: {
-                    name: item.name
-                },
-                unit_amount: Math.round(item.price * 100)
-            },
-            quantity: item.quantity
-        }));
+    <h2>Saved for later</h2>
+    <div id="saved-items"></div>
+</div>
 
-        const session = await stripe.checkout.sessions.create({
-            payment_method_types: ["card"],
-            line_items,
-            mode: "payment",
-            success_url: "https://multi-maniacscustoms.netlify.app/success.html",
-            cancel_url: "https://multi-maniacscustoms.netlify.app/cart.html"
-        });
+<script src="products.js"></script>
+<script src="cart.js"></script>
 
-        res.json({ url: session.url });
-
-    } catch (error) {
-        console.error("Checkout Error:", error);
-        res.status(500).json({ error: "Checkout session failed." });
-    }
-});
-
-// =========================
-// Start Server
-// =========================
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
-    console.log(`MMC Backend running on port ${PORT}`);
-});
+</body>
+</html>

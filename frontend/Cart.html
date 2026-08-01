@@ -2,47 +2,98 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Multi-Maniacs Customs</title>
-
-    <!-- MMC Neon Theme -->
+    <title>Cart • Multi-Maniacs Customs LLC</title>
     <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
 
-<nav class="navbar">
-    <ul>
-        <li><a href="index.html">Home</a></li>
-        <li><a href="shop.html">Shop</a></li>
+    <!-- ============================
+         UPDATED BLACK HEADER
+         ============================ -->
+    <header class="top-header">
+        <h1>Multi-Maniacs Customs LLC</h1>
 
-        <li class="cart-nav">
-            <a href="Cart.html">
-                Cart <span id="cart-count" class="cart-badge">0</span>
-            </a>
-            <div id="mini-cart" class="mini-cart-dropdown"></div>
-        </li>
-    </ul>
-</nav>
+        <nav class="header-buttons">
 
-<div class="page">
-    <h1>Your Cart</h1>
+            <button onclick="navigate('home')">
+                <span class="icon">🏠</span> Home
+            </button>
 
-    <div id="cart-items"></div>
+            <button onclick="navigate('about')">
+                <span class="icon">📘</span> About
+            </button>
 
-    <div class="totals-box">
-        <p>Subtotal: <span id="subtotal">$0.00</span></p>
-        <p>Tax (6%): <span id="tax">$0.00</span></p>
-        <h2>Total: <span id="total">$0.00</span></h2>
+            <button onclick="navigate('services')">
+                <span class="icon">🛠️</span> Services
+            </button>
 
-        <button onclick="checkout()" class="btn">Proceed to Checkout</button>
-        <a href="shop.html" class="btn">Back to Shop</a>
+            <button onclick="navigate('shop')">
+                <span class="icon">🛒</span> Shop
+            </button>
+
+            <button onclick="navigate('cart')">
+                <span class="icon">🛍️</span> Cart
+            </button>
+
+            <button onclick="navigate('contact')">
+                <span class="icon">📞</span> Contact
+            </button>
+
+            <button onclick="navigate('gallery')">
+                <span class="icon">🖼️</span> Gallery
+            </button>
+
+            <!-- ⭐ ADMIN BUTTON ⭐ -->
+            <button class="admin-btn" onclick="navigate('admin-dashboard')">
+                <span class="icon">🔧</span> Admin
+            </button>
+
+        </nav>
+
+        <!-- MINI CART -->
+        <div class="mini-cart" id="miniCart">
+            <h3>Mini Cart</h3>
+            <div id="miniCartItems"></div>
+        </div>
+    </header>
+
+
+    <!-- ============================
+         CART PAGE CONTENT
+         ============================ -->
+    <div class="page" style="padding: 20px;">
+        <h1>Your Cart</h1>
+
+        <div id="cart-items"></div>
+
+        <div class="totals-box" style="margin-top: 20px;">
+            <p>Subtotal: <span id="subtotal">$0.00</span></p>
+            <p>Tax (6%): <span id="tax">$0.00</span></p>
+            <h2>Total: <span id="total">$0.00</span></h2>
+
+            <button onclick="checkout()" class="btn" style="margin-top: 10px;">Proceed to Checkout</button>
+            <button onclick="navigate('shop')" class="btn" style="margin-left: 10px;">Back to Shop</button>
+        </div>
+
+        <h2 style="margin-top: 30px;">Saved for later</h2>
+        <div id="saved-items"></div>
     </div>
 
-    <h2>Saved for later</h2>
-    <div id="saved-items"></div>
-</div>
 
-<script src="products.js"></script>
-<script src="cart.js"></script>
+    <!-- ============================
+         FOOTER
+         ============================ -->
+    <footer style="background:#000; color:#fff; padding:20px; text-align:center; margin-top:40px;">
+        © 2026 Multi-Maniacs Customs LLC • Essie, KY • Clients accepted anywhere in the U.S.
+    </footer>
+
+    <!-- ============================
+         CART SCRIPTS
+         ============================ -->
+    <script src="products.js"></script>
+    <script src="cart.js"></script>
+    <script src="navigation.js"></script>
 
 </body>
 </html>

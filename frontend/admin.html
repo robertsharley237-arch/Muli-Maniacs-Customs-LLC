@@ -1,47 +1,53 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <title>Multi-Maniacs Customs</title>
-
-    <!-- MMC Neon Theme -->
-    <link rel="stylesheet" href="style.css">
+    <title>MMC Admin Dashboard</title>
+    <style>
+        body {
+            background: #111;
+            color: white;
+            font-family: Arial;
+            margin-left: 270px;
+            padding: 20px;
+        }
+        .card {
+            background: #222;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+    </style>
 </head>
+<script src="navigation.js"></script>
+
 <body>
 
-<nav class="navbar">
-    <ul>
-        <li><a href="index.html">Home</a></li>
-        <li><a href="shop.html">Shop</a></li>
-        <li><a href="Cart.html">Cart</a></li>
-        <li><a href="admin.html" class="active">Admin</a></li>
-    </ul>
-</nav>
+    <!-- Sidebar -->
+    <script src="admin-sidebar.html"></script>
 
-<div class="page">
     <h1>Admin Dashboard</h1>
 
-    <h2>Add New Product</h2>
-    <div class="admin-box">
-        <input id="p-name" placeholder="Product Name">
-        <input id="p-sku" placeholder="SKU (MMC-001)">
-        <input id="p-price" placeholder="Base Price">
-        <input type="file" id="p-image-file">
-<button onclick="uploadImage()" class="btn-small">Upload Image</button>
-<input id="p-image" placeholder="Image URL (auto-filled)">
-
-        <input id="p-stock" placeholder="Stock">
-        <input id="p-category" placeholder="Category">
-        <textarea id="p-desc" placeholder="Description"></textarea>
-
-        <button onclick="addProduct()" class="btn">Add Product</button>
+    <div class="card">
+        <h2>Total Products</h2>
+        <p id="productCount">Loading...</p>
     </div>
 
-    <h2>Products</h2>
-    <div id="admin-products"></div>
-</div>
+    <div class="card">
+        <h2>Total Orders</h2>
+        <p id="orderCount">Loading...</p>
+    </div>
 
-<script src="admin.js"></script>
+    <script>
+        async function loadStats() {
+            const products = await fetch("https://multi-maniacs-customs-backend.onrender.com/products").then(r => r.json());
+            const orders = await fetch("https://multi-maniacs-customs-backend.onrender.com/orders").then(r => r.json());
+
+            document.getElementById("productCount").innerText = products.length;
+            document.getElementById("orderCount").innerText = orders.length;
+        }
+
+        loadStats();
+    </script>
 
 </body>
 </html>

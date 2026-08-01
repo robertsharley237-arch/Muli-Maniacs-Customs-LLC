@@ -13,7 +13,7 @@ function saveCart() {
 }
 
 // ================================
-// UPDATE CART BADGE
+// UPDATE CART BADGE (Mini Cart)
 // ================================
 function updateCartBadge() {
     const badge = document.getElementById("cart-count");
@@ -22,7 +22,7 @@ function updateCartBadge() {
 updateCartBadge();
 
 // ================================
-// ADD TO CART (supports variants)
+// ADD TO CART (FULL VARIANT SUPPORT)
 // ================================
 async function addToCart(id, variantIndex = null) {
     try {
@@ -35,19 +35,22 @@ async function addToCart(id, variantIndex = null) {
             variant = product.variants[variantIndex];
         }
 
+        // Out of stock check
         if (variant && variant.stock <= 0) {
             alert("This variant is out of stock.");
             return;
         }
 
+        // Build cart item
         cart.push({
             id: product._id,
             name: product.name,
             price: variant ? variant.price : product.price,
             sku: variant ? variant.sku : product.sku,
-            image: product.image,
+            image: variant && variant.image ? variant.image : product.image,
             variantIndex: variantIndex,
-            variantName: variant ? variant.name : null
+            variantName: variant ? variant.name : null,
+            quantity: 1
         });
 
         saveCart();
@@ -88,7 +91,7 @@ function moveBackToCart(index) {
 }
 
 // ================================
-// RENDER CART PAGE
+// RENDER CART PAGE (FULL VARIANT SUPPORT)
 // ================================
 async function renderCart() {
     const cartContainer = document.getElementById("cart-items");
@@ -99,30 +102,40 @@ async function renderCart() {
     cartContainer.innerHTML = "";
     savedContainer.innerHTML = "";
 
+    // Render cart items
     cart.forEach((item, index) => {
         cartContainer.innerHTML += `
             <div class="cart-row">
                 <img src="${item.image}" class="cart-img">
+
                 <div class="cart-info">
                     <p><b>${item.name}</b></p>
-                    <p>${item.variantName ? item.variantName : ""}</p>
-                    <p>$${item.price}</p>
+                    <p>${item.variantName ? `<b>Variant:</b> ${item.variantName}` : ""}</p>
+                    <p>${item.sku ? `<b>SKU:</b> ${item.sku}` : ""}</p>
+                    <p><b>Price:</b> $${item.price}</p>
+                    <p><b>Qty:</b> ${item.quantity}</p>
                 </div>
+
                 <button onclick="removeFromCart(${index})" class="remove-btn-small">Remove</button>
                 <button onclick="moveToSaved(${index})" class="btn-small">Save for later</button>
             </div>
         `;
     });
 
+    // Render saved-for-later items
     savedForLater.forEach((item, index) => {
         savedContainer.innerHTML += `
             <div class="cart-row saved">
                 <img src="${item.image}" class="cart-img">
+
                 <div class="cart-info">
                     <p><b>${item.name}</b></p>
-                    <p>${item.variantName ? item.variantName : ""}</p>
-                    <p>$${item.price}</p>
+                    <p>${item.variantName ? `<b>Variant:</b> ${item.variantName}` : ""}</p>
+                    <p>${item.sku ? `<b>SKU:</b> ${item.sku}` : ""}</p>
+                    <p><b>Price:</b> $${item.price}</p>
+                    <p><b>Qty:</b> ${item.quantity || 1}</p>
                 </div>
+
                 <button onclick="moveBackToCart(${index})" class="btn-small">Move to cart</button>
             </div>
         `;

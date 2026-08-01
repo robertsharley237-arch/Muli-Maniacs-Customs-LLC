@@ -43,6 +43,7 @@
         }
     </style>
 </head>
+<script src="navigation.js"></script>
 <body>
 
     <div class="container">
@@ -64,7 +65,7 @@
             const username = document.getElementById("username").value;
             const password = document.getElementById("password").value;
 
-            const res = await fetch("https://YOUR-RENDER-BACKEND-URL/admin/login", {
+            const res = await fetch("https://multi-maniacs-customs-backend.onrender.com/admin/login", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ username, password })
@@ -72,8 +73,10 @@
 
             const data = await res.json();
 
-            if (data.message === "Login successful") {
+            if (data.token) {
                 document.getElementById("message").innerText = "Login successful!";
+                localStorage.setItem("MMC_ADMIN_TOKEN", data.token);
+
                 setTimeout(() => {
                     window.location.href = "admin.html";
                 }, 800);

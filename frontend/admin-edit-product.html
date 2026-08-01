@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Edit Product - MMC Admin</title>
+  <style>
+    body { background:#111; color:white; font-family:Arial; padding:20px; }
+    .container { max-width:500px; margin:auto; background:#222; padding:20px; border-radius:10px; }
+    input, textarea, select { width:100%; padding:10px; margin-top:10px; border-radius:6px; border:none; }
+    button { width:100%; padding:12px; margin-top:15px; background:#2196F3; border:none; color:white; font-size:16px; border-radius:6px; cursor:pointer; }
+    button:hover { background:#1976D2; }
+  </style>
+</head>
+<script src="navigation.js"></script>
+<body>
+
+<div class="container">
+  <h2>Edit Product</h2>
+
+  <select id="productSelect">
+    <option value="">Select a product...</option>
+  </select>
+
+  <input id="name" type="text" placeholder="Product Name">
+  <input id="price" type="number" placeholder="Price">
+  <textarea id="description" placeholder="Description"></textarea>
+  <input id="category" type="text" placeholder="Category">
+  <input id="stock" type="number" placeholder="Stock">
+  <input id="image" type="text" placeholder="Image URL (Cloudinary)">
+  
+  <label>
+    <input id="active" type="checkbox"> Active
+  </label>
+
+  <button onclick="saveProduct()">Save Changes</button>
+
+  <p id="message"></p>
+</div>
+
+<script src="edit-product.js"></script>
+</body>
+</html>

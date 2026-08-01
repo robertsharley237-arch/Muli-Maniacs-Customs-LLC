@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Admin Settings • MMC</title>
+    <link rel="stylesheet" href="admin.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+<header class="top-header">
+    <h1>Multi-Maniacs Customs LLC — Admin Settings</h1>
+
+    <nav class="header-buttons">
+        <button onclick="navigate('home')"><span class="icon">🏠</span> Home</button>
+        <button onclick="navigate('admin-dashboard')"><span class="icon">🔧</span> Admin</button>
+    </nav>
+
+    <div class="mini-cart" id="miniCart">
+        <h3>Mini Cart</h3>
+        <div id="miniCartItems"></div>
+    </div>
+</header>
+
+<script src="admin-sidebar.html"></script>
+
+<script>
+    const token = localStorage.getItem("MMC_ADMIN_TOKEN");
+    if (!token) window.location.href = "admin-login.html";
+</script>
+
+<div class="admin-page" style="padding: 20px;">
+    <h1>Admin Settings</h1>
+
+    <div class="section">
+        <h2>Store Settings</h2>
+        <label>Store Name</label>
+        <input id="storeName">
+
+        <label>Phone #1</label>
+        <input id="contactPhone1">
+
+        <label>Phone #2</label>
+        <input id="contactPhone2">
+
+        <label>Email</label>
+        <input id="contactEmail">
+
+        <label>Tax Rate</label>
+        <input id="taxRate" type="number" step="0.01">
+
+        <label>Store Open</label>
+        <select id="storeOpen">
+            <option value="true">Open</option>
+            <option value="false">Closed</option>
+        </select>
+    </div>
+
+    <div class="section">
+        <h2>Product System Settings</h2>
+        <label>Default Stock</label>
+        <input id="defaultStock" type="number">
+
+        <label>Auto-Activate New Products</label>
+        <select id="autoActivateProducts">
+            <option value="true">Yes</option>
+            <option value="false">No</option>
+        </select>
+    </div>
+
+    <div class="section">
+        <h2>Backend API Keys (View Only)</h2>
+        <p><strong>Backend URL:</strong> <span id="backendURL"></span></p>
+        <p><strong>Stripe Public Key:</strong> <span id="stripePublicKey"></span></p>
+        <p><strong>Stripe Secret Key:</strong> <span id="stripeSecretKey"></span></p>
+        <p><strong>Cloudinary Key:</strong> <span id="cloudinaryKey"></span></p>
+        <p><strong>Cloudinary Secret:</strong> <span id="cloudinarySecret"></span></p>
+    </div>
+
+    <button onclick="saveSettings()" class="btn">Save Settings</button>
+</div>
+
+<script src="admin-settings.js"></script>
+<script src="navigation.js"></script>
+
+</body>
+</html>

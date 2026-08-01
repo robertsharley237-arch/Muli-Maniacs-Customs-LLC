@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Product Details - Multi Maniacs Customs</title>
+
+  <style>
+    body {
+      background: #111;
+      color: white;
+      font-family: Arial, sans-serif;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: auto;
+      background: #222;
+      padding: 20px;
+      border-radius: 10px;
+      display: flex;
+      gap: 20px;
+    }
+
+    img {
+      width: 350px;
+      border-radius: 10px;
+    }
+
+    select, button {
+      width: 100%;
+      padding: 12px;
+      margin-top: 15px;
+      border-radius: 6px;
+      border: none;
+      font-size: 16px;
+    }
+
+    select {
+      background: #333;
+      color: white;
+    }
+
+    button {
+      background: #2196F3;
+      color: white;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #1976D2;
+    }
+
+    #stockDisplay {
+      margin-top: 10px;
+      font-size: 18px;
+    }
+
+    .danger {
+      color: #e53935;
+    }
+
+    .warning {
+      color: #ff9800;
+    }
+  </style>
+</head>
+<script src="navigation.js"></script>
+
+<body>
+
+  <div class="container">
+
+    <!-- LEFT SIDE: IMAGE -->
+    <div>
+      <img id="productImage" src="" alt="Product Image">
+    </div>
+
+    <!-- RIGHT SIDE: DETAILS -->
+    <div style="flex: 1;">
+      <h2 id="productName"></h2>
+      <p id="productDescription"></p>
+
+      <h3 id="productPrice" style="margin-top: 10px;"></h3>
+
+      <label style="margin-top: 20px;">Select Variant:</label>
+      <select id="variantSelect"></select>
+
+      <p id="stockDisplay"></p>
+
+      <button onclick="addToCart()">Add to Cart</button>
+    </div>
+
+  </div>
+
+  <!-- Load product.js -->
+  <script src="product.js"></script>
+
+  <script>
+    // Get product ID from URL
+    const params = new URLSearchParams(window.location.search);
+    const productId = params.get("id");
+
+    // Load product on page load
+    if (productId) {
+      loadProduct(productId);
+    } else {
+      alert("No product ID provided.");
+    }
+  </script>
+
+</body>
+</html>

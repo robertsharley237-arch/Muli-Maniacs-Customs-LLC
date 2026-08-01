@@ -1,30 +1,31 @@
 const express = require("express");
+const router = express.Router();
 const Product = require("../models/Product");
 const multer = require("multer");
-const path = require("path");
+const cloudinary = require("../cloudinary");
+const { CloudinaryStorage } = require("multer-storage-cloudinary");
 
-const router = express.Router();
-
-// Image upload setup
-const storage = multer.diskStorage({
-  destination: "./uploads/",
-  filename: (req, file, cb) => {
-    cb(null, Date.now() + path.extname(file.originalname));
+// Cloudinary storage
+const storage = new CloudinaryStorage({
+  cloudinary,
+  params: {
+    folder: "mmc-products",
+    allowed_formats: ["jpg", "png", "jpeg", "webp"]
   }
 });
+
 const upload = multer({ storage });
 
-// Upload product image
+// Upload image to Cloudinary
 router.post("/upload-image", upload.single("image"), (req, res) => {
   if (!req.file) return res.status(400).json({ error: "No file uploaded" });
-  res.json({ imageUrl: `/uploads/${req.file.filename}` });
+  res.json({ imageUrl: req.file.path }); // Cloudinary URL
 });
 
 // Add product
 router.post("/add", async (req, res) => {
   try {
-    const { name, price, description, category, imageUrl } = req.body;
-    const newProduct = new Product({ name, price, description, category, imageUrl });
+    const newProduct = new Product(req.body);
     await newProduct.save();
     res.json({ message: "Product added successfully!" });
   } catch (err) {
@@ -32,41 +33,76 @@ router.post("/add", async (req, res) => {
   }
 });
 
-// Edit product
-router.put("/edit", async (req, res) => {
+// Get all active products
+router.get("/all", async (req, res) => {
   try {
-    const { id, name, price, description, category, imageUrl } = req.body;
-    const updated = await Product.findByIdAndUpdate(
-      id,
-      { name, price, description, category, imageUrl },
-      { new: true }
-    );
-    if (!updated) return res.json({ error: "Product not found" });
-    res.json({ message: "Product updated successfully!" });
+    const products = await Product.find({ active: true });
+    res.json(products);
+  } catch (err) {
+    res.status(500).json({ error: "Failed to fetch products" });
+  }
+});
+
+// Get single product by ID
+router.get("/:id", async (req, res) => {
+  try {
+    const product = await Product.findById(req.params.id);
+    if (!product) return res.status(404).json({ error: "Product not found" });
+    res.json(product);
+  } catch (err) {
+    res.status(500).json({ error: "Failed to fetch product" });
+  }
+});
+
+// Edit product by ID
+router.put("/:id", async (req, res) => {
+  try {
+    const updates = req.body; // name, price, description, category, stock, active, image, etc.
+    const product = await Product.findByIdAndUpdate(req.params.id, updates, { new: true });
+
+    if (!product) return res.status(404).json({ error: "Product not found" });
+
+    res.json({ message: "Product updated successfully!", product });
   } catch (err) {
     res.status(500).json({ error: "Failed to update product" });
   }
 });
-
 // Delete product
-router.delete("/delete", async (req, res) => {
+router.delete("/:id", async (req, res) => {
   try {
-    const { id } = req.body;
-    const deleted = await Product.findByIdAndDelete(id);
-    if (!deleted) return res.json({ error: "Product not found" });
+    const product = await Product.findByIdAndDelete(req.params.id);
+
+    if (!product) {
+      return res.status(404).json({ error: "Product not found" });
+    }
+
     res.json({ message: "Product deleted successfully!" });
   } catch (err) {
     res.status(500).json({ error: "Failed to delete product" });
   }
 });
-
-// Get all products
-router.get("/all", async (req, res) => {
+// Update stock only
+router.patch("/:id/stock", async (req, res) => {
   try {
-    const products = await Product.find();
-    res.json(products);
+    const { stock } = req.body;
+
+    if (stock === undefined) {
+      return res.status(400).json({ error: "Stock value is required" });
+    }
+
+    const product = await Product.findByIdAndUpdate(
+      req.params.id,
+      { stock },
+      { new: true }
+    );
+
+    if (!product) {
+      return res.status(404).json({ error: "Product not found" });
+    }
+
+    res.json({ message: "Stock updated!", product });
   } catch (err) {
-    res.status(500).json({ error: "Failed to fetch products" });
+    res.status(500).json({ error: "Failed to update stock" });
   }
 });
 

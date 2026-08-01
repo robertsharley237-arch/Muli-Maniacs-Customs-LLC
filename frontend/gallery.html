@@ -2,54 +2,105 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Multi-Maniacs Customs</title>
-
-    <!-- MMC Neon Theme -->
+    <title>Gallery • Multi-Maniacs Customs LLC</title>
     <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
 
-<nav class="navbar">
-    <ul>
-        <li><a href="index.html">Home</a></li>
-        <li><a href="about.html">About</a></li>
-        <li><a href="services.html">Services</a></li>
-        <li><a href="gallery.html">Gallery</a></li>
-        <li><a href="shop.html">Shop</a></li>
-        <li><a href="cart.html">Cart</a></li>
-        <li><a href="contact.html">Contact</a></li>
-    </ul>
-</nav>
+    <!-- ============================
+         UPDATED BLACK HEADER
+         ============================ -->
+    <header class="top-header">
+        <h1>Multi-Maniacs Customs LLC</h1>
 
-<div class="page">
-    <h1>Gallery</h1>
-    <p>
-        A look at some of the custom work, builds, and projects we’ve completed. This is a small sample—
-        many projects are one-off and built specifically for each client.
-    </p>
+        <nav class="header-buttons">
 
-    <div class="grid">
-        <div class="card">
-            <h3>Custom Automotive Build</h3>
-            <p>Full custom styling, accessories, and detail work.</p>
+            <button onclick="navigate('home')">
+                <span class="icon">🏠</span> Home
+            </button>
+
+            <button onclick="navigate('about')">
+                <span class="icon">📘</span> About
+            </button>
+
+            <button onclick="navigate('services')">
+                <span class="icon">🛠️</span> Services
+            </button>
+
+            <button onclick="navigate('shop')">
+                <span class="icon">🛒</span> Shop
+            </button>
+
+            <button onclick="navigate('cart')">
+                <span class="icon">🛍️</span> Cart
+            </button>
+
+            <button onclick="navigate('contact')">
+                <span class="icon">📞</span> Contact
+            </button>
+
+            <button onclick="navigate('gallery')">
+                <span class="icon">🖼️</span> Gallery
+            </button>
+
+            <!-- ⭐ ADMIN BUTTON ⭐ -->
+            <button class="admin-btn" onclick="navigate('admin-dashboard')">
+                <span class="icon">🔧</span> Admin
+            </button>
+
+        </nav>
+
+        <!-- MINI CART -->
+        <div class="mini-cart" id="miniCart">
+            <h3>Mini Cart</h3>
+            <div id="miniCartItems"></div>
         </div>
-        <div class="card">
-            <h3>Shop & Garage Decor</h3>
-            <p>Custom signage, wall art, and display pieces.</p>
-        </div>
-        <div class="card">
-            <h3>Branding & Display</h3>
-            <p>Custom branded pieces for small businesses and events.</p>
+    </header>
+
+
+    <!-- ============================
+         GALLERY PAGE CONTENT
+         ============================ -->
+    <div class="page" style="padding: 20px;">
+        <h1>Gallery</h1>
+
+        <p>
+            A look at some of the custom work, builds, and projects we’ve completed. This is a small sample—
+            many projects are one-off and built specifically for each client.
+        </p>
+
+        <div class="grid" style="margin-top: 20px; display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 20px;">
+
+            <div class="card" style="background:#fff; padding:15px; border-radius:6px; box-shadow:0 0 10px rgba(0,0,0,0.1);">
+                <h3>Custom Automotive Build</h3>
+                <p>Full custom styling, accessories, and detail work.</p>
+            </div>
+
+            <div class="card" style="background:#fff; padding:15px; border-radius:6px; box-shadow:0 0 10px rgba(0,0,0,0.1);">
+                <h3>Shop & Garage Decor</h3>
+                <p>Custom signage, wall art, and display pieces.</p>
+            </div>
+
+            <div class="card" style="background:#fff; padding:15px; border-radius:6px; box-shadow:0 0 10px rgba(0,0,0,0.1);">
+                <h3>Branding & Display</h3>
+                <p>Custom branded pieces for small businesses and events.</p>
+            </div>
+
         </div>
     </div>
-</div>
 
-<footer>
-    <p>
-        &copy; 2026 Multi-Maniacs Customs LLC • Essie, KY • Clients accepted anywhere in the U.S. •
+
+    <!-- ============================
+         FOOTER
+         ============================ -->
+    <footer style="background:#000; color:#fff; padding:20px; text-align:center; margin-top:40px;">
+        © 2026 Multi-Maniacs Customs LLC • Essie, KY • Clients accepted anywhere in the U.S.<br>
         Phone: (606) 220-0185 • (606) 212-4695 • Email: multimaniacscustoms@gmail.com
-    </p>
-</footer>
+    </footer>
+
+    <!-- NAVIGATION SYSTEM -->
+    <script src="navigation.js"></script>
 
 </body>
 </html>

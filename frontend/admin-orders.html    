@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>MMC Admin – Orders</title>
+    <link rel="stylesheet" href="admin.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <!-- ============================
+         UPDATED BLACK HEADER
+         ============================ -->
+    <header class="top-header">
+        <h1>Multi-Maniacs Customs LLC — Admin</h1>
+
+        <nav class="header-buttons">
+
+            <button onclick="navigate('home')">
+                <span class="icon">🏠</span> Home
+            </button>
+
+            <button onclick="navigate('about')">
+                <span class="icon">📘</span> About
+            </button>
+
+            <button onclick="navigate('services')">
+                <span class="icon">🛠️</span> Services
+            </button>
+
+            <button onclick="navigate('shop')">
+                <span class="icon">🛒</span> Shop
+            </button>
+
+            <button onclick="navigate('cart')">
+                <span class="icon">🛍️</span> Cart
+            </button>
+
+            <button onclick="navigate('contact')">
+                <span class="icon">📞</span> Contact
+            </button>
+
+            <button onclick="navigate('gallery')">
+                <span class="icon">🖼️</span> Gallery
+            </button>
+
+            <!-- ⭐ ADMIN BUTTON ⭐ -->
+            <button class="admin-btn" onclick="navigate('admin-dashboard')">
+                <span class="icon">🔧</span> Admin
+            </button>
+
+        </nav>
+
+        <!-- MINI CART -->
+        <div class="mini-cart" id="miniCart">
+            <h3>Mini Cart</h3>
+            <div id="miniCartItems"></div>
+        </div>
+    </header>
+
+
+    <!-- ============================
+         SIDEBAR + AUTH PROTECTION
+         ============================ -->
+    <script src="admin-sidebar.html"></script>
+
+    <script>
+        const token = localStorage.getItem("MMC_ADMIN_TOKEN");
+        if (!token) window.location.href = "admin-login.html";
+    </script>
+
+
+    <!-- ============================
+         PAGE CONTENT
+         ============================ -->
+    <div class="admin-page" style="padding: 20px;">
+
+        <h1>Orders</h1>
+
+        <div id="orderList"></div>
+
+    </div>
+
+
+    <!-- ============================
+         SCRIPTS
+         ============================ -->
+    <script>
+        async function loadOrders() {
+            try {
+                const res = await fetch("/orders", {
+                    headers: {
+                        "Authorization": localStorage.getItem("MMC_ADMIN_TOKEN")
+                    }
+                });
+
+                const orders = await res.json();
+                const list = document.getElementById("orderList");
+
+                if (!orders.length) {
+                    list.innerHTML = "<p>No orders found.</p>";
+                    return;
+                }
+
+                orders.forEach(o => {
+                    list.innerHTML += `
+                        <div class="section">
+                            <p><b>Order ID:</b> ${o._id}</p>
+                            <p><b>Email:</b> ${o.email}</p>
+                            <p><b>Total:</b> $${o.total}</p>
+                            <p><b>Date:</b> ${new Date(o.createdAt).toLocaleString()}</p>
+                        </div>
+                    `;
+                });
+
+            } catch (err) {
+                console.error("Order load error:", err);
+                document.getElementById("orderList").innerHTML =
+                    "<p style='color:red;'>Failed to load orders.</p>";
+            }
+        }
+
+        loadOrders();
+    </script>
+
+    <script src="navigation.js"></script>
+
+</body>
+</html>

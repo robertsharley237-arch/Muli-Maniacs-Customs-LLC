@@ -2,61 +2,108 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Multi-Maniacs Customs</title>
-
-    <!-- MMC Neon Theme -->
+    <title>Contact • Multi-Maniacs Customs LLC</title>
     <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
 
-<nav class="navbar">
-    <ul>
-        <li><a href="index.html">Home</a></li>
-        <li><a href="about.html">About</a></li>
-        <li><a href="services.html">Services</a></li>
-        <li><a href="gallery.html">Gallery</a></li>
-        <li><a href="shop.html">Shop</a></li>
-        <li><a href="cart.html">Cart</a></li>
-        <li><a href="contact.html">Contact</a></li>
-    </ul>
-</nav>
+    <!-- ============================
+         UPDATED BLACK HEADER
+         ============================ -->
+    <header class="top-header">
+        <h1>Multi-Maniacs Customs LLC</h1>
 
-<div class="page">
-    <h1>Contact</h1>
-    <p>
-        Use this form to tell us about your project, idea, or custom request. The more detail you share,
-        the better we can respond with options and pricing.
-    </p>
+        <nav class="header-buttons">
 
-    <form action="#" method="post">
-        <label for="name">Name</label>
-        <input id="name" name="name" type="text" required>
+            <button onclick="navigate('home')">
+                <span class="icon">🏠</span> Home
+            </button>
 
-        <label for="email">Email</label>
-        <input id="email" name="email" type="email" required>
+            <button onclick="navigate('about')">
+                <span class="icon">📘</span> About
+            </button>
 
-        <label for="phone">Phone</label>
-        <input id="phone" name="phone" type="text">
+            <button onclick="navigate('services')">
+                <span class="icon">🛠️</span> Services
+            </button>
 
-        <label for="details">Project Details</label>
-        <textarea id="details" name="details" rows="5" required></textarea>
+            <button onclick="navigate('shop')">
+                <span class="icon">🛒</span> Shop
+            </button>
 
-        <button type="submit" class="btn">Submit</button>
-    </form>
+            <button onclick="navigate('cart')">
+                <span class="icon">🛍️</span> Cart
+            </button>
 
-    <p>
-        You can also reach us directly:<br>
-        Phone: (606) 220-0185 • (606) 212-4695<br>
-        Email: multimaniacscustoms@gmail.com
-    </p>
-</div>
+            <button onclick="navigate('contact')">
+                <span class="icon">📞</span> Contact
+            </button>
 
-<footer>
-    <p>
-        &copy; 2026 Multi-Maniacs Customs LLC • Essie, KY • Clients accepted anywhere in the U.S. •
+            <button onclick="navigate('gallery')">
+                <span class="icon">🖼️</span> Gallery
+            </button>
+
+            <!-- ⭐ ADMIN BUTTON ⭐ -->
+            <button class="admin-btn" onclick="navigate('admin-dashboard')">
+                <span class="icon">🔧</span> Admin
+            </button>
+
+        </nav>
+
+        <!-- MINI CART -->
+        <div class="mini-cart" id="miniCart">
+            <h3>Mini Cart</h3>
+            <div id="miniCartItems"></div>
+        </div>
+    </header>
+
+
+    <!-- ============================
+         CONTACT PAGE CONTENT
+         ============================ -->
+    <div class="page" style="padding: 20px;">
+        <h1>Contact</h1>
+
+        <p>
+            Use this form to tell us about your project, idea, or custom request. The more detail you share,
+            the better we can respond with options and pricing.
+        </p>
+
+        <form action="#" method="post" style="margin-top: 20px;">
+            <label for="name">Name</label>
+            <input id="name" name="name" type="text" required>
+
+            <label for="email">Email</label>
+            <input id="email" name="email" type="email" required>
+
+            <label for="phone">Phone</label>
+            <input id="phone" name="phone" type="text">
+
+            <label for="details">Project Details</label>
+            <textarea id="details" name="details" rows="5" required></textarea>
+
+            <button type="submit" class="btn" style="margin-top: 10px;">Submit</button>
+        </form>
+
+        <p style="margin-top: 20px;">
+            You can also reach us directly:<br>
+            Phone: (606) 220-0185 • (606) 212-4695<br>
+            Email: multimaniacscustoms@gmail.com
+        </p>
+    </div>
+
+
+    <!-- ============================
+         FOOTER
+         ============================ -->
+    <footer style="background:#000; color:#fff; padding:20px; text-align:center; margin-top:40px;">
+        © 2026 Multi-Maniacs Customs LLC • Essie, KY • Clients accepted anywhere in the U.S.<br>
         Phone: (606) 220-0185 • (606) 212-4695 • Email: multimaniacscustoms@gmail.com
-    </p>
-</footer>
+    </footer>
+
+    <!-- NAVIGATION SYSTEM -->
+    <script src="navigation.js"></script>
 
 </body>
 </html>

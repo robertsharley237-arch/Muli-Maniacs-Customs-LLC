@@ -2,76 +2,125 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Multi-Maniacs Customs</title>
-
-    <!-- MMC Neon Theme -->
+    <title>Shop • Multi-Maniacs Customs LLC</title>
     <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
 
-<nav class="navbar">
-    <ul>
-        <li><a href="index.html">Home</a></li>
-        <li><a href="shop.html">Shop</a></li>
-        <li class="cart-nav">
-            <a href="Cart.html">
-                Cart <span id="cart-count" class="cart-badge">0</span>
-            </a>
-            <div id="mini-cart" class="mini-cart-dropdown"></div>
-        </li>
-    </ul>
-</nav>
+    <!-- ============================
+         UPDATED BLACK HEADER
+         ============================ -->
+    <header class="top-header">
+        <h1>Multi-Maniacs Customs LLC</h1>
 
-<div class="page">
-    <h1>Shop</h1>
-    <p>Browse available custom products, accessories, and limited-run items.</p>
+        <nav class="header-buttons">
 
-    <div id="shop-grid" class="grid"></div>
-</div>
+            <button onclick="navigate('home')">
+                <span class="icon">🏠</span> Home
+            </button>
 
-<footer>
-    <p>
-        &copy; 2026 Multi-Maniacs Customs LLC • Essie, KY • Clients accepted anywhere in the U.S.
-    </p>
-</footer>
+            <button onclick="navigate('about')">
+                <span class="icon">📘</span> About
+            </button>
 
-<script src="products.js"></script>
-<script src="cart.js"></script>
-<script>
-    async function renderShop() {
-        await loadProducts();
+            <button onclick="navigate('services')">
+                <span class="icon">🛠️</span> Services
+            </button>
 
-        const grid = document.getElementById("shop-grid");
-        grid.innerHTML = "";
+            <button onclick="navigate('shop')">
+                <span class="icon">🛒</span> Shop
+            </button>
 
-        products.forEach((p, index) => {
-            if (!p.active) return;
-            if (p.stock <= 0 && (!p.variants || p.variants.length === 0)) return;
+            <button onclick="navigate('cart')">
+                <span class="icon">🛍️</span> Cart
+            </button>
 
-            let stockText = "";
-            if (p.variants && p.variants.length > 0) {
-                stockText = "Multiple variants available";
-            } else {
-                stockText = "In stock: " + p.stock;
-            }
+            <button onclick="navigate('contact')">
+                <span class="icon">📞</span> Contact
+            </button>
 
-            grid.innerHTML += `
-                <div class="card">
-                    <img src="${p.image}" class="cart-img" alt="${p.name}">
-                    <h3>${p.name}</h3>
-                    <p>$${p.price.toFixed(2)}</p>
-                    <p>${stockText}</p>
-                    <a onclick="addToCart('${p._id}')" class="btn">Add to Cart</a>
-                </div>
-            `;
-        });
+            <button onclick="navigate('gallery')">
+                <span class="icon">🖼️</span> Gallery
+            </button>
 
-        updateCartBadge();
-        renderMiniCart();
-    }
+            <!-- ⭐ ADMIN BUTTON ⭐ -->
+            <button class="admin-btn" onclick="navigate('admin-dashboard')">
+                <span class="icon">🔧</span> Admin
+            </button>
 
-    document.addEventListener("DOMContentLoaded", renderShop);
-</script>
+        </nav>
+
+        <!-- MINI CART -->
+        <div class="mini-cart" id="miniCart">
+            <h3>Mini Cart</h3>
+            <div id="miniCartItems"></div>
+        </div>
+    </header>
+
+
+    <!-- ============================
+         SHOP PAGE CONTENT
+         ============================ -->
+    <div class="page" style="padding: 20px;">
+        <h1>Shop</h1>
+        <p>Browse available custom products, accessories, and limited-run items.</p>
+
+        <div id="shop-grid" class="grid"></div>
+    </div>
+
+
+    <!-- ============================
+         FOOTER
+         ============================ -->
+    <footer style="background:#000; color:#fff; padding:20px; text-align:center; margin-top:40px;">
+        © 2026 Multi-Maniacs Customs LLC • Essie, KY • Clients accepted anywhere in the U.S.
+    </footer>
+
+    <!-- ============================
+         SHOP SCRIPTS
+         ============================ -->
+    <script src="products.js"></script>
+    <script src="cart.js"></script>
+    <script src="navigation.js"></script>
+
+    <script>
+        async function renderShop() {
+            await loadProducts();
+
+            const grid = document.getElementById("shop-grid");
+            grid.innerHTML = "";
+
+            products.forEach((p) => {
+                if (!p.active) return;
+                if (p.stock <= 0 && (!p.variants || p.variants.length === 0)) return;
+
+                let stockText = "";
+                if (p.variants && p.variants.length > 0) {
+                    stockText = "Multiple variants available";
+                } else {
+                    stockText = "In stock: " + p.stock;
+                }
+
+                grid.innerHTML += `
+                    <div class="card" style="background:#fff; padding:15px; border-radius:6px; box-shadow:0 0 10px rgba(0,0,0,0.1); text-align:center;">
+                        <img src="${p.image}" class="cart-img" alt="${p.name}" style="width:100%; border-radius:6px;">
+                        <h3>${p.name}</h3>
+                        <p>$${p.price.toFixed(2)}</p>
+                        <p>${stockText}</p>
+                        <button onclick="addToCart('${p._id}')" class="btn" style="padding:10px 15px; background:#222; color:#fff; border:none; border-radius:4px; cursor:pointer;">
+                            Add to Cart
+                        </button>
+                    </div>
+                `;
+            });
+
+            updateCartBadge();
+            renderMiniCart();
+        }
+
+        document.addEventListener("DOMContentLoaded", renderShop);
+    </script>
 
 </body>
 </html>

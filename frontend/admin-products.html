@@ -2,7 +2,8 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Services • Multi-Maniacs Customs LLC</title>
+    <title>MMC Admin – Products</title>
+    <link rel="stylesheet" href="admin.css">
     <link rel="stylesheet" href="style.css">
 </head>
 
@@ -12,7 +13,7 @@
          UPDATED BLACK HEADER
          ============================ -->
     <header class="top-header">
-        <h1>Multi-Maniacs Customs LLC</h1>
+        <h1>Multi-Maniacs Customs LLC — Admin</h1>
 
         <nav class="header-buttons">
 
@@ -60,41 +61,50 @@
 
 
     <!-- ============================
-         SERVICES PAGE CONTENT
+         SIDEBAR + AUTH PROTECTION
          ============================ -->
-    <div class="page" style="padding: 20px;">
-        <h1>Services</h1>
+    <script src="admin-sidebar.html"></script>
 
-        <p>
-            We offer a wide range of custom services across multiple industries. Every project is scoped and
-            priced based on complexity, materials, and client vision.
-        </p>
+    <script>
+        const token = localStorage.getItem("MMC_ADMIN_TOKEN");
+        if (!token) window.location.href = "admin-login.html";
+    </script>
 
-        <h2>Popular Service Categories</h2>
-        <ul>
-            <li>Custom automotive styling and accessories</li>
-            <li>Custom fabrication and one-off builds</li>
-            <li>Custom signage, branding, and display pieces</li>
-            <li>Custom home, office, and shop decor</li>
-            <li>Freelance design and concept development</li>
-        </ul>
 
-        <p style="margin-top: 15px;">
-            To discuss a specific project, use our contact page to send details and we’ll follow up with options,
-            pricing, and timelines.
-        </p>
+    <!-- ============================
+         PAGE CONTENT
+         ============================ -->
+    <div class="admin-page" style="padding: 20px;">
+
+        <h1>Manage Products</h1>
+
+        <!-- Search + Add Product -->
+        <div class="section">
+            <h2>Search Products</h2>
+
+            <input id="searchBox" placeholder="Search by name, SKU, or category" oninput="filterProducts()">
+
+            <button onclick="navigate('admin-add-product')"
+                    class="btn"
+                    style="margin-top: 10px;">
+                ➕ Add New Product
+            </button>
+        </div>
+
+        <!-- Product List -->
+        <div class="section">
+            <h2>Product List</h2>
+
+            <div id="productList"></div>
+        </div>
+
     </div>
 
 
     <!-- ============================
-         FOOTER
+         SCRIPTS
          ============================ -->
-    <footer style="background:#000; color:#fff; padding:20px; text-align:center; margin-top:40px;">
-        © 2026 Multi-Maniacs Customs LLC • Essie, KY • Clients accepted anywhere in the U.S.<br>
-        Phone: (606) 220-0185 • (606) 212-4695 • Email: multimaniacscustoms@gmail.com
-    </footer>
-
-    <!-- NAVIGATION SYSTEM -->
+    <script src="admin-products.js"></script>
     <script src="navigation.js"></script>
 
 </body>

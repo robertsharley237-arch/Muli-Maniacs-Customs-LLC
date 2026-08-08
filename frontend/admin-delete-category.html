@@ -1,42 +1,529 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Delete Category</title>
-    <style>
-        body { background:#111; color:white; font-family:Arial; padding:20px; }
-        .container { max-width:500px; margin:auto; background:#222; padding:20px; border-radius:10px; }
-        input { width:100%; padding:10px; margin-top:10px; border-radius:6px; border:none; }
-        button { width:100%; padding:12px; margin-top:15px; background:#E53935; border:none; color:white; font-size:16px; border-radius:6px; cursor:pointer; }
-        button:hover { background:#C62828; }
-    </style>
+  <meta charset="UTF-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
+
+  <meta
+    name="description"
+    content="Delete a product category from Multi-Maniacs Customs."
+  >
+
+  <title>
+    Delete Category | Multi-Maniacs Customs LLC
+  </title>
+
+  <link
+    rel="stylesheet"
+    href="style.css"
+  >
+
+  <link
+    rel="stylesheet"
+    href="admin.css"
+  >
+
+  <style>
+    :root {
+      --delete-page-background: #111111;
+      --delete-panel-background: #222222;
+      --delete-panel-border: #444444;
+      --delete-text: #ffffff;
+      --delete-muted-text: #cccccc;
+      --delete-input-background: #ffffff;
+      --delete-input-text: #111111;
+      --delete-button: #e53935;
+      --delete-button-hover: #c62828;
+      --delete-button-disabled: #7a3b39;
+      --delete-warning-background: #3b2020;
+      --delete-warning-border: #b94a48;
+      --delete-error: #ff7676;
+      --delete-success: #79d77c;
+      --delete-focus: #ff8a80;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      min-height: 100vh;
+      margin: 0;
+      padding: 24px;
+      color: var(--delete-text);
+      background: var(--delete-page-background);
+      font-family: Arial, Helvetica, sans-serif;
+    }
+
+    .delete-category-page {
+      width: 100%;
+      max-width: 620px;
+      margin: 40px auto;
+    }
+
+    .delete-category-container {
+      padding: 30px;
+      background: var(--delete-panel-background);
+      border: 1px solid var(--delete-panel-border);
+      border-radius: 12px;
+      box-shadow: 0 16px 45px rgba(0, 0, 0, 0.4);
+    }
+
+    .delete-category-heading {
+      margin: 0 0 10px;
+      text-align: center;
+      font-size: 28px;
+      line-height: 1.2;
+    }
+
+    .delete-category-description {
+      margin: 0 0 24px;
+      color: var(--delete-muted-text);
+      text-align: center;
+      line-height: 1.5;
+    }
+
+    .admin-account-bar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 24px;
+      padding: 14px;
+      background: #191919;
+      border: 1px solid var(--delete-panel-border);
+      border-radius: 8px;
+    }
+
+    .admin-account-bar p {
+      margin: 0;
+    }
+
+    .admin-account-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .small-action-button,
+    .return-button {
+      display: inline-block;
+      width: auto;
+      margin: 0;
+      padding: 9px 13px;
+      color: #ffffff;
+      background: #444444;
+      border: none;
+      border-radius: 6px;
+      font: inherit;
+      font-size: 14px;
+      text-decoration: none;
+      cursor: pointer;
+    }
+
+    .small-action-button:hover,
+    .small-action-button:focus,
+    .return-button:hover,
+    .return-button:focus {
+      background: #5b5b5b;
+    }
+
+    .delete-category-form {
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+
+    .form-field {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .form-field label {
+      font-size: 15px;
+      font-weight: 700;
+    }
+
+    .form-field select {
+      width: 100%;
+      min-height: 48px;
+      padding: 11px 12px;
+      color: var(--delete-input-text);
+      background: var(--delete-input-background);
+      border: 2px solid transparent;
+      border-radius: 7px;
+      font: inherit;
+      cursor: pointer;
+      outline: none;
+    }
+
+    .form-field select:focus {
+      border-color: var(--delete-focus);
+      box-shadow: 0 0 0 3px rgba(255, 138, 128, 0.18);
+    }
+
+    .form-field select:disabled {
+      cursor: wait;
+      opacity: 0.7;
+    }
+
+    .category-details {
+      padding: 16px;
+      color: var(--delete-muted-text);
+      background: #191919;
+      border: 1px solid var(--delete-panel-border);
+      border-radius: 8px;
+    }
+
+    .category-details[hidden] {
+      display: none;
+    }
+
+    .category-details h2 {
+      margin: 0 0 12px;
+      color: var(--delete-text);
+      font-size: 18px;
+    }
+
+    .category-details p {
+      margin: 8px 0;
+      line-height: 1.45;
+    }
+
+    .category-image {
+      display: block;
+      width: 100%;
+      max-width: 260px;
+      height: auto;
+      margin: 14px auto 0;
+      border-radius: 8px;
+      object-fit: cover;
+    }
+
+    .delete-warning {
+      padding: 16px;
+      color: #ffffff;
+      background: var(--delete-warning-background);
+      border: 1px solid var(--delete-warning-border);
+      border-radius: 8px;
+      line-height: 1.5;
+    }
+
+    .delete-warning strong {
+      display: block;
+      margin-bottom: 5px;
+    }
+
+    .confirmation-field {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+    }
+
+    .confirmation-field input {
+      width: 20px;
+      height: 20px;
+      margin: 1px 0 0;
+      accent-color: var(--delete-button);
+      cursor: pointer;
+    }
+
+    .confirmation-field label {
+      line-height: 1.4;
+      cursor: pointer;
+    }
+
+    .delete-category-button {
+      width: 100%;
+      min-height: 50px;
+      padding: 12px;
+      color: #ffffff;
+      background: var(--delete-button);
+      border: none;
+      border-radius: 7px;
+      font: inherit;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+      transition:
+        background-color 0.2s ease,
+        transform 0.2s ease,
+        opacity 0.2s ease;
+    }
+
+    .delete-category-button:hover:not(:disabled) {
+      background: var(--delete-button-hover);
+      transform: translateY(-1px);
+    }
+
+    .delete-category-button:focus-visible {
+      outline: 3px solid var(--delete-focus);
+      outline-offset: 3px;
+    }
+
+    .delete-category-button:disabled {
+      background: var(--delete-button-disabled);
+      cursor: not-allowed;
+      opacity: 0.7;
+    }
+
+    .category-message {
+      min-height: 24px;
+      margin: 18px 0 0;
+      text-align: center;
+      font-weight: 700;
+      line-height: 1.5;
+    }
+
+    .category-message:empty {
+      display: none;
+    }
+
+    .category-error {
+      color: var(--delete-error);
+    }
+
+    .category-success {
+      color: var(--delete-success);
+    }
+
+    .category-information {
+      color: var(--delete-muted-text);
+    }
+
+    .page-actions {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px;
+      margin-top: 24px;
+    }
+
+    @media (max-width: 600px) {
+      body {
+        padding: 14px;
+      }
+
+      .delete-category-page {
+        margin: 20px auto;
+      }
+
+      .delete-category-container {
+        padding: 22px 18px;
+      }
+
+      .admin-account-bar {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .admin-account-actions {
+        width: 100%;
+      }
+
+      .small-action-button,
+      .return-button {
+        flex: 1;
+        text-align: center;
+      }
+    }
+  </style>
+
+  <script
+    src="navigation.js"
+    defer
+  ></script>
+
+  admin-delete-category.jsscript>
 </head>
-<script src="navigation.js"></script>
+
 <body>
+  <main class="delete-category-page">
+    <section
+      class="delete-category-container"
+      aria-labelledby="delete-category-heading"
+    >
+      <h1
+        id="delete-category-heading"
+        class="delete-category-heading"
+      >
+        Delete Category
+      </h1>
 
-<div class="container">
-    <h2>Delete Category</h2>
+      <p class="delete-category-description">
+        Select a category from the list below. Review the category
+        information carefully before permanently deleting it.
+      </p>
 
-    <input type="text" id="id" placeholder="Category ID" required>
+      <div class="admin-account-bar">
+        <div>
+          <p>
+            Signed in as:
+            <strong id="admin-username">
+              Loading...
+            </strong>
+          </p>
 
-    <button onclick="deleteCategory()">Delete Category</button>
+          <p>
+            Role:
+            <strong id="admin-role">
+              Loading...
+            </strong>
+          </p>
+        </div>
 
-    <p id="message"></p>
-</div>
+        <div class="admin-account-actions">
+          <a
+            class="small-action-button"
+            href="admin-dashboard.html"
+          >
+            Dashboard
+          </a>
 
-<script>
-async function deleteCategory() {
-    const id = document.getElementById("id").value;
+          <button
+            id="admin-logout-button"
+            class="small-action-button"
+            type="button"
+          >
+            Log Out
+          </button>
+        </div>
+      </div>
 
-    const res = await fetch("https://multi-maniacs-customs-backend.onrender.com/categories/delete", {
-        method: "DELETE",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id })
-    });
+      <form
+        id="delete-category-form"
+        class="delete-category-form"
+        novalidate
+      >
+        <div class="form-field">
+          <label for="category-to-delete">
+            Category
+          </label>
 
-    const data = await res.json();
-    document.getElementById("message").innerText = data.message || data.error;
-}
-</script>
+          <select
+            id="category-to-delete"
+            name="categoryId"
+            required
+            disabled
+          >
+            <option value="">
+              Loading categories...
+            </option>
+          </select>
+        </div>
 
+        <section
+          id="selected-category-details"
+          class="category-details"
+          aria-labelledby="selected-category-heading"
+          hidden
+        >
+          <h2 id="selected-category-heading">
+            Selected Category
+          </h2>
+
+          <p>
+            <strong>Name:</strong>
+            <span id="selected-category-name"></span>
+          </p>
+
+          <p>
+            <strong>Tag:</strong>
+            <span id="selected-category-slug"></span>
+          </p>
+
+          <p>
+            <strong>Description:</strong>
+            <span id="selected-category-description"></span>
+          </p>
+
+          <p>
+            <strong>Products Assigned:</strong>
+            <span id="selected-category-product-count">0</span>
+          </p>
+
+          <p>
+            <strong>Status:</strong>
+            <span id="selected-category-status"></span>
+          </p>
+
+          
+        </section>
+
+        <div class="delete-warning">
+          <strong>
+            Warning
+          </strong>
+
+          Deleting a category is permanent. Products assigned to
+          the deleted category must either be moved to another
+          category or left without a category, depending on the
+          backend deletion rules we add.
+        </div>
+
+        <div class="confirmation-field">
+          <input
+            id="confirm-category-deletion"
+            name="confirmDeletion"
+            type="checkbox"
+            required
+          >
+
+          <label for="confirm-category-deletion">
+            I understand that this category deletion cannot be
+            undone.
+          </label>
+        </div>
+
+        <button
+          id="delete-category-button"
+          class="delete-category-button"
+          type="submit"
+          disabled
+        >
+          Delete Selected Category
+        </button>
+      </form>
+
+      <p
+        id="category-message"
+        class="category-message"
+        role="status"
+        aria-live="polite"
+      ></p>
+
+      <div class="page-actions">
+        <a
+          class="return-button"
+          href="admin-dashboard.html"
+        >
+          Return to Dashboard
+        </a>
+
+        <a
+          class="return-button"
+          href="admin-edit-category.html"
+        >
+          Edit a Category Instead
+        </a>
+
+        index.html
+          View Website
+        </a>
+      </div>
+    </section>
+  </main>
+
+  <noscript>
+    <p>
+      JavaScript must be enabled to manage product categories.
+    </p>
+  </noscript>
 </body>
 </html>

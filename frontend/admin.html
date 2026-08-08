@@ -39,8 +39,8 @@
 
     <script>
         async function loadStats() {
-            const products = await fetch("https://multi-maniacs-customs-backend.onrender.com/products").then(r => r.json());
-            const orders = await fetch("https://multi-maniacs-customs-backend.onrender.com/orders").then(r => r.json());
+            const products = await fetch("https://multi-maniacscustoms.vercel.app/products").then(r => r.json());
+            const orders = await fetch("https://multi-maniacscustoms.vercel.app/orders").then(r => r.json());
 
             document.getElementById("productCount").innerText = products.length;
             document.getElementById("orderCount").innerText = orders.length;

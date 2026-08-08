@@ -27,7 +27,7 @@
 async function addCategory() {
     const name = document.getElementById("name").value;
 
-    const res = await fetch("https://multi-maniacs-customs-backend.onrender.com/categories/add", {
+    const res = await fetch("https://multi-maniacscustoms.vercel.app/categories/add", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name })

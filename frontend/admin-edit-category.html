@@ -1,44 +1,660 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Edit Category</title>
-    <style>
-        body { background:#111; color:white; font-family:Arial; padding:20px; }
-        .container { max-width:500px; margin:auto; background:#222; padding:20px; border-radius:10px; }
-        input { width:100%; padding:10px; margin-top:10px; border-radius:6px; border:none; }
-        button { width:100%; padding:12px; margin-top:15px; background:#2196F3; border:none; color:white; font-size:16px; border-radius:6px; cursor:pointer; }
-        button:hover { background:#1976D2; }
-    </style>
+  <meta charset="UTF-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
+
+  <meta
+    name="description"
+    content="Edit product categories for Multi-Maniacs Customs."
+  >
+
+  <title>
+    Edit Category | Multi-Maniacs Customs LLC
+  </title>
+
+  <link
+    rel="stylesheet"
+    href="style.css"
+  >
+
+  <link
+    rel="stylesheet"
+    href="admin.css"
+  >
+
+  <style>
+    :root {
+      --edit-page-background: #111111;
+      --edit-panel-background: #222222;
+      --edit-panel-border: #444444;
+      --edit-text: #ffffff;
+      --edit-muted-text: #cccccc;
+      --edit-input-background: #ffffff;
+      --edit-input-text: #111111;
+      --edit-button: #2196f3;
+      --edit-button-hover: #1976d2;
+      --edit-button-disabled: #365b78;
+      --edit-error: #ff7676;
+      --edit-success: #79d77c;
+      --edit-information: #90caf9;
+      --edit-focus: #64b5f6;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      min-height: 100%;
+    }
+
+    body {
+      min-height: 100vh;
+      margin: 0;
+      padding: 24px;
+      color: var(--edit-text);
+      background: var(--edit-page-background);
+      font-family: Arial, Helvetica, sans-serif;
+    }
+
+    .edit-category-page {
+      width: 100%;
+      max-width: 700px;
+      margin: 40px auto;
+    }
+
+    .edit-category-container {
+      padding: 30px;
+      background: var(--edit-panel-background);
+      border: 1px solid var(--edit-panel-border);
+      border-radius: 12px;
+      box-shadow: 0 16px 45px rgba(0, 0, 0, 0.4);
+    }
+
+    .edit-category-heading {
+      margin: 0 0 10px;
+      text-align: center;
+      font-size: 28px;
+      line-height: 1.2;
+    }
+
+    .edit-category-description {
+      margin: 0 0 24px;
+      color: var(--edit-muted-text);
+      text-align: center;
+      line-height: 1.5;
+    }
+
+    .admin-account-bar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 24px;
+      padding: 14px;
+      background: #191919;
+      border: 1px solid var(--edit-panel-border);
+      border-radius: 8px;
+    }
+
+    .admin-account-bar p {
+      margin: 4px 0;
+    }
+
+    .admin-account-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .small-action-button,
+    .return-button {
+      display: inline-block;
+      width: auto;
+      margin: 0;
+      padding: 9px 13px;
+      color: #ffffff;
+      background: #444444;
+      border: none;
+      border-radius: 6px;
+      font: inherit;
+      font-size: 14px;
+      text-align: center;
+      text-decoration: none;
+      cursor: pointer;
+    }
+
+    .small-action-button:hover,
+    .small-action-button:focus,
+    .return-button:hover,
+    .return-button:focus {
+      background: #5b5b5b;
+    }
+
+    .category-selection {
+      margin-bottom: 24px;
+      padding-bottom: 24px;
+      border-bottom: 1px solid var(--edit-panel-border);
+    }
+
+    .edit-category-form {
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+
+    .edit-category-form[hidden] {
+      display: none;
+    }
+
+    .form-field {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .form-field label {
+      font-size: 15px;
+      font-weight: 700;
+    }
+
+    .field-help {
+      margin: 0;
+      color: var(--edit-muted-text);
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    .form-field input,
+    .form-field select,
+    .form-field textarea {
+      width: 100%;
+      padding: 11px 12px;
+      color: var(--edit-input-text);
+      background: var(--edit-input-background);
+      border: 2px solid transparent;
+      border-radius: 7px;
+      font: inherit;
+      outline: none;
+    }
+
+    .form-field input,
+    .form-field select {
+      min-height: 48px;
+    }
+
+    .form-field textarea {
+      min-height: 130px;
+      resize: vertical;
+    }
+
+    .form-field input:focus,
+    .form-field select:focus,
+    .form-field textarea:focus {
+      border-color: var(--edit-focus);
+      box-shadow: 0 0 0 3px rgba(100, 181, 246, 0.18);
+    }
+
+    .form-field select:disabled,
+    .form-field input:disabled,
+    .form-field textarea:disabled {
+      cursor: wait;
+      opacity: 0.7;
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    .checkbox-field {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 14px;
+      background: #191919;
+      border: 1px solid var(--edit-panel-border);
+      border-radius: 8px;
+    }
+
+    .checkbox-field input {
+      width: 20px;
+      height: 20px;
+      margin: 1px 0 0;
+      accent-color: var(--edit-button);
+      cursor: pointer;
+    }
+
+    .checkbox-field label {
+      line-height: 1.45;
+      cursor: pointer;
+    }
+
+    .category-image-preview-container {
+      padding: 16px;
+      text-align: center;
+      background: #191919;
+      border: 1px solid var(--edit-panel-border);
+      border-radius: 8px;
+    }
+
+    .category-image-preview-container[hidden] {
+      display: none;
+    }
+
+    .category-image-preview-container h2 {
+      margin: 0 0 14px;
+      font-size: 18px;
+    }
+
+    .category-image-preview {
+      display: block;
+      width: 100%;
+      max-width: 320px;
+      max-height: 240px;
+      margin: 0 auto;
+      border-radius: 8px;
+      object-fit: cover;
+    }
+
+    .category-product-count {
+      margin: 0;
+      padding: 14px;
+      color: var(--edit-muted-text);
+      background: #191919;
+      border: 1px solid var(--edit-panel-border);
+      border-radius: 8px;
+      line-height: 1.5;
+    }
+
+    .update-category-button {
+      width: 100%;
+      min-height: 50px;
+      padding: 12px;
+      color: #ffffff;
+      background: var(--edit-button);
+      border: none;
+      border-radius: 7px;
+      font: inherit;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+      transition:
+        background-color 0.2s ease,
+        transform 0.2s ease,
+        opacity 0.2s ease;
+    }
+
+    .update-category-button:hover:not(:disabled) {
+      background: var(--edit-button-hover);
+      transform: translateY(-1px);
+    }
+
+    .update-category-button:focus-visible {
+      outline: 3px solid var(--edit-focus);
+      outline-offset: 3px;
+    }
+
+    .update-category-button:disabled {
+      background: var(--edit-button-disabled);
+      cursor: not-allowed;
+      opacity: 0.7;
+    }
+
+    .category-message {
+      min-height: 24px;
+      margin: 18px 0 0;
+      text-align: center;
+      font-weight: 700;
+      line-height: 1.5;
+    }
+
+    .category-message:empty {
+      display: none;
+    }
+
+    .category-error {
+      color: var(--edit-error);
+    }
+
+    .category-success {
+      color: var(--edit-success);
+    }
+
+    .category-information {
+      color: var(--edit-information);
+    }
+
+    .page-actions {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px;
+      margin-top: 24px;
+    }
+
+    @media (max-width: 650px) {
+      body {
+        padding: 14px;
+      }
+
+      .edit-category-page {
+        margin: 20px auto;
+      }
+
+      .edit-category-container {
+        padding: 22px 18px;
+      }
+
+      .admin-account-bar {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .admin-account-actions {
+        width: 100%;
+      }
+
+      .small-action-button,
+      .return-button {
+        flex: 1;
+      }
+
+      .form-row {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+
+  <script
+    src="navigation.js"
+    defer
+  ></script>
+
+  admin-edit-category.jsscript>
 </head>
-<script src="navigation.js"></script>
+
 <body>
+  <main class="edit-category-page">
+    <section
+      class="edit-category-container"
+      aria-labelledby="edit-category-heading"
+    >
+      <h1
+        id="edit-category-heading"
+        class="edit-category-heading"
+      >
+        Edit Category
+      </h1>
 
-<div class="container">
-    <h2>Edit Category</h2>
+      <p class="edit-category-description">
+        Choose a category, update its customer-facing information,
+        and save the changes to the Neon database.
+      </p>
 
-    <input type="text" id="id" placeholder="Category ID" required>
-    <input type="text" id="name" placeholder="New Category Name">
+      <div class="admin-account-bar">
+        <div>
+          <p>
+            Signed in as:
+            <strong id="admin-username">
+              Loading...
+            </strong>
+          </p>
 
-    <button onclick="editCategory()">Update Category</button>
+          <p>
+            Role:
+            <strong id="admin-role">
+              Loading...
+            </strong>
+          </p>
+        </div>
 
-    <p id="message"></p>
-</div>
+        <div class="admin-account-actions">
+          <a
+            class="small-action-button"
+            href="admin-dashboard.html"
+          >
+            Dashboard
+          </a>
 
-<script>
-async function editCategory() {
-    const id = document.getElementById("id").value;
-    const name = document.getElementById("name").value;
+          <button
+            id="admin-logout-button"
+            class="small-action-button"
+            type="button"
+          >
+            Log Out
+          </button>
+        </div>
+      </div>
 
-    const res = await fetch("https://multi-maniacs-customs-backend.onrender.com/categories/edit", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id, name })
-    });
+      <section class="category-selection">
+        <div class="form-field">
+          <label for="category-to-edit">
+            Select Category
+          </label>
 
-    const data = await res.json();
-    document.getElementById("message").innerText = data.message || data.error;
-}
-</script>
+          <select
+            id="category-to-edit"
+            name="categoryId"
+            disabled
+            required
+          >
+            <option value="">
+              Loading categories...
+            </option>
+          </select>
 
+          <p class="field-help">
+            Select the category that you want to update.
+          </p>
+        </div>
+      </section>
+
+      <form
+        id="edit-category-form"
+        class="edit-category-form"
+        hidden
+        novalidate
+      >
+        <input
+          id="edit-category-id"
+          name="categoryId"
+          type="hidden"
+        >
+
+        <div class="form-field">
+          <label for="edit-category-name">
+            Category Name
+          </label>
+
+          <input
+            id="edit-category-name"
+            name="name"
+            type="text"
+            placeholder="Example: Tumblers"
+            minlength="2"
+            maxlength="100"
+            required
+          >
+
+          <p class="field-help">
+            This is the category name customers will see.
+          </p>
+        </div>
+
+        <div class="form-field">
+          <label for="edit-category-slug">
+            Category Tag
+          </label>
+
+          <input
+            id="edit-category-slug"
+            name="slug"
+            type="text"
+            placeholder="Example: tumblers"
+            minlength="2"
+            maxlength="100"
+            required
+          >
+
+          <p class="field-help">
+            Use lowercase letters, numbers, and hyphens. This tag
+            can be used by customer category buttons and dropdowns.
+          </p>
+        </div>
+
+        <div class="form-field">
+          <label for="edit-category-description">
+            Category Description
+          </label>
+
+          <textarea
+            id="edit-category-description"
+            name="description"
+            placeholder="Describe the products included in this category."
+            maxlength="1000"
+          ></textarea>
+        </div>
+
+        <div class="form-field">
+          <label for="edit-category-image">
+            Category Image URL
+          </label>
+
+          <input
+            id="edit-category-image"
+            name="image"
+            type="url"
+            placeholder="https://..."
+          >
+
+          <p class="field-help">
+            This can be a Cloudinary image URL used for a category
+            card, button, banner, or shop display.
+          </p>
+        </div>
+
+        <section
+          id="category-image-preview-container"
+          class="category-image-preview-container"
+          aria-labelledby="category-image-preview-heading"
+          hidden
+        >
+          <h2 id="category-image-preview-heading">
+            Category Image Preview
+          </h2>
+
+          
+        </section>
+
+        <div class="form-row">
+          <div class="form-field">
+            <label for="edit-category-display-order">
+              Display Order
+            </label>
+
+            <input
+              id="edit-category-display-order"
+              name="displayOrder"
+              type="number"
+              min="0"
+              step="1"
+              value="0"
+            >
+
+            <p class="field-help">
+              Lower numbers appear first.
+            </p>
+          </div>
+
+          <div class="form-field">
+            <label for="edit-category-product-count">
+              Assigned Products
+            </label>
+
+            <input
+              id="edit-category-product-count"
+              type="number"
+              value="0"
+              readonly
+              disabled
+            >
+
+            <p class="field-help">
+              This number is calculated automatically.
+            </p>
+          </div>
+        </div>
+
+        <div class="checkbox-field">
+          <input
+            id="edit-category-active"
+            name="active"
+            type="checkbox"
+            checked
+          >
+
+          <label for="edit-category-active">
+            Show this category to customers in category dropdowns,
+            buttons, filters, and category groups.
+          </label>
+        </div>
+
+        <p class="category-product-count">
+          Products assigned to this category will continue using
+          the updated category name and tag after the category is
+          saved.
+        </p>
+
+        <button
+          id="update-category-button"
+          class="update-category-button"
+          type="submit"
+        >
+          Save Category Changes
+        </button>
+      </form>
+
+      <p
+        id="category-message"
+        class="category-message"
+        role="status"
+        aria-live="polite"
+      ></p>
+
+      <div class="page-actions">
+        <a
+          class="return-button"
+          href="admin-dashboard.html"
+        >
+          Return to Dashboard
+        </a>
+
+        <a
+          class="return-button"
+          href="admin-delete-category.html"
+        >
+          Delete a Category
+        </a>
+
+        index.html
+          View Website
+        </a>
+      </div>
+    </section>
+  </main>
+
+  <noscript>
+    <p>
+      JavaScript must be enabled to manage product categories.
+    </p>
+  </noscript>
 </body>
 </html>

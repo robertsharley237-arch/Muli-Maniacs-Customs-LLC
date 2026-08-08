@@ -1,4 +1,4 @@
-const BACKEND_URL = "https://multi-maniacs-customs-backend.onrender.com";
+const BACKEND_URL = "https://multi-maniacscustoms.vercel.app";
 
 // Load products into dropdown
 async function loadProducts() {

@@ -2,51 +2,781 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Client Intakes - Admin</title>
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
+
+  <meta
+    name="description"
+    content="Review and manage Multi-Maniacs Customs client intake submissions."
+  >
+
+  <title>
+    Client Intakes | Multi-Maniacs Customs LLC
+  </title>
+
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="admin.css">
+
   <style>
-    body { background:#000; color:#fff; font-family:Arial; padding:20px; }
-    .intake { background:#111; padding:15px; margin-bottom:20px; border-radius:8px; }
-    img { width:200px; border-radius:8px; margin-top:10px; }
+    :root {
+      --intakes-background: #111111;
+      --intakes-header: #000000;
+      --intakes-panel: #222222;
+      --intakes-inner: #181818;
+      --intakes-border: #444444;
+      --intakes-text: #ffffff;
+      --intakes-muted: #cccccc;
+      --intakes-input-background: #ffffff;
+      --intakes-input-text: #111111;
+      --intakes-primary: #2196f3;
+      --intakes-primary-hover: #1976d2;
+      --intakes-success: #4caf50;
+      --intakes-warning: #ff9800;
+      --intakes-danger: #e53935;
+      --intakes-danger-hover: #c62828;
+      --intakes-error-text: #ff7676;
+      --intakes-success-text: #79d77c;
+      --intakes-information-text: #90caf9;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      min-height: 100%;
+    }
+
+    body {
+      min-height: 100vh;
+      margin: 0;
+      color: var(--intakes-text);
+      background: var(--intakes-background);
+      font-family: Arial, Helvetica, sans-serif;
+    }
+
+    .top-header {
+      padding: 18px 20px;
+      background: var(--intakes-header);
+      border-bottom: 1px solid var(--intakes-border);
+    }
+
+    .header-content {
+      width: 100%;
+      max-width: 1300px;
+      margin: 0 auto;
+    }
+
+    .site-heading {
+      margin: 0 0 16px;
+      font-size: 26px;
+      line-height: 1.25;
+    }
+
+    .header-buttons {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .header-buttons a {
+      display: inline-flex;
+      min-height: 42px;
+      align-items: center;
+      justify-content: center;
+      padding: 9px 13px;
+      color: #ffffff;
+      background: #222222;
+      border: 1px solid #353535;
+      border-radius: 7px;
+      text-decoration: none;
+    }
+
+    .header-buttons a:hover,
+    .header-buttons a:focus {
+      background: #333333;
+    }
+
+    .header-buttons a[aria-current="page"] {
+      background: var(--intakes-primary);
+      border-color: var(--intakes-primary);
+    }
+
+    .intakes-page {
+      width: 100%;
+      max-width: 1300px;
+      margin: 36px auto;
+      padding: 0 20px;
+    }
+
+    .intakes-container {
+      padding: 30px;
+      background: var(--intakes-panel);
+      border: 1px solid var(--intakes-border);
+      border-radius: 14px;
+      box-shadow: 0 18px 50px rgba(0, 0, 0, 0.4);
+    }
+
+    .page-heading {
+      margin: 0 0 10px;
+      text-align: center;
+      font-size: 30px;
+    }
+
+    .page-description {
+      max-width: 760px;
+      margin: 0 auto 24px;
+      color: var(--intakes-muted);
+      text-align: center;
+      line-height: 1.55;
+    }
+
+    .admin-account-bar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      margin-bottom: 24px;
+      padding: 15px;
+      background: var(--intakes-inner);
+      border: 1px solid var(--intakes-border);
+      border-radius: 9px;
+    }
+
+    .admin-account-bar p {
+      margin: 4px 0;
+    }
+
+    .admin-account-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .small-action-button {
+      display: inline-block;
+      padding: 9px 13px;
+      color: #ffffff;
+      background: #444444;
+      border: none;
+      border-radius: 6px;
+      font: inherit;
+      font-size: 14px;
+      text-align: center;
+      text-decoration: none;
+      cursor: pointer;
+    }
+
+    .small-action-button:hover,
+    .small-action-button:focus {
+      background: #5a5a5a;
+    }
+
+    .intake-toolbar {
+      display: grid;
+      grid-template-columns:
+        minmax(220px, 1fr)
+        minmax(180px, 240px)
+        auto;
+      gap: 14px;
+      align-items: end;
+      margin-bottom: 24px;
+      padding: 18px;
+      background: var(--intakes-inner);
+      border: 1px solid var(--intakes-border);
+      border-radius: 10px;
+    }
+
+    .toolbar-field {
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+    }
+
+    .toolbar-field label {
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    .toolbar-field input,
+    .toolbar-field select {
+      width: 100%;
+      min-height: 44px;
+      padding: 10px 11px;
+      color: var(--intakes-input-text);
+      background: var(--intakes-input-background);
+      border: 2px solid transparent;
+      border-radius: 7px;
+      font: inherit;
+      outline: none;
+    }
+
+    .toolbar-field input:focus,
+    .toolbar-field select:focus {
+      border-color: var(--intakes-primary);
+      box-shadow: 0 0 0 3px rgba(33, 150, 243, 0.2);
+    }
+
+    .refresh-intakes-button {
+      min-height: 44px;
+      padding: 10px 15px;
+      color: #ffffff;
+      background: var(--intakes-primary);
+      border: none;
+      border-radius: 7px;
+      font: inherit;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .refresh-intakes-button:hover:not(:disabled) {
+      background: var(--intakes-primary-hover);
+    }
+
+    .refresh-intakes-button:disabled {
+      cursor: wait;
+      opacity: 0.7;
+    }
+
+    .intake-summary {
+      display: grid;
+      grid-template-columns:
+        repeat(auto-fit, minmax(150px, 1fr));
+      gap: 14px;
+      margin-bottom: 24px;
+    }
+
+    .summary-card {
+      padding: 17px;
+      background: var(--intakes-inner);
+      border: 1px solid var(--intakes-border);
+      border-radius: 9px;
+      text-align: center;
+    }
+
+    .summary-card h2 {
+      margin: 0 0 8px;
+      color: var(--intakes-muted);
+      font-size: 15px;
+    }
+
+    .summary-number {
+      margin: 0;
+      font-size: 28px;
+      font-weight: 700;
+    }
+
+    .intake-list {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .intake-list-loading,
+    .intake-list-empty {
+      padding: 30px 20px;
+      color: var(--intakes-muted);
+      background: var(--intakes-inner);
+      border: 1px solid var(--intakes-border);
+      border-radius: 10px;
+      text-align: center;
+    }
+
+    .intake-card {
+      overflow: hidden;
+      background: var(--intakes-inner);
+      border: 1px solid var(--intakes-border);
+      border-radius: 11px;
+    }
+
+    .intake-card-header {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 14px;
+      padding: 18px;
+      background: #101010;
+      border-bottom: 1px solid var(--intakes-border);
+    }
+
+    .intake-card-header h2 {
+      margin: 0 0 6px;
+      font-size: 22px;
+    }
+
+    .intake-submitted-date {
+      margin: 0;
+      color: var(--intakes-muted);
+      font-size: 14px;
+    }
+
+    .intake-status {
+      display: inline-block;
+      padding: 6px 10px;
+      color: #ffffff;
+      background: #555555;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .status-new {
+      background: var(--intakes-primary);
+    }
+
+    .status-contacted {
+      background: var(--intakes-warning);
+    }
+
+    .status-in-review {
+      background: #8e44ad;
+    }
+
+    .status-approved {
+      background: var(--intakes-success);
+    }
+
+    .status-closed {
+      background: #666666;
+    }
+
+    .intake-card-body {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 260px;
+      gap: 22px;
+      padding: 20px;
+    }
+
+    .intake-information-grid {
+      display: grid;
+      grid-template-columns:
+        repeat(2, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .intake-information-item {
+      padding: 13px;
+      background: #101010;
+      border: 1px solid var(--intakes-border);
+      border-radius: 8px;
+    }
+
+    .intake-information-item h3 {
+      margin: 0 0 6px;
+      color: var(--intakes-muted);
+      font-size: 13px;
+      text-transform: uppercase;
+    }
+
+    .intake-information-item p {
+      margin: 0;
+      overflow-wrap: anywhere;
+      line-height: 1.5;
+    }
+
+    .intake-description {
+      grid-column: 1 / -1;
+    }
+
+    .intake-description p {
+      white-space: pre-wrap;
+    }
+
+    .intake-reference {
+      padding: 15px;
+      background: #101010;
+      border: 1px solid var(--intakes-border);
+      border-radius: 8px;
+    }
+
+    .intake-reference h3 {
+      margin: 0 0 12px;
+      font-size: 17px;
+    }
+
+    .intake-reference-image {
+      display: block;
+      width: 100%;
+      max-height: 280px;
+      border-radius: 8px;
+      object-fit: contain;
+      background: #000000;
+    }
+
+    .intake-reference-empty {
+      margin: 0;
+      color: var(--intakes-muted);
+      line-height: 1.5;
+    }
+
+    .intake-card-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      padding: 18px 20px;
+      background: #101010;
+      border-top: 1px solid var(--intakes-border);
+    }
+
+    .intake-card-actions select {
+      min-height: 42px;
+      padding: 9px 11px;
+      color: var(--intakes-input-text);
+      background: var(--intakes-input-background);
+      border: none;
+      border-radius: 7px;
+      font: inherit;
+    }
+
+    .intake-action-button {
+      min-height: 42px;
+      padding: 9px 13px;
+      color: #ffffff;
+      background: var(--intakes-primary);
+      border: none;
+      border-radius: 7px;
+      font: inherit;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .intake-action-button:hover:not(:disabled) {
+      background: var(--intakes-primary-hover);
+    }
+
+    .delete-intake-button {
+      background: var(--intakes-danger);
+    }
+
+    .delete-intake-button:hover:not(:disabled) {
+      background: var(--intakes-danger-hover);
+    }
+
+    .intake-action-button:disabled {
+      cursor: wait;
+      opacity: 0.7;
+    }
+
+    .intakes-message {
+      min-height: 24px;
+      margin: 20px 0 0;
+      text-align: center;
+      font-weight: 700;
+      line-height: 1.5;
+    }
+
+    .intakes-message:empty {
+      display: none;
+    }
+
+    .intakes-error {
+      color: var(--intakes-error-text);
+    }
+
+    .intakes-success {
+      color: var(--intakes-success-text);
+    }
+
+    .intakes-information {
+      color: var(--intakes-information-text);
+    }
+
+    @media (max-width: 850px) {
+      .intake-toolbar {
+        grid-template-columns: 1fr;
+      }
+
+      .intake-card-body {
+        grid-template-columns: 1fr;
+      }
+
+      .intake-reference {
+        max-width: 400px;
+      }
+    }
+
+    @media (max-width: 600px) {
+      .intakes-page {
+        margin: 20px auto;
+        padding: 0 14px;
+      }
+
+      .intakes-container {
+        padding: 20px 14px;
+      }
+
+      .intake-information-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .intake-description {
+        grid-column: auto;
+      }
+
+      .admin-account-bar {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .header-buttons {
+        flex-direction: column;
+      }
+
+      .header-buttons a {
+        width: 100%;
+      }
+
+      .intake-card-actions {
+        flex-direction: column;
+      }
+
+      .intake-card-actions select,
+      .intake-action-button {
+        width: 100%;
+      }
+    }
   </style>
+
+  <script src="navigation.js" defer></script>
+  admin-intakes.jsscript>
 </head>
-<script src="navigation.js"></script>
+
 <body>
+  <header class="top-header">
+    <div class="header-content">
+      <h1 class="site-heading">
+        Multi-Maniacs Customs LLC - Admin
+      </h1>
 
-<h1>Client Intakes</h1>
-<div id="intake-list"></div>
+      <nav
+        class="header-buttons"
+        aria-label="Administrator navigation"
+      >
+        <a href="index.html">
+          Home
+        </a>
 
-<script>
-async function loadIntakes() {
-  const res = await fetch("https://multi-maniacs-customs-backend.onrender.com/intake/all");
-  const intakes = await res.json();
+        <a href="admin-dashboard.html">
+          Dashboard
+        </a>
 
-  const container = document.getElementById("intake-list");
-  container.innerHTML = "";
+        <a href="admin-products.html">
+          Products
+        </a>
 
-  intakes.forEach(i => {
-    const div = document.createElement("div");
-    div.classList.add("intake");
+        admin-add-category.html
+          Categories
+        </a>
 
-    div.innerHTML = `
-      <h2>${i.name}</h2>
-      <p><strong>Phone:</strong> ${i.phone}</p>
-      <p><strong>Email:</strong> ${i.email}</p>
-      <p><strong>Preferred Contact:</strong> ${i.contactMethod}</p>
-      <p><strong>Project Type:</strong> ${i.projectType}</p>
-      <p><strong>Budget:</strong> ${i.budget}</p>
-      <p><strong>Timeline:</strong> ${i.timeline}</p>
-      <p><strong>Location:</strong> ${i.location}</p>
-      <p><strong>Description:</strong><br>${i.description}</p>
-      ${i.imageUrl ? `<img src="${i.imageUrl}">` : ""}
-      <p><em>Submitted: ${new Date(i.createdAt).toLocaleString()}</em></p>
-    `;
+        <a
+          href="admin-intake.html"
+          aria-current="page"
+        >
+          Client Intakes
+        </a>
 
-    container.appendChild(div);
-  });
-}
+        <a href="shop.html">
+          View Shop
+        </a>
+      </nav>
+    </div>
+  </header>
 
-loadIntakes();
-</script>
+  <main class="intakes-page">
+    <section
+      class="intakes-container"
+      aria-labelledby="client-intakes-heading"
+    >
+      <h1
+        id="client-intakes-heading"
+        class="page-heading"
+      >
+        Client Intake Requests
+      </h1>
 
+      <p class="page-description">
+        Review and manage detailed custom project requests
+        submitted through the Multi-Maniacs Customs client intake
+        system.
+      </p>
+
+      <div class="admin-account-bar">
+        <div>
+          <p>
+            Signed in as:
+            <strong id="admin-username">
+              Loading...
+            </strong>
+          </p>
+
+          <p>
+            Role:
+            <strong id="admin-role">
+              Loading...
+            </strong>
+          </p>
+        </div>
+
+        <div class="admin-account-actions">
+          <a
+            class="small-action-button"
+            href="admin-dashboard.html"
+          >
+            Dashboard
+          </a>
+
+          <button
+            id="admin-logout-button"
+            class="small-action-button"
+            type="button"
+          >
+            Log Out
+          </button>
+        </div>
+      </div>
+
+      <section
+        class="intake-toolbar"
+        aria-label="Client intake filters"
+      >
+        <div class="toolbar-field">
+          <label for="intake-search">
+            Search Intakes
+          </label>
+
+          <input
+            id="intake-search"
+            type="search"
+            placeholder="Search by client, email, project, or location"
+          >
+        </div>
+
+        <div class="toolbar-field">
+          <label for="intake-status-filter">
+            Status
+          </label>
+
+          <select id="intake-status-filter">
+            <option value="all">
+              All Statuses
+            </option>
+
+            <option value="new">
+              New
+            </option>
+
+            <option value="contacted">
+              Contacted
+            </option>
+
+            <option value="in_review">
+              In Review
+            </option>
+
+            <option value="approved">
+              Approved
+            </option>
+
+            <option value="closed">
+              Closed
+            </option>
+          </select>
+        </div>
+
+        <button
+          id="refresh-intakes-button"
+          class="refresh-intakes-button"
+          type="button"
+        >
+          Refresh Intakes
+        </button>
+      </section>
+
+      <section
+        class="intake-summary"
+        aria-label="Client intake summary"
+      >
+        <article class="summary-card">
+          <h2>
+            Total Intakes
+          </h2>
+
+          <p
+            id="total-intakes"
+            class="summary-number"
+          >
+            0
+          </p>
+        </article>
+
+        <article class="summary-card">
+          <h2>
+            New
+          </h2>
+
+          <p
+            id="new-intakes"
+            class="summary-number"
+          >
+            0
+          </p>
+        </article>
+
+        <article class="summary-card">
+          <h2>
+            In Review
+          </h2>
+
+          <p
+            id="review-intakes"
+            class="summary-number"
+          >
+            0
+          </p>
+        </article>
+
+        <article class="summary-card">
+          <h2>
+            Approved
+          </h2>
+
+          <p
+            id="approved-intakes"
+            class="summary-number"
+          >
+            0
+          </p>
+        </article>
+      </section>
+
+      <section
+        id="intake-list"
+        class="intake-list"
+        aria-label="Submitted client intake requests"
+      >
+        <p class="intake-list-loading">
+          Loading client intake requests...
+        </p>
+      </section>
+
+      <p
+        id="intakes-message"
+        class="intakes-message"
+        role="status"
+        aria-live="polite"
+      ></p>
+    </section>
+  </main>
+
+  <noscript>
+    <p>
+      JavaScript must be enabled to review client intake requests.
+    </p>
+  </noscript>
 </body>
 </html>

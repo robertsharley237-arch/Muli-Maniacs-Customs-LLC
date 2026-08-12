@@ -1,109 +1,793 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Contact • Multi-Maniacs Customs LLC</title>
-    <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
+
+  <meta
+    name="description"
+    content="Contact Multi-Maniacs Customs LLC about custom products, projects, services, and pricing."
+  >
+
+  <title>
+    Contact | Multi-Maniacs Customs LLC
+  </title>
+
+  <link
+    rel="stylesheet"
+    href="style.css"
+  >
+
+  <style>
+    :root {
+      --contact-background: #000000;
+      --contact-panel: #181818;
+      --contact-header: #111111;
+      --contact-border: #3d3d3d;
+      --contact-text: #ffffff;
+      --contact-muted: #cccccc;
+      --contact-input-background: #ffffff;
+      --contact-input-text: #111111;
+      --contact-button: #d32f2f;
+      --contact-button-hover: #b71c1c;
+      --contact-button-disabled: #743838;
+      --contact-focus: #ef5350;
+      --contact-error: #ff7676;
+      --contact-success: #79d77c;
+      --contact-information: #90caf9;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      min-height: 100%;
+    }
+
+    body {
+      min-height: 100vh;
+      margin: 0;
+      color: var(--contact-text);
+      background: var(--contact-background);
+      font-family: Arial, Helvetica, sans-serif;
+    }
+
+    .top-header {
+      padding: 18px 20px;
+      background: var(--contact-header);
+      border-bottom: 1px solid var(--contact-border);
+    }
+
+    .header-content {
+      width: 100%;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .site-heading {
+      margin: 0 0 16px;
+      font-size: 26px;
+      line-height: 1.25;
+    }
+
+    .header-buttons {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .header-buttons a {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      min-height: 42px;
+      padding: 9px 13px;
+      color: var(--contact-text);
+      background: #222222;
+      border: 1px solid #353535;
+      border-radius: 7px;
+      text-decoration: none;
+      transition:
+        background-color 0.2s ease,
+        transform 0.2s ease;
+    }
+
+    .header-buttons a:hover,
+    .header-buttons a:focus {
+      background: #333333;
+      transform: translateY(-1px);
+    }
+
+    .header-buttons a[aria-current="page"] {
+      background: var(--contact-button);
+      border-color: var(--contact-button);
+    }
+
+    .admin-navigation-link {
+      margin-left: auto;
+    }
+
+    .mini-cart {
+      margin-top: 16px;
+      padding: 14px;
+      background: #191919;
+      border: 1px solid var(--contact-border);
+      border-radius: 8px;
+    }
+
+    .mini-cart h2 {
+      margin: 0 0 10px;
+      font-size: 18px;
+    }
+
+    .mini-cart p {
+      margin: 0;
+      color: var(--contact-muted);
+    }
+
+    .contact-page {
+      width: 100%;
+      max-width: 900px;
+      margin: 42px auto;
+      padding: 0 20px;
+    }
+
+    .contact-container {
+      padding: 30px;
+      background: var(--contact-panel);
+      border: 1px solid var(--contact-border);
+      border-radius: 14px;
+      box-shadow:
+        0 18px 50px rgba(0, 0, 0, 0.4);
+    }
+
+    .contact-heading {
+      margin: 0 0 10px;
+      text-align: center;
+      font-size: 32px;
+      line-height: 1.2;
+    }
+
+    .contact-description {
+      max-width: 700px;
+      margin: 0 auto 28px;
+      color: var(--contact-muted);
+      text-align: center;
+      line-height: 1.6;
+    }
+
+    .contact-layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 270px;
+      gap: 24px;
+      align-items: start;
+    }
+
+    .contact-form {
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    .form-field {
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+    }
+
+    .form-field label {
+      font-size: 15px;
+      font-weight: 700;
+    }
+
+    .required-marker {
+      color: #ff8585;
+    }
+
+    .field-help {
+      margin: 0;
+      color: var(--contact-muted);
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    .form-field input,
+    .form-field select,
+    .form-field textarea {
+      width: 100%;
+      padding: 11px 12px;
+      color: var(--contact-input-text);
+      background: var(--contact-input-background);
+      border: 2px solid transparent;
+      border-radius: 7px;
+      font: inherit;
+      outline: none;
+    }
+
+    .form-field input,
+    .form-field select {
+      min-height: 48px;
+    }
+
+    .form-field textarea {
+      min-height: 170px;
+      resize: vertical;
+    }
+
+    .form-field input:focus,
+    .form-field select:focus,
+    .form-field textarea:focus {
+      border-color: var(--contact-focus);
+      box-shadow:
+        0 0 0 3px rgba(239, 83, 80, 0.2);
+    }
+
+    .contact-submit-button {
+      width: 100%;
+      min-height: 52px;
+      padding: 13px;
+      color: #ffffff;
+      background: var(--contact-button);
+      border: none;
+      border-radius: 8px;
+      font: inherit;
+      font-size: 17px;
+      font-weight: 700;
+      cursor: pointer;
+      transition:
+        background-color 0.2s ease,
+        transform 0.2s ease,
+        opacity 0.2s ease;
+    }
+
+    .contact-submit-button:hover:not(:disabled) {
+      background: var(--contact-button-hover);
+      transform: translateY(-1px);
+    }
+
+    .contact-submit-button:focus-visible {
+      outline: 3px solid var(--contact-focus);
+      outline-offset: 3px;
+    }
+
+    .contact-submit-button:disabled {
+      background: var(--contact-button-disabled);
+      cursor: wait;
+      opacity: 0.7;
+    }
+
+    .contact-information {
+      padding: 20px;
+      background: #101010;
+      border: 1px solid var(--contact-border);
+      border-radius: 10px;
+    }
+
+    .contact-information h2 {
+      margin: 0 0 14px;
+      font-size: 21px;
+    }
+
+    .contact-information h3 {
+      margin: 22px 0 8px;
+      font-size: 17px;
+    }
+
+    .contact-information p {
+      margin: 8px 0;
+      color: var(--contact-muted);
+      line-height: 1.5;
+    }
+
+    .contact-information a {
+      color: #ffffff;
+      overflow-wrap: anywhere;
+      text-decoration: underline;
+      text-underline-offset: 3px;
+    }
+
+    .contact-information a:hover,
+    .contact-information a:focus {
+      color: var(--contact-information);
+    }
+
+    .contact-message {
+      min-height: 24px;
+      margin: 20px 0 0;
+      text-align: center;
+      font-weight: 700;
+      line-height: 1.5;
+    }
+
+    .contact-message:empty {
+      display: none;
+    }
+
+    .contact-error {
+      color: var(--contact-error);
+    }
+
+    .contact-success {
+      color: var(--contact-success);
+    }
+
+    .contact-status {
+      color: var(--contact-information);
+    }
+
+    .client-intake-link {
+      display: inline-block;
+      width: 100%;
+      margin-top: 16px;
+      padding: 11px 14px;
+      color: #ffffff;
+      background: #3d3d3d;
+      border-radius: 7px;
+      text-align: center;
+      text-decoration: none;
+    }
+
+    .client-intake-link:hover,
+    .client-intake-link:focus {
+      background: #505050;
+    }
+
+    .site-footer {
+      margin-top: 42px;
+      padding: 24px 20px;
+      color: #ffffff;
+      background: #000000;
+      border-top: 1px solid var(--contact-border);
+      text-align: center;
+    }
+
+    .site-footer p {
+      margin: 6px 0;
+      color: var(--contact-muted);
+      line-height: 1.5;
+    }
+
+    .site-footer a {
+      color: #ffffff;
+      text-decoration: underline;
+      text-underline-offset: 3px;
+    }
+
+    @media (max-width: 780px) {
+      .contact-layout {
+        grid-template-columns: 1fr;
+      }
+
+      .admin-navigation-link {
+        margin-left: 0;
+      }
+    }
+
+    @media (max-width: 600px) {
+      .contact-page {
+        margin: 24px auto;
+        padding: 0 14px;
+      }
+
+      .contact-container {
+        padding: 22px 16px;
+      }
+
+      .form-row {
+        grid-template-columns: 1fr;
+      }
+
+      .header-buttons {
+        flex-direction: column;
+      }
+
+      .header-buttons a {
+        width: 100%;
+        justify-content: center;
+      }
+    }
+  </style>
+
+  <script
+    src="navigation.js"
+    defer
+  ></script>
+
+  contact.jsscript>
 </head>
 
 <body>
+  <header class="top-header">
+    <div class="header-content">
+      <h1 class="site-heading">
+        Multi-Maniacs Customs LLC
+      </h1>
 
-    <!-- ============================
-         UPDATED BLACK HEADER
-         ============================ -->
-    <header class="top-header">
-        <h1>Multi-Maniacs Customs LLC</h1>
+      <nav
+        class="header-buttons"
+        aria-label="Main website navigation"
+      >
+        <a href="index.html">
+          <span
+            class="icon"
+            aria-hidden="true"
+          >
+            🏠
+          </span>
 
-        <nav class="header-buttons">
+          Home
+        </a>
 
-            <button onclick="navigate('home')">
-                <span class="icon">🏠</span> Home
-            </button>
+        <a href="about.html">
+          <span
+            class="icon"
+            aria-hidden="true"
+          >
+            📘
+          </span>
 
-            <button onclick="navigate('about')">
-                <span class="icon">📘</span> About
-            </button>
+          About
+        </a>
 
-            <button onclick="navigate('services')">
-                <span class="icon">🛠️</span> Services
-            </button>
+        <a href="services.html">
+          <span
+            class="icon"
+            aria-hidden="true"
+          >
+            🛠️
+          </span>
 
-            <button onclick="navigate('shop')">
-                <span class="icon">🛒</span> Shop
-            </button>
+          Services
+        </a>
 
-            <button onclick="navigate('cart')">
-                <span class="icon">🛍️</span> Cart
-            </button>
+        <a href="shop.html">
+          <span
+            class="icon"
+            aria-hidden="true"
+          >
+            🛒
+          </span>
 
-            <button onclick="navigate('contact')">
-                <span class="icon">📞</span> Contact
-            </button>
+          Shop
+        </a>
 
-            <button onclick="navigate('gallery')">
-                <span class="icon">🖼️</span> Gallery
-            </button>
+        <a href="Cart.html">
+          <span
+            class="icon"
+            aria-hidden="true"
+          >
+            🛍️
+          </span>
 
-            <!-- ⭐ ADMIN BUTTON ⭐ -->
-            <button class="admin-btn" onclick="navigate('admin-dashboard')">
-                <span class="icon">🔧</span> Admin
-            </button>
+          Cart
+        </a>
 
-        </nav>
+        <a
+          href="contact.html"
+          aria-current="page"
+        >
+          <span
+            class="icon"
+            aria-hidden="true"
+          >
+            📞
+          </span>
 
-        <!-- MINI CART -->
-        <div class="mini-cart" id="miniCart">
-            <h3>Mini Cart</h3>
-            <div id="miniCartItems"></div>
+          Contact
+        </a>
+
+        <a href="gallery.html">
+          <span
+            class="icon"
+            aria-hidden="true"
+          >
+            🖼️
+          </span>
+
+          Gallery
+        </a>
+
+        <a
+          class="admin-navigation-link"
+          href="admin-login.html"
+        >
+          <span
+            class="icon"
+            aria-hidden="true"
+          >
+            🔧
+          </span>
+
+          Admin
+        </a>
+      </nav>
+
+      <section
+        class="mini-cart"
+        id="miniCart"
+        aria-labelledby="mini-cart-heading"
+      >
+        <h2 id="mini-cart-heading">
+          Mini Cart
+        </h2>
+
+        <div id="miniCartItems">
+          <p>Your cart is empty.</p>
         </div>
-    </header>
+      </section>
+    </div>
+  </header>
 
+  <main class="contact-page">
+    <section
+      class="contact-container"
+      aria-labelledby="contact-heading"
+    >
+      <h1
+        id="contact-heading"
+        class="contact-heading"
+      >
+        Contact Multi-Maniacs Customs
+      </h1>
 
-    <!-- ============================
-         CONTACT PAGE CONTENT
-         ============================ -->
-    <div class="page" style="padding: 20px;">
-        <h1>Contact</h1>
+      <p class="contact-description">
+        Use this form to tell us about your project, idea, custom
+        request, or general question. The more detail you provide,
+        the better we can respond with appropriate options and
+        pricing information.
+      </p>
 
-        <p>
-            Use this form to tell us about your project, idea, or custom request. The more detail you share,
-            the better we can respond with options and pricing.
-        </p>
+      <div class="contact-layout">
+        <form
+          id="contact-form"
+          class="contact-form"
+          novalidate
+        >
+          <div class="form-field">
+            <label for="contact-name">
+              Name
+              <span
+                class="required-marker"
+                aria-hidden="true"
+              >
+                *
+              </span>
+            </label>
 
-        <form action="#" method="post" style="margin-top: 20px;">
-            <label for="name">Name</label>
-            <input id="name" name="name" type="text" required>
+            <input
+              id="contact-name"
+              name="name"
+              type="text"
+              autocomplete="name"
+              placeholder="Enter your full name"
+              minlength="2"
+              maxlength="150"
+              required
+            >
+          </div>
 
-            <label for="email">Email</label>
-            <input id="email" name="email" type="email" required>
+          <div class="form-row">
+            <div class="form-field">
+              <label for="contact-email">
+                Email Address
+                <span
+                  class="required-marker"
+                  aria-hidden="true"
+                >
+                  *
+                </span>
+              </label>
 
-            <label for="phone">Phone</label>
-            <input id="phone" name="phone" type="text">
+              <input
+                id="contact-email"
+                name="email"
+                type="email"
+                autocomplete="email"
+                placeholder="Enter your email address"
+                maxlength="254"
+                required
+              >
+            </div>
 
-            <label for="details">Project Details</label>
-            <textarea id="details" name="details" rows="5" required></textarea>
+            <div class="form-field">
+              <label for="contact-phone">
+                Phone Number
+              </label>
 
-            <button type="submit" class="btn" style="margin-top: 10px;">Submit</button>
+              <input
+                id="contact-phone"
+                name="phone"
+                type="tel"
+                autocomplete="tel"
+                placeholder="Enter your phone number"
+                maxlength="40"
+              >
+            </div>
+          </div>
+
+          <div class="form-field">
+            <label for="contact-subject">
+              Subject
+            </label>
+
+            <select
+              id="contact-subject"
+              name="subject"
+            >
+              <option value="General Question">
+                General Question
+              </option>
+
+              <option value="Custom Project">
+                Custom Project
+              </option>
+
+              <option value="Product Question">
+                Product Question
+              </option>
+
+              <option value="Order Question">
+                Order Question
+              </option>
+
+              <option value="Pricing Request">
+                Pricing Request
+              </option>
+
+              <option value="Business Collaboration">
+                Business Collaboration
+              </option>
+
+              <option value="Other">
+                Other
+              </option>
+            </select>
+          </div>
+
+          <div class="form-field">
+            <label for="contact-details">
+              Project Details or Message
+              <span
+                class="required-marker"
+                aria-hidden="true"
+              >
+                *
+              </span>
+            </label>
+
+            <textarea
+              id="contact-details"
+              name="details"
+              placeholder="Tell us about your project, question, order, or custom request."
+              minlength="10"
+              maxlength="5000"
+              required
+            ></textarea>
+
+            <p class="field-help">
+              Include colors, sizes, quantities, materials,
+              deadlines, or other details that may help us respond.
+            </p>
+          </div>
+
+          <button
+            id="contact-submit-button"
+            class="contact-submit-button"
+            type="submit"
+          >
+            Send Message
+          </button>
         </form>
 
-        <p style="margin-top: 20px;">
-            You can also reach us directly:<br>
-            Phone: (606) 220-0185 • (606) 212-4695<br>
-            Email: multimaniacscustoms@gmail.com
-        </p>
-    </div>
+        <aside
+          class="contact-information"
+          aria-labelledby="direct-contact-heading"
+        >
+          <h2 id="direct-contact-heading">
+            Contact Information
+          </h2>
 
+          <h3>
+            Phone
+          </h3>
 
-    <!-- ============================
-         FOOTER
-         ============================ -->
-    <footer style="background:#000; color:#fff; padding:20px; text-align:center; margin-top:40px;">
-        © 2026 Multi-Maniacs Customs LLC • Essie, KY • Clients accepted anywhere in the U.S.<br>
-        Phone: (606) 220-0185 • (606) 212-4695 • Email: multimaniacscustoms@gmail.com
-    </footer>
+          <p>
+            tel:+16062200185
+              (606) 220-0185
+            </a>
+          </p>
 
-    <!-- NAVIGATION SYSTEM -->
-    <script src="navigation.js"></script>
+          <p>
+            tel:+16062124695
+              (606) 212-4695
+            </a>
+          </p>
 
+          <h3>
+            Email
+          </h3>
+
+          <p>
+            <a href="mailto:multimaniacscustoms@gmail.com">
+              multimaniacscustoms@gmail.com
+            </a>
+          </p>
+
+          <h3>
+            Service Area
+          </h3>
+
+          <p>
+            Based in Essie, Kentucky.
+          </p>
+
+          <p>
+            Custom project requests are accepted from clients
+            throughout the United States.
+          </p>
+
+          <a
+            class="client-intake-link"
+            href="client-intake.html"
+          >
+            Submit a Detailed Project Request
+          </a>
+        </aside>
+      </div>
+
+      <p
+        id="contact-message"
+        class="contact-message"
+        role="status"
+        aria-live="polite"
+      ></p>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <p>
+      &copy; 2026 Multi-Maniacs Customs LLC
+    </p>
+
+    <p>
+      Essie, Kentucky | Clients accepted throughout the United
+      States
+    </p>
+
+    <p>
+      tel:+16062200185
+        (606) 220-0185
+      </a>
+
+      |
+
+      tel:+16062124695
+        (606) 212-4695
+      </a>
+
+      |
+
+      <a href="mailto:multimaniacscustoms@gmail.com">
+        multimaniacscustoms@gmail.com
+      </a>
+    </p>
+  </footer>
+
+  <noscript>
+    <p>
+      JavaScript must be enabled to submit the contact form.
+    </p>
+  </noscript>
 </body>
 </html>

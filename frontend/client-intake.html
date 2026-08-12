@@ -2,89 +2,733 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Client Intake - Multi-Maniacs Customs LLC</title>
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
+
+  <meta
+    name="description"
+    content="Submit a custom project request to Multi-Maniacs Customs LLC."
+  >
+
+  <title>
+    Client Intake | Multi-Maniacs Customs LLC
+  </title>
+
+  <link
+    rel="stylesheet"
+    href="style.css"
+  >
+
   <style>
-    body { margin:0; background:#000; color:#fff; font-family:Arial; }
-    header, footer { background:#111; padding:15px 20px; }
-    nav a { color:#fff; margin-right:15px; text-decoration:none; }
-    nav a:hover { text-decoration:underline; }
-    .content { max-width:700px; margin:40px auto; padding:0 20px; }
-    input, textarea, select { width:100%; padding:10px; margin-top:10px; border-radius:6px; border:none; }
-    button { margin-top:15px; padding:10px 20px; background:red; color:#fff; border:none; border-radius:6px; cursor:pointer; }
-    #message { margin-top:15px; }
+    :root {
+      --intake-page-background: #000000;
+      --intake-panel-background: #161616;
+      --intake-header-background: #111111;
+      --intake-border: #3c3c3c;
+      --intake-text: #ffffff;
+      --intake-muted-text: #cccccc;
+      --intake-input-background: #ffffff;
+      --intake-input-text: #111111;
+      --intake-button: #d32f2f;
+      --intake-button-hover: #b71c1c;
+      --intake-focus: #ef5350;
+      --intake-error: #ff7676;
+      --intake-success: #79d77c;
+      --intake-information: #90caf9;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      min-height: 100%;
+    }
+
+    body {
+      min-height: 100vh;
+      margin: 0;
+      color: var(--intake-text);
+      background: var(--intake-page-background);
+      font-family: Arial, Helvetica, sans-serif;
+    }
+
+    .site-header {
+      padding: 16px 20px;
+      background: var(--intake-header-background);
+      border-bottom: 1px solid var(--intake-border);
+    }
+
+    .site-header-content {
+      width: 100%;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .site-title {
+      margin: 0 0 14px;
+      font-size: 24px;
+      line-height: 1.25;
+    }
+
+    .site-navigation {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .site-navigation a {
+      display: inline-block;
+      padding: 8px 11px;
+      color: var(--intake-text);
+      background: #222222;
+      border: 1px solid #333333;
+      border-radius: 6px;
+      text-decoration: none;
+    }
+
+    .site-navigation a:hover,
+    .site-navigation a:focus {
+      background: #333333;
+      text-decoration: underline;
+      text-underline-offset: 3px;
+    }
+
+    .site-navigation a[aria-current="page"] {
+      background: var(--intake-button);
+      border-color: var(--intake-button);
+    }
+
+    .intake-page {
+      width: 100%;
+      max-width: 820px;
+      margin: 42px auto;
+      padding: 0 20px;
+    }
+
+    .intake-container {
+      padding: 30px;
+      background: var(--intake-panel-background);
+      border: 1px solid var(--intake-border);
+      border-radius: 14px;
+      box-shadow: 0 18px 50px rgba(0, 0, 0, 0.4);
+    }
+
+    .intake-heading {
+      margin: 0 0 10px;
+      text-align: center;
+      font-size: 30px;
+      line-height: 1.2;
+    }
+
+    .intake-description {
+      max-width: 650px;
+      margin: 0 auto 28px;
+      color: var(--intake-muted-text);
+      text-align: center;
+      line-height: 1.55;
+    }
+
+    .intake-form {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .form-section {
+      padding: 20px;
+      background: #101010;
+      border: 1px solid var(--intake-border);
+      border-radius: 10px;
+    }
+
+    .form-section h2 {
+      margin: 0 0 16px;
+      font-size: 20px;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 17px;
+    }
+
+    .form-field {
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+    }
+
+    .form-field-full {
+      grid-column: 1 / -1;
+    }
+
+    .form-field label {
+      font-size: 15px;
+      font-weight: 700;
+    }
+
+    .required-marker {
+      color: #ff8585;
+    }
+
+    .field-help {
+      margin: 0;
+      color: var(--intake-muted-text);
+      font-size: 13px;
+      line-height: 1.4;
+    }
+
+    .form-field input,
+    .form-field textarea,
+    .form-field select {
+      width: 100%;
+      padding: 11px 12px;
+      color: var(--intake-input-text);
+      background: var(--intake-input-background);
+      border: 2px solid transparent;
+      border-radius: 7px;
+      font: inherit;
+      outline: none;
+    }
+
+    .form-field input,
+    .form-field select {
+      min-height: 48px;
+    }
+
+    .form-field textarea {
+      min-height: 150px;
+      resize: vertical;
+    }
+
+    .form-field input:focus,
+    .form-field textarea:focus,
+    .form-field select:focus {
+      border-color: var(--intake-focus);
+      box-shadow: 0 0 0 3px rgba(239, 83, 80, 0.2);
+    }
+
+    .form-field input[type="file"] {
+      padding: 9px;
+      cursor: pointer;
+    }
+
+    .file-preview-container {
+      padding: 15px;
+      text-align: center;
+      background: #191919;
+      border: 1px solid var(--intake-border);
+      border-radius: 8px;
+    }
+
+    .file-preview-container[hidden] {
+      display: none;
+    }
+
+    .file-preview-container h3 {
+      margin: 0 0 12px;
+      font-size: 17px;
+    }
+
+    .file-preview {
+      display: block;
+      width: 100%;
+      max-width: 350px;
+      max-height: 280px;
+      margin: 0 auto;
+      border-radius: 8px;
+      object-fit: contain;
+    }
+
+    .confirmation-field {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 15px;
+      background: #101010;
+      border: 1px solid var(--intake-border);
+      border-radius: 8px;
+    }
+
+    .confirmation-field input {
+      width: 20px;
+      height: 20px;
+      margin: 2px 0 0;
+      accent-color: var(--intake-button);
+      cursor: pointer;
+    }
+
+    .confirmation-field label {
+      line-height: 1.5;
+      cursor: pointer;
+    }
+
+    .submit-intake-button {
+      width: 100%;
+      min-height: 52px;
+      padding: 13px;
+      color: #ffffff;
+      background: var(--intake-button);
+      border: none;
+      border-radius: 8px;
+      font: inherit;
+      font-size: 17px;
+      font-weight: 700;
+      cursor: pointer;
+      transition:
+        background-color 0.2s ease,
+        transform 0.2s ease,
+        opacity 0.2s ease;
+    }
+
+    .submit-intake-button:hover:not(:disabled) {
+      background: var(--intake-button-hover);
+      transform: translateY(-1px);
+    }
+
+    .submit-intake-button:focus-visible {
+      outline: 3px solid var(--intake-focus);
+      outline-offset: 3px;
+    }
+
+    .submit-intake-button:disabled {
+      cursor: wait;
+      opacity: 0.7;
+    }
+
+    .intake-message {
+      min-height: 24px;
+      margin: 20px 0 0;
+      text-align: center;
+      font-weight: 700;
+      line-height: 1.5;
+    }
+
+    .intake-message:empty {
+      display: none;
+    }
+
+    .intake-error {
+      color: var(--intake-error);
+    }
+
+    .intake-success {
+      color: var(--intake-success);
+    }
+
+    .intake-information {
+      color: var(--intake-information);
+    }
+
+    .site-footer {
+      padding: 22px 20px;
+      text-align: center;
+      background: var(--intake-header-background);
+      border-top: 1px solid var(--intake-border);
+    }
+
+    .site-footer p {
+      margin: 0;
+      color: var(--intake-muted-text);
+    }
+
+    @media (max-width: 700px) {
+      .intake-page {
+        margin: 24px auto;
+        padding: 0 14px;
+      }
+
+      .intake-container {
+        padding: 22px 16px;
+      }
+
+      .form-section {
+        padding: 17px 14px;
+      }
+
+      .form-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .form-field-full {
+        grid-column: auto;
+      }
+
+      .site-navigation {
+        flex-direction: column;
+      }
+
+      .site-navigation a {
+        width: 100%;
+        text-align: center;
+      }
+    }
   </style>
+
+  <script
+    src="navigation.js"
+    defer
+  ></script>
+
+  client-intake.jsscript>
 </head>
-<script src="navigation.js"></script>
+
 <body>
+  <header class="site-header">
+    <div class="site-header-content">
+      <h1 class="site-title">
+        Multi-Maniacs Customs LLC
+      </h1>
 
-<header>
-  <nav>
-    <a href="index.html">Home</a>
-    <a href="about.html">About</a>
-    <a href="services.html">Services</a>
-    <a href="gallery.html">Gallery</a>
-    <a href="shop.html">Shop</a>
-    <a href="cart.html">Cart</a>
-    <a href="client-intake.html">Client Intake</a>
-    <a href="contact.html">Contact</a>
-  </nav>
-</header>
+      <nav
+        class="site-navigation"
+        aria-label="Main website navigation"
+      >
+        <a href="index.html">
+          Home
+        </a>
 
-<div class="content">
-  <h1>Client Intake Form</h1>
+        <a href="about.html">
+          About
+        </a>
 
-  <input id="name" type="text" placeholder="Full Name">
-  <input id="phone" type="text" placeholder="Phone Number">
-  <input id="email" type="email" placeholder="Email Address">
+        <a href="services.html">
+          Services
+        </a>
 
-  <select id="contactMethod">
-    <option value="">Preferred Contact Method</option>
-    <option value="Phone">Phone</option>
-    <option value="Email">Email</option>
-    <option value="Text">Text</option>
-  </select>
+        <a href="gallery.html">
+          Gallery
+        </a>
 
-  <input id="projectType" type="text" placeholder="Project Type">
-  <textarea id="description" placeholder="Describe your project"></textarea>
+        <a href="shop.html">
+          Shop
+        </a>
 
-  <input id="budget" type="text" placeholder="Budget">
-  <input id="timeline" type="text" placeholder="Timeline">
-  <input id="location" type="text" placeholder="Location">
+        <a href="Cart.html">
+          Cart
+        </a>
 
-  <input id="image" type="file">
+        <a
+          href="client-intake.html"
+          aria-current="page"
+        >
+          Client Intake
+        </a>
 
-  <button id="submitBtn">Submit Intake</button>
+        <a href="contact.html">
+          Contact
+        </a>
+      </nav>
+    </div>
+  </header>
 
-  <p id="message"></p>
-</div>
+  <main class="intake-page">
+    <section
+      class="intake-container"
+      aria-labelledby="client-intake-heading"
+    >
+      <h1
+        id="client-intake-heading"
+        class="intake-heading"
+      >
+        Client Intake Form
+      </h1>
 
-<footer>
-  <p>&copy; 2026 Multi-Maniacs Customs LLC</p>
-</footer>
+      <p class="intake-description">
+        Tell Multi-Maniacs Customs about your custom project.
+        Include as much detail as possible so the request can be
+        reviewed accurately.
+      </p>
 
-<script>
-document.getElementById("submitBtn").addEventListener("click", async () => {
-  const formData = new FormData();
-  formData.append("image", document.getElementById("image").files[0]);
-  formData.append("name", document.getElementById("name").value);
-  formData.append("phone", document.getElementById("phone").value);
-  formData.append("email", document.getElementById("email").value);
-  formData.append("contactMethod", document.getElementById("contactMethod").value);
-  formData.append("projectType", document.getElementById("projectType").value);
-  formData.append("description", document.getElementById("description").value);
-  formData.append("budget", document.getElementById("budget").value);
-  formData.append("timeline", document.getElementById("timeline").value);
-  formData.append("location", document.getElementById("location").value);
+      <form
+        id="client-intake-form"
+        class="intake-form"
+        enctype="multipart/form-data"
+        novalidate
+      >
+        <section class="form-section">
+          <h2>
+            Contact Information
+          </h2>
 
-  const res = await fetch("https://multi-maniacs-customs-backend.onrender.com/intake/submit", {
-    method: "POST",
-    body: formData
-  });
+          <div class="form-grid">
+            <div class="form-field form-field-full">
+              <label for="client-name">
+                Full Name
+                <span
+                  class="required-marker"
+                  aria-hidden="true"
+                >
+                  *
+                </span>
+              </label>
 
-  const data = await res.json();
-  document.getElementById("message").innerText = data.message || data.error;
-});
-</script>
+              <input
+                id="client-name"
+                name="name"
+                type="text"
+                autocomplete="name"
+                placeholder="Enter your full name"
+                minlength="2"
+                maxlength="150"
+                required
+              >
+            </div>
 
+            <div class="form-field">
+              <label for="client-phone">
+                Phone Number
+              </label>
+
+              <input
+                id="client-phone"
+                name="phone"
+                type="tel"
+                autocomplete="tel"
+                placeholder="Enter your phone number"
+                maxlength="40"
+              >
+            </div>
+
+            <div class="form-field">
+              <label for="client-email">
+                Email Address
+              </label>
+
+              <input
+                id="client-email"
+                name="email"
+                type="email"
+                autocomplete="email"
+                placeholder="Enter your email address"
+                maxlength="254"
+              >
+            </div>
+
+            <div class="form-field form-field-full">
+              <label for="contact-method">
+                Preferred Contact Method
+                <span
+                  class="required-marker"
+                  aria-hidden="true"
+                >
+                  *
+                </span>
+              </label>
+
+              <select
+                id="contact-method"
+                name="contactMethod"
+                required
+              >
+                <option value="">
+                  Select a contact method
+                </option>
+
+                <option value="Phone">
+                  Phone Call
+                </option>
+
+                <option value="Email">
+                  Email
+                </option>
+
+                <option value="Text">
+                  Text Message
+                </option>
+              </select>
+            </div>
+          </div>
+        </section>
+
+        <section class="form-section">
+          <h2>
+            Project Details
+          </h2>
+
+          <div class="form-grid">
+            <div class="form-field form-field-full">
+              <label for="project-type">
+                Project Type
+                <span
+                  class="required-marker"
+                  aria-hidden="true"
+                >
+                  *
+                </span>
+              </label>
+
+              <input
+                id="project-type"
+                name="projectType"
+                type="text"
+                placeholder="Example: Custom tumbler, apparel, sign, or vehicle project"
+                minlength="2"
+                maxlength="150"
+                required
+              >
+            </div>
+
+            <div class="form-field form-field-full">
+              <label for="project-description">
+                Project Description
+                <span
+                  class="required-marker"
+                  aria-hidden="true"
+                >
+                  *
+                </span>
+              </label>
+
+              <textarea
+                id="project-description"
+                name="description"
+                placeholder="Describe the design, colors, materials, size, quantity, personalization, and other project details."
+                minlength="10"
+                maxlength="5000"
+                required
+              ></textarea>
+
+              <p class="field-help">
+                Include names, wording, colors, measurements,
+                quantities, and any special requests.
+              </p>
+            </div>
+
+            <div class="form-field">
+              <label for="project-budget">
+                Estimated Budget
+              </label>
+
+              <input
+                id="project-budget"
+                name="budget"
+                type="text"
+                placeholder="Example: $100 to $250"
+                maxlength="100"
+              >
+            </div>
+
+            <div class="form-field">
+              <label for="project-timeline">
+                Desired Timeline
+              </label>
+
+              <input
+                id="project-timeline"
+                name="timeline"
+                type="text"
+                placeholder="Example: Needed within 4 weeks"
+                maxlength="150"
+              >
+            </div>
+
+            <div class="form-field form-field-full">
+              <label for="client-location">
+                Location
+              </label>
+
+              <input
+                id="client-location"
+                name="location"
+                type="text"
+                autocomplete="address-level2"
+                placeholder="City and state, or shipping location"
+                maxlength="200"
+              >
+            </div>
+          </div>
+        </section>
+
+        <section class="form-section">
+          <h2>
+            Reference Image
+          </h2>
+
+          <div class="form-field">
+            <label for="reference-image">
+              Upload an Image
+            </label>
+
+            <input
+              id="reference-image"
+              name="image"
+              type="file"
+              accept="image/jpeg,image/png,image/webp,image/gif"
+            >
+
+            <p class="field-help">
+              Upload an optional inspiration image, design,
+              photograph, sketch, or reference. Maximum file size:
+              10 MB.
+            </p>
+          </div>
+
+          <section
+            id="reference-image-preview-container"
+            class="file-preview-container"
+            aria-labelledby="reference-image-preview-heading"
+            hidden
+          >
+            <h3 id="reference-image-preview-heading">
+              Image Preview
+            </h3>
+
+            <img
+              id="reference-image-preview"
+              class="file-preview"
+              alt="Selected project reference preview"
+            >
+          </section>
+        </section>
+
+        <div class="confirmation-field">
+          <input
+            id="intake-confirmation"
+            name="confirmation"
+            type="checkbox"
+            required
+          >
+
+          <label for="intake-confirmation">
+            I confirm that the information provided is accurate,
+            and I understand that submitting this form is a project
+            request and not a final price quote or guaranteed order.
+          </label>
+        </div>
+
+        <button
+          id="submit-intake-button"
+          class="submit-intake-button"
+          type="submit"
+        >
+          Submit Project Request
+        </button>
+      </form>
+
+      <p
+        id="intake-message"
+        class="intake-message"
+        role="status"
+        aria-live="polite"
+      ></p>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <p>
+      &copy; 2026 Multi-Maniacs Customs LLC
+    </p>
+  </footer>
+
+  <noscript>
+    <p>
+      JavaScript must be enabled to submit the client intake form.
+    </p>
+  </noscript>
 </body>
 </html>

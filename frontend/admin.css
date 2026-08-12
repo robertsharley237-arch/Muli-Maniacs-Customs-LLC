@@ -1,65 +1,62 @@
-body {
-    background: #111;
-    color: white;
-    font-family: Arial;
-    margin-left: 270px;
-    padding: 20px;
+/* ============================================================
+   MULTI-MANIACS CUSTOMS LLC
+   FILE: admin.css
+   NEON TIE-DYE ADMINISTRATOR THEME
+   ============================================================ */
+
+/* ============================================================
+   THEME COLORS
+   ============================================================ */
+
+:root {
+  --admin-black: #000000;
+  --admin-near-black: #111111;
+  --admin-dark-gray: #222222;
+  --admin-white: #ffffff;
+  --admin-off-white: #fffdf8;
+
+  --admin-pink: #ff1493;
+  --admin-magenta: #ef00ff;
+  --admin-purple: #8a00ff;
+  --admin-blue: #007bff;
+  --admin-cyan: #00eaff;
+  --admin-green: #34e600;
+  --admin-lime: #a8ff00;
+  --admin-yellow: #ffe600;
+  --admin-orange: #ff7a00;
+  --admin-red: #e53935;
+
+  --admin-panel:
+    rgba(255, 255, 255, 0.94);
+
+  --admin-panel-solid:
+    #ffffff;
+
+  --admin-muted:
+    #333333;
+
+  --admin-border:
+    #000000;
+
+  --admin-shadow:
+    rgba(0, 0, 0, 0.38);
+
+  --admin-focus:
+    #002bff;
+
+  --admin-success-text:
+    #126b17;
+
+  --admin-warning-text:
+    #8a4200;
+
+  --admin-error-text:
+    #b00024;
+
+  --admin-information-text:
+    #003d9c;
 }
 
-/* Sections */
-.section {
-    background: #222;
-    padding: 20px;
-    border-radius: 10px;
-    margin-bottom: 25px;
-}
-
-/* Inputs */
-input, textarea, select {
-    width: 100%;
-    padding: 10px;
-    margin-top: 10px;
-    border: none;
-    border-radius: 6px;
-    background: #333;
-    color: white;
-}
-
-/* Buttons */
-button {
-    padding: 12px 20px;
-    background: #2196F3;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-    margin-top: 15px;
-}
-
-button:hover {
-    background: #1976D2;
-}
-
-.danger {
-    background: red !important;
-    color: white;
-}
-
-/* Variant Boxes */
-.variant-box {
-    background: #333;
-    padding: 15px;
-    border-radius: 10px;
-    margin-bottom: 15px;
-}
-
-.variant-box input {
-    background: #444;
-}
-
-/* Product Image Preview */
-#p-preview {
-    width: 180px;
-    border-radius: 10px;
-    margin-top: 10px;
-}
-
+/* ============================================================
+   THEME STYLES
+   ============================================================ */

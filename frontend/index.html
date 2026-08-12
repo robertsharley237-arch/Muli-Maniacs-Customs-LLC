@@ -1,93 +1,864 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Multi-Maniacs Customs LLC</title>
-    <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
+
+  <meta
+    name="description"
+    content="Multi-Maniacs Customs LLC is a multi-industry customization shop offering personalized products, creative builds, and custom project services."
+  >
+
+  <meta
+    name="theme-color"
+    content="#000000"
+  >
+
+  <title>
+    Home | Multi-Maniacs Customs LLC
+  </title>
+
+  <link
+    rel="stylesheet"
+    href="style.css"
+  >
+
+  <script
+    src="navigation.js"
+    defer
+  ></script>
+
+  <script
+    src="cart.js"
+    defer
+  ></script>
+
+  <script
+    src="homepage.js"
+    defer
+  ></script>
 </head>
 
 <body>
+  #main-content
+    Skip to main content
+  </a>
 
-    <!-- ============================
-         UPDATED BLACK HEADER
-         ============================ -->
-    <header class="top-header">
-        <h1>Multi-Maniacs Customs LLC</h1>
+  <!-- ========================================================
+       WEBSITE HEADER
+       ======================================================== -->
 
-        <nav class="header-buttons">
+  <header class="top-header">
+    <div class="header-content">
+      <a
+        class="site-logo-link"
+        href="index.html"
+        aria-label="Go to the Multi-Maniacs Customs home page"
+      >
+        images/mmc-logo.png
+      </a>
 
-            <button onclick="navigate('home')">
-                <span class="icon">🏠</span> Home
-            </button>
+      <div class="site-branding">
+        <p class="site-heading">
+          Multi-Maniacs Customs LLC
+        </p>
 
-            <button onclick="navigate('about')">
-                <span class="icon">📘</span> About
-            </button>
+        <p class="site-tagline">
+          Custom Possibilities Across Industries
+        </p>
 
-            <button onclick="navigate('services')">
-                <span class="icon">🛠️</span> Services
-            </button>
+        <nav
+          class="header-buttons"
+          aria-label="Main website navigation"
+        >
+          <a
+            href="index.html"
+            aria-current="page"
+          >
+            Home
+          </a>
 
-            <button onclick="navigate('shop')">
-                <span class="icon">🛒</span> Shop
-            </button>
+          <a href="about.html">
+            About
+          </a>
 
-            <button onclick="navigate('cart')">
-                <span class="icon">🛍️</span> Cart
-            </button>
+          <a href="services.html">
+            Services
+          </a>
 
-            <button onclick="navigate('contact')">
-                <span class="icon">📞</span> Contact
-            </button>
+          <a href="gallery.html">
+            Gallery
+          </a>
 
-            <button onclick="navigate('gallery')">
-                <span class="icon">🖼️</span> Gallery
-            </button>
+          <a href="shop.html">
+            Shop
+          </a>
 
-            <!-- ⭐ ADMIN BUTTON ⭐ -->
-            <button class="admin-btn" onclick="navigate('admin-dashboard')">
-                <span class="icon">🔧</span> Admin
-            </button>
+          <a
+            class="cart-navigation-link"
+            href="cart.html"
+          >
+            Cart
 
+            <span
+              id="cart-count"
+              class="cart-count-badge"
+              aria-label="0 items in cart"
+            >
+              0
+            </span>
+          </a>
+
+          <a href="contact.html">
+            Contact
+          </a>
+
+          <a href="client-intake.html">
+            Client Intake
+          </a>
+
+          <button
+            id="admin-navigation-button"
+            class="admin-navigation-button"
+            type="button"
+          >
+            Admin
+          </button>
         </nav>
+      </div>
+    </div>
+  </header>
 
-        <!-- MINI CART -->
-        <div class="mini-cart" id="miniCart">
-            <h3>Mini Cart</h3>
-            <div id="miniCartItems"></div>
-        </div>
-    </header>
+  <!-- ========================================================
+       HOMEPAGE MINI CART
+       ======================================================== -->
 
+  <aside
+    class="mini-cart-section"
+    aria-labelledby="mini-cart-heading"
+  >
+    <div
+      class="tie-dye-color-bar"
+      aria-hidden="true"
+    ></div>
 
-    <!-- ============================
-         HOME PAGE CONTENT
-         ============================ -->
-    <div class="home-container" style="padding: 20px; text-align: center;">
-        <h2>Welcome to Multi-Maniacs Customs LLC</h2>
-
-        <p style="margin-top: 15px;">
-            A multi-industry customization and freelance business serving clients of all walks of life.
-            We create custom products, custom builds, and custom jobs across many industries,
-            tailored to each client’s vision.
+    <div class="mini-cart-heading-row">
+      <div>
+        <p class="mini-cart-eyebrow">
+          Quick Cart Preview
         </p>
 
-        <p style="margin-top: 15px;">
-            We are not a body shop — we are a custom shop. Every project is unique,
-            and every client receives a personalized experience.
-        </p>
+        <h2 id="mini-cart-heading">
+          Your Cart
+        </h2>
+      </div>
+
+      <a
+        class="mini-cart-header-link"
+        href="cart.html"
+      >
+        Open Full Cart
+      </a>
     </div>
 
+    <div
+      id="miniCartItems"
+      class="mini-cart-items"
+      aria-live="polite"
+      aria-atomic="false"
+    >
+      <p class="mini-cart-loading">
+        Loading your cart...
+      </p>
+    </div>
+  </aside>
 
-    <!-- ============================
-         FOOTER
-         ============================ -->
-    <footer style="background:#000; color:#fff; padding:20px; text-align:center; margin-top:40px;">
-        © 2026 Multi-Maniacs Customs LLC • Essie, KY • Clients accepted anywhere in the U.S.<br>
-        Phone: (606) 220-0185 • (606) 212-4695 • Email: multimaniacscustoms@gmail.com
-    </footer>
+  <!-- ========================================================
+       MAIN HOMEPAGE
+       ======================================================== -->
 
-    <!-- NAVIGATION SYSTEM -->
-    <script src="navigation.js"></script>
+  <main
+    id="main-content"
+    class="home-page"
+  >
+    <!-- ======================================================
+         HERO SECTION
+         ====================================================== -->
 
+    <section
+      class="hero-section"
+      aria-labelledby="hero-heading"
+    >
+      <div
+        class="tie-dye-color-bar"
+        aria-hidden="true"
+      ></div>
+
+      <p class="hero-eyebrow">
+        Welcome to MMC
+      </p>
+
+      <h1
+        id="hero-heading"
+        class="hero-heading"
+      >
+        Custom Possibilities Across Industries
+      </h1>
+
+      <p class="hero-description">
+        Multi-Maniacs Customs LLC is a multi-industry
+        customization shop serving clients from all walks of
+        life. We create personalized products, custom builds,
+        creative designs, and unique projects based on each
+        client’s individual vision.
+      </p>
+
+      <div class="hero-actions">
+        <a
+          class="primary-action"
+          href="client-intake.html"
+        >
+          Start a Client Intake Request
+        </a>
+
+        <a
+          class="secondary-action"
+          href="shop.html"
+        >
+          Browse the Shop
+        </a>
+
+        <a
+          class="secondary-action"
+          href="gallery.html"
+        >
+          View the Gallery
+        </a>
+      </div>
+    </section>
+
+    <!-- ======================================================
+         ABOUT THE CUSTOM SHOP
+         ====================================================== -->
+
+    <section
+      class="home-section"
+      aria-labelledby="custom-shop-heading"
+    >
+      <div
+        class="tie-dye-color-bar"
+        aria-hidden="true"
+      ></div>
+
+      <p class="section-eyebrow">
+        Multi-Industry Customization
+      </p>
+
+      <h2 id="custom-shop-heading">
+        More Than One Type of Custom Shop
+      </h2>
+
+      <p class="home-section-description">
+        Multi-Maniacs Customs is not limited to one product,
+        service, material, or industry. Each project is reviewed
+        individually so the work can be planned around the
+        client’s needs, purpose, budget, timeline, and preferred
+        style.
+      </p>
+
+      <div class="feature-grid">
+        <article class="feature-card">
+          <span
+            class="feature-icon"
+            aria-hidden="true"
+          >
+            🎨
+          </span>
+
+          <h3>
+            Personalized Products
+          </h3>
+
+          <p>
+            Custom products designed around names, colors,
+            wording, themes, branding, events, and personal
+            preferences.
+          </p>
+        </article>
+
+        <article class="feature-card">
+          <span
+            class="feature-icon"
+            aria-hidden="true"
+          >
+            🛠️
+          </span>
+
+          <h3>
+            Custom Builds
+          </h3>
+
+          <p>
+            Creative projects, displays, decor, equipment, and
+            builds developed for a specific client purpose.
+          </p>
+        </article>
+
+        <article class="feature-card">
+          <span
+            class="feature-icon"
+            aria-hidden="true"
+          >
+            🏢
+          </span>
+
+          <h3>
+            Business and Event Work
+          </h3>
+
+          <p>
+            Branded items, signs, displays, promotional pieces,
+            and custom materials for businesses, organizations,
+            and events.
+          </p>
+        </article>
+
+        <article class="feature-card">
+          <span
+            class="feature-icon"
+            aria-hidden="true"
+          >
+            💡
+          </span>
+
+          <h3>
+            Unique Client Requests
+          </h3>
+
+          <p>
+            Projects that do not fit into a standard category can
+            be submitted and reviewed through the client intake
+            system.
+          </p>
+        </article>
+      </div>
+    </section>
+
+    <!-- ======================================================
+         FEATURED SERVICES
+         ====================================================== -->
+
+    <section
+      class="home-section"
+      aria-labelledby="featured-services-heading"
+    >
+      <div
+        class="tie-dye-color-bar"
+        aria-hidden="true"
+      ></div>
+
+      <p class="section-eyebrow">
+        Explore the Possibilities
+      </p>
+
+      <h2 id="featured-services-heading">
+        Featured Services
+      </h2>
+
+      <p class="home-section-description">
+        MMC provides customization and creative project support
+        across several industries. Every project is reviewed
+        individually based on the requested work.
+      </p>
+
+      <div class="feature-grid">
+        <article class="feature-card">
+          <span
+            class="feature-icon"
+            aria-hidden="true"
+          >
+            👕
+          </span>
+
+          <h3>
+            Clothing and Apparel
+          </h3>
+
+          <p>
+            Personalized clothing, apparel designs, names,
+            wording, images, themes, and custom details.
+          </p>
+        </article>
+
+        <article class="feature-card">
+          <span
+            class="feature-icon"
+            aria-hidden="true"
+          >
+            💍
+          </span>
+
+          <h3>
+            Jewelry and Engraving
+          </h3>
+
+          <p>
+            Custom jewelry concepts, personalization, and
+            engraving services for meaningful designs.
+          </p>
+        </article>
+
+        <article class="feature-card">
+          <span
+            class="feature-icon"
+            aria-hidden="true"
+          >
+            ⚙️
+          </span>
+
+          <h3>
+            Tools and Equipment
+          </h3>
+
+          <p>
+            Customization for tools, equipment, workspaces, and
+            specialized projects.
+          </p>
+        </article>
+
+        <article class="feature-card">
+          <span
+            class="feature-icon"
+            aria-hidden="true"
+          >
+            🏠
+          </span>
+
+          <h3>
+            Home Projects
+          </h3>
+
+          <p>
+            Interior upgrades, customized decor, landscaping,
+            demolition, and rebuilding projects.
+          </p>
+        </article>
+
+        <article class="feature-card">
+          <span
+            class="feature-icon"
+            aria-hidden="true"
+          >
+            📹
+          </span>
+
+          <h3>
+            Home Protection
+          </h3>
+
+          <p>
+            Security camera and home-protection system
+            installation services.
+          </p>
+        </article>
+
+        <article class="feature-card">
+          <span
+            class="feature-icon"
+            aria-hidden="true"
+          >
+            🐾
+          </span>
+
+          <h3>
+            Pet Care
+          </h3>
+
+          <p>
+            Pet grooming and personalized pet-care services based
+            on the client’s requested needs.
+          </p>
+        </article>
+      </div>
+
+      <div class="section-actions">
+        <a
+          class="primary-action"
+          href="services.html"
+        >
+          View All Services
+        </a>
+
+        <a
+          class="secondary-action"
+          href="contact.html"
+        >
+          Ask About a Service
+        </a>
+      </div>
+    </section>
+
+    <!-- ======================================================
+         CLIENT PROJECT PROCESS
+         ====================================================== -->
+
+    <section
+      class="home-section"
+      aria-labelledby="client-process-heading"
+    >
+      <div
+        class="tie-dye-color-bar"
+        aria-hidden="true"
+      ></div>
+
+      <p class="section-eyebrow">
+        From Idea to Creation
+      </p>
+
+      <h2 id="client-process-heading">
+        The Client Project Process
+      </h2>
+
+      <p class="home-section-description">
+        Detailed custom requests begin with the client intake
+        system so the project information is documented before
+        options and pricing are discussed.
+      </p>
+
+      <div class="client-process">
+        <article class="client-process-step">
+          <h3>
+            Submit the Request
+          </h3>
+
+          <p>
+            Provide contact information, project details,
+            reference images, budget information, and timeline
+            preferences.
+          </p>
+        </article>
+
+        <article class="client-process-step">
+          <h3>
+            Project Review
+          </h3>
+
+          <p>
+            Multi-Maniacs Customs reviews the request, materials,
+            design requirements, and project feasibility.
+          </p>
+        </article>
+
+        <article class="client-process-step">
+          <h3>
+            Options and Pricing
+          </h3>
+
+          <p>
+            Available options, expected costs, project scope, and
+            next steps can then be discussed with the client.
+          </p>
+        </article>
+
+        <article class="client-process-step">
+          <h3>
+            Custom Creation
+          </h3>
+
+          <p>
+            Once approved, the project moves forward according to
+            the agreed design, timeline, and customization plan.
+          </p>
+        </article>
+      </div>
+    </section>
+
+    <!-- ======================================================
+         WHY CHOOSE MMC
+         ====================================================== -->
+
+    <section
+      class="home-section"
+      aria-labelledby="why-mmc-heading"
+    >
+      <div
+        class="tie-dye-color-bar"
+        aria-hidden="true"
+      ></div>
+
+      <p class="section-eyebrow">
+        Built Around the Client
+      </p>
+
+      <h2 id="why-mmc-heading">
+        Why Choose Multi-Maniacs Customs?
+      </h2>
+
+      <div class="feature-grid">
+        <article class="feature-card">
+          <span
+            class="feature-icon"
+            aria-hidden="true"
+          >
+            🌈
+          </span>
+
+          <h3>
+            Creative Possibilities
+          </h3>
+
+          <p>
+            MMC welcomes ideas that may not fit into a traditional
+            product or service category.
+          </p>
+        </article>
+
+        <article class="feature-card">
+          <span
+            class="feature-icon"
+            aria-hidden="true"
+          >
+            📋
+          </span>
+
+          <h3>
+            Organized Intake Process
+          </h3>
+
+          <p>
+            Project details are collected through a structured
+            client intake system before custom work begins.
+          </p>
+        </article>
+
+        <article class="feature-card">
+          <span
+            class="feature-icon"
+            aria-hidden="true"
+          >
+            🤝
+          </span>
+
+          <h3>
+            Client-Focused Service
+          </h3>
+
+          <p>
+            Each project is reviewed according to the individual
+            client’s goals, preferences, and intended use.
+          </p>
+        </article>
+
+        <article class="feature-card">
+          <span
+            class="feature-icon"
+            aria-hidden="true"
+          >
+            ✨
+          </span>
+
+          <h3>
+            Personalized Results
+          </h3>
+
+          <p>
+            Customization options can include colors, wording,
+            images, materials, measurements, themes, and other
+            details.
+          </p>
+        </article>
+      </div>
+    </section>
+
+    <!-- ======================================================
+         SHOP CALL TO ACTION
+         ====================================================== -->
+
+    <section
+      class="shop-callout"
+      aria-labelledby="shop-callout-heading"
+    >
+      <div
+        class="tie-dye-color-bar"
+        aria-hidden="true"
+      ></div>
+
+      <p class="section-eyebrow">
+        Ready-to-Browse Products
+      </p>
+
+      <h2 id="shop-callout-heading">
+        Visit the MMC Shop
+      </h2>
+
+      <p>
+        Browse available products, review customization options,
+        select product variants, and add items to your cart.
+      </p>
+
+      <div class="section-actions">
+        <a
+          class="primary-action"
+          href="shop.html"
+        >
+          Browse Products
+        </a>
+
+        <a
+          class="secondary-action"
+          href="cart.html"
+        >
+          View Your Cart
+        </a>
+      </div>
+    </section>
+
+    <!-- ======================================================
+         CLIENT INTAKE CALL TO ACTION
+         ====================================================== -->
+
+    <section
+      class="client-intake-callout"
+      aria-labelledby="intake-callout-heading"
+    >
+      <div
+        class="tie-dye-color-bar"
+        aria-hidden="true"
+      ></div>
+
+      <p class="section-eyebrow">
+        Have Something Different in Mind?
+      </p>
+
+      <h2 id="intake-callout-heading">
+        Have an Idea That Does Not Fit a Standard Category?
+      </h2>
+
+      <p>
+        That is exactly what the client intake system is for.
+        Share the idea, intended use, preferred colors,
+        materials, measurements, quantity, budget, timeline, and
+        reference images so the project can be reviewed.
+      </p>
+
+      <div class="section-actions">
+        <a
+          class="primary-action"
+          href="client-intake.html"
+        >
+          Submit a Client Intake Request
+        </a>
+
+        <a
+          class="secondary-action"
+          href="contact.html"
+        >
+          Contact MMC
+        </a>
+      </div>
+    </section>
+  </main>
+
+  <!-- ========================================================
+       WEBSITE FOOTER
+       ======================================================== -->
+
+  <footer class="site-footer">
+    images/mmc-logo.png
+
+    <p>
+      <strong>
+        Multi-Maniacs Customs LLC
+      </strong>
+    </p>
+
+    <p>
+      Multi-industry customization, creative builds, and
+      personalized client projects.
+    </p>
+
+    <p>
+      Essie, Kentucky | Clients accepted throughout the United
+      States
+    </p>
+
+    <p>
+      Phone:
+
+      tel:+16062200185
+        (606) 220-0185
+      </a>
+
+      <span aria-hidden="true">
+        |
+      </span>
+
+      tel:+16062124695
+        (606) 212-4695
+      </a>
+    </p>
+
+    <p>
+      Email:
+
+      <a href="mailto:multimaniacscustoms@gmail.com">
+        multimaniacscustoms@gmail.com
+      </a>
+    </p>
+
+    <p>
+      <a
+        href="https://www.facebook.com/profile.php?id=61576404930589"
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        Visit the MMC Facebook Page
+      </a>
+    </p>
+
+    <nav
+      class="footer-navigation"
+      aria-label="Footer navigation"
+    >
+      <a href="about.html">
+        About
+      </a>
+
+      <a href="services.html">
+        Services
+      </a>
+
+      <a href="shop.html">
+        Shop
+      </a>
+
+      <a href="gallery.html">
+        Gallery
+      </a>
+
+      <a href="contact.html">
+        Contact
+      </a>
+
+      <a href="client-intake.html">
+        Client Intake
+      </a>
+    </nav>
+
+    <p class="footer-copyright">
+      &copy; 2026 Multi-Maniacs Customs LLC. All rights reserved.
+    </p>
+  </footer>
+
+  <noscript>
+    <div class="noscript-message">
+      JavaScript must be enabled to use the shopping cart and
+      other interactive website features.
+    </div>
+  </noscript>
 </body>
 </html>

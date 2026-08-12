@@ -1,1434 +1,977 @@
 // ============================================================
-// MULTI-MANIACS CUSTOMS LLC - ADMIN DASHBOARD
-// Vercel + Neon PostgreSQL + JWT + Multer + Cloudinary
+// MULTI-MANIACS CUSTOMS LLC
+// FILE: models/Admin.js
+// ADMINISTRATOR MODEL FOR NEON POSTGRESQL
 // ============================================================
 
-const BACKEND_URL = window.MMC_BACKEND_URL || window.location.origin;
+"use strict";
 
-const PRODUCTS_API = `${BACKEND_URL}/products`;
-const ADMIN_PRODUCTS_API = `${BACKEND_URL}/admin/products`;
-const UPLOAD_API = `${BACKEND_URL}/upload/image`;
+const bcrypt =
+  require("bcryptjs");
 
-let uploadedImagePublicId = "";
+const db =
+  require("../db");
 
-// ============================================================
-// AUTHENTICATION HELPERS
-// ============================================================
+const ALLOWED_ADMIN_ROLES = [
+  "admin",
+  "super_admin"
+];
 
-function getAdminToken() {
-  return localStorage.getItem("adminToken");
-}
-
-function getAdminHeaders(includeContentType = true) {
-  const headers = {
-    Authorization: `Bearer ${getAdminToken()}`
-  };
-
-  if (includeContentType) {
-    headers["Content-Type"] = "application/json";
-  }
-
-  return headers;
-}
-
-function redirectToLogin() {
-  localStorage.removeItem("adminToken");
-  localStorage.removeItem("adminUser");
-  window.location.href = "admin-login.html";
-}
-
-function logoutAdmin() {
-  redirectToLogin();
-}
-
-async function readApiResponse(response) {
-  let data;
-
-  try {
-    data = await response.json();
-  } catch (error) {
-    data = {
-      error: "The server returned an unexpected response."
-    };
-  }
-
-  if (response.status === 401) {
-    redirectToLogin();
-
-    throw new Error(
-      data.error || "Your admin session expired. Please log in again."
-    );
-  }
-
-  if (!response.ok) {
-    throw new Error(
-      data.error || `Request failed with status ${response.status}.`
-    );
-  }
-
-  return data;
-}
-
-async function verifyAdminSession() {
-  if (!getAdminToken()) {
-    redirectToLogin();
-    return false;
-  }
-
-  try {
-    const response = await fetch(`${BACKEND_URL}/admin/me`, {
-      method: "GET",
-      headers: getAdminHeaders(false)
-    });
-
-    const data = await readApiResponse(response);
-
-    localStorage.setItem(
-      "adminUser",
-      JSON.stringify(data.admin)
-    );
-
-    displayLoggedInAdmin(data.admin);
-
-    return true;
-  } catch (error) {
-    console.error(
-      "Admin session verification failed:",
-      error
-    );
-
-    return false;
-  }
-}
-
-function displayLoggedInAdmin(admin) {
-  const usernameElement =
-    document.getElementById("admin-username");
-
-  const roleElement =
-    document.getElementById("admin-role");
-
-  if (usernameElement) {
-    usernameElement.textContent = admin.username;
-  }
-
-  if (roleElement) {
-    roleElement.textContent = admin.role;
-  }
-}
+const PASSWORD_HASH_ROUNDS = 12;
 
 // ============================================================
-// GENERAL HELPERS
+// CLEAN TEXT
 // ============================================================
 
-function formatPrice(value) {
-  const price = Number(value);
-
-  return Number.isFinite(price)
-    ? price.toFixed(2)
-    : "0.00";
-}
-
-function getProductId(product) {
-  return String(
-    product.id ||
-    product._id ||
-    ""
-  );
-}
-
-function createElement(tagName, options = {}) {
-  const element =
-    document.createElement(tagName);
-
-  if (options.className) {
-    element.className = options.className;
-  }
-
-  if (options.text !== undefined) {
-    element.textContent = options.text;
-  }
-
-  if (options.id) {
-    element.id = options.id;
-  }
-
-  if (options.type) {
-    element.type = options.type;
-  }
-
-  if (options.placeholder) {
-    element.placeholder = options.placeholder;
-  }
-
-  if (options.min !== undefined) {
-    element.min = options.min;
-  }
-
-  if (options.step !== undefined) {
-    element.step = options.step;
-  }
-
-  return element;
-}
-
-function appendInformationLine(
-  container,
-  label,
-  value
+function cleanText(
+  value,
+  maximumLength
 ) {
-  const paragraph =
-    document.createElement("p");
+  return String(value || "")
+    .trim()
+    .replace(/\s+/g, " ")
+    .slice(
+      0,
+      maximumLength
+    );
+}
 
-  const boldLabel =
-    document.createElement("strong");
+// ============================================================
+// NORMALIZE USERNAME
+// ============================================================
 
-  boldLabel.textContent = `${label}: `;
+function normalizeUsername(value) {
+  return cleanText(
+    value,
+    100
+  ).toLowerCase();
+}
 
-  paragraph.appendChild(boldLabel);
+// ============================================================
+// NORMALIZE ROLE
+// ============================================================
 
-  paragraph.appendChild(
-    document.createTextNode(
-      String(value ?? "")
+function normalizeRole(
+  value,
+  fallbackRole
+) {
+  const role =
+    String(
+      value ||
+      fallbackRole ||
+      "admin"
     )
-  );
-
-  container.appendChild(paragraph);
-}
-
-function createLabeledInput(
-  labelText,
-  inputOptions
-) {
-  const wrapper = createElement("div", {
-    className: "admin-field"
-  });
-
-  const label = createElement("label", {
-    text: labelText
-  });
-
-  const input = createElement(
-    "input",
-    inputOptions
-  );
-
-  label.htmlFor = input.id;
-
-  wrapper.appendChild(label);
-  wrapper.appendChild(input);
-
-  return {
-    wrapper,
-    input
-  };
-}
-
-// ============================================================
-// CLOUDINARY IMAGE UPLOAD
-// ============================================================
-
-async function uploadImage() {
-  const fileInput =
-    document.getElementById("p-image-file");
-
-  const imageUrlInput =
-    document.getElementById("p-image");
-
-  const uploadButton =
-    document.getElementById(
-      "upload-image-button"
-    );
-
-  const file =
-    fileInput &&
-    fileInput.files &&
-    fileInput.files[0];
-
-  if (!file) {
-    alert("Please select an image.");
-    return;
-  }
-
-  if (!file.type.startsWith("image/")) {
-    alert(
-      "Please select a valid image file."
-    );
-
-    return;
-  }
-
-  const formData = new FormData();
-
-  formData.append("image", file);
-
-  try {
-    if (uploadButton) {
-      uploadButton.disabled = true;
-      uploadButton.textContent =
-        "Uploading...";
-    }
-
-    const response = await fetch(
-      UPLOAD_API,
-      {
-        method: "POST",
-        headers: getAdminHeaders(false),
-        body: formData
-      }
-    );
-
-    const data =
-      await readApiResponse(response);
-
-    if (imageUrlInput) {
-      imageUrlInput.value = data.url;
-    }
-
-    uploadedImagePublicId =
-      data.public_id || "";
-
-    alert(
-      "Image uploaded successfully."
-    );
-  } catch (error) {
-    console.error(
-      "Image upload failed:",
-      error
-    );
-
-    alert(
-      error.message ||
-      "Image upload failed."
-    );
-  } finally {
-    if (uploadButton) {
-      uploadButton.disabled = false;
-      uploadButton.textContent =
-        "Upload Image";
-    }
-  }
-}
-
-// ============================================================
-// LOAD ADMIN PRODUCTS
-// ============================================================
-
-async function loadAdminProducts() {
-  const container =
-    document.getElementById(
-      "admin-products"
-    );
-
-  if (!container) {
-    return;
-  }
-
-  container.replaceChildren(
-    createElement("p", {
-      text: "Loading products..."
-    })
-  );
-
-  try {
-    const response = await fetch(
-      ADMIN_PRODUCTS_API,
-      {
-        method: "GET",
-        headers: getAdminHeaders(false)
-      }
-    );
-
-    const products =
-      await readApiResponse(response);
-
-    container.replaceChildren();
-
-    if (
-      !Array.isArray(products) ||
-      products.length === 0
-    ) {
-      container.appendChild(
-        createElement("p", {
-          text:
-            "No products have been added yet."
-        })
-      );
-
-      return;
-    }
-
-    products.forEach((product) => {
-      container.appendChild(
-        createProductCard(product)
-      );
-    });
-  } catch (error) {
-    console.error(
-      "Failed to load products:",
-      error
-    );
-
-    container.replaceChildren(
-      createElement("p", {
-        className: "admin-error",
-        text:
-          error.message ||
-          "Failed to load products."
-      })
-    );
-  }
-}
-
-// ============================================================
-// CREATE PRODUCT CARD
-// ============================================================
-
-function createProductCard(product) {
-  const productId =
-    getProductId(product);
-
-  const variants =
-    Array.isArray(product.variants)
-      ? product.variants
-      : [];
-
-  const card = createElement("section", {
-    className: "admin-product"
-  });
-
-  card.dataset.productId = productId;
-
-  card.appendChild(
-    createElement("h3", {
-      text:
-        product.name ||
-        "Unnamed Product"
-    })
-  );
-
-  if (product.image) {
-    const image =
-      document.createElement("img");
-
-    image.src = product.image;
-
-    image.alt =
-      product.name ||
-      "Product image";
-
-    image.className = "admin-img";
-    image.loading = "lazy";
-
-    image.addEventListener(
-      "error",
-      () => {
-        image.remove();
-      }
-    );
-
-    card.appendChild(image);
-  }
-
-  appendInformationLine(
-    card,
-    "SKU",
-    product.sku || ""
-  );
-
-  appendInformationLine(
-    card,
-    "Price",
-    `$${formatPrice(product.price)}`
-  );
-
-  appendInformationLine(
-    card,
-    "Stock",
-    Number(product.stock || 0)
-  );
-
-  appendInformationLine(
-    card,
-    "Category",
-    product.category || "General"
-  );
-
-  appendInformationLine(
-    card,
-    "Description",
-    product.description || ""
-  );
-
-  card.appendChild(
-    createElement("h4", {
-      text: "Variants"
-    })
-  );
-
-  const variantList =
-    createElement("div", {
-      className: "variant-list"
-    });
-
-  if (variants.length === 0) {
-    variantList.appendChild(
-      createElement("p", {
-        text:
-          "No variants have been added."
-      })
-    );
-  } else {
-    variants.forEach(
-      (variant, index) => {
-        variantList.appendChild(
-          createVariantItem(
-            productId,
-            variant,
-            index
-          )
-        );
-      }
-    );
-  }
-
-  card.appendChild(variantList);
-
-  card.appendChild(
-    createAddVariantSection(productId)
-  );
-
-  card.appendChild(
-    createProductStockSection(productId)
-  );
-
-  const deleteButton =
-    createElement("button", {
-      className: "remove-btn",
-      text: "Delete Product",
-      type: "button"
-    });
-
-  deleteButton.addEventListener(
-    "click",
-    () => {
-      deleteProduct(productId);
-    }
-  );
-
-  card.appendChild(deleteButton);
-
-  return card;
-}
-
-// ============================================================
-// CREATE VARIANT ITEM
-// ============================================================
-
-function createVariantItem(
-  productId,
-  variant,
-  variantIndex
-) {
-  const item = createElement("div", {
-    className: "variant-item"
-  });
-
-  const information =
-    createElement("p", {
-      text:
-        `${variant.name || "Unnamed Variant"} | ` +
-        `SKU: ${variant.sku || ""} | ` +
-        `Price: $${formatPrice(variant.price)} | ` +
-        `Stock: ${Number(variant.stock || 0)}`
-    });
-
-  item.appendChild(information);
-
-  const stockField =
-    createLabeledInput(
-      "New variant stock",
-      {
-        id:
-          `v-stock-${productId}-` +
-          `${variantIndex}`,
-        type: "number",
-        placeholder: "New Stock",
-        min: "0",
-        step: "1"
-      }
-    );
-
-  const updateButton =
-    createElement("button", {
-      className: "btn-small",
-      text: "Update Stock",
-      type: "button"
-    });
-
-  updateButton.addEventListener(
-    "click",
-    () => {
-      updateVariantStock(
-        productId,
-        variantIndex
-      );
-    }
-  );
-
-  const deleteButton =
-    createElement("button", {
-      className: "remove-btn-small",
-      text: "Delete Variant",
-      type: "button"
-    });
-
-  deleteButton.addEventListener(
-    "click",
-    () => {
-      deleteVariant(
-        productId,
-        variantIndex
-      );
-    }
-  );
-
-  item.appendChild(stockField.wrapper);
-  item.appendChild(updateButton);
-  item.appendChild(deleteButton);
-
-  return item;
-}
-
-// ============================================================
-// CREATE ADD VARIANT SECTION
-// ============================================================
-
-function createAddVariantSection(
-  productId
-) {
-  const section = createElement("div", {
-    className: "add-variant-section"
-  });
-
-  section.appendChild(
-    createElement("h4", {
-      text: "Add Variant"
-    })
-  );
-
-  const nameField =
-    createLabeledInput(
-      "Variant name",
-      {
-        id: `v-name-${productId}`,
-        type: "text",
-        placeholder:
-          "Red, XL, Gloss"
-      }
-    );
-
-  const skuField =
-    createLabeledInput(
-      "Variant SKU",
-      {
-        id: `v-sku-${productId}`,
-        type: "text",
-        placeholder:
-          "MMC-001-RED"
-      }
-    );
-
-  const priceField =
-    createLabeledInput(
-      "Variant price",
-      {
-        id: `v-price-${productId}`,
-        type: "number",
-        placeholder:
-          "Variant Price",
-        min: "0",
-        step: "0.01"
-      }
-    );
-
-  const stockField =
-    createLabeledInput(
-      "Variant stock",
-      {
-        id:
-          `v-stock-new-${productId}`,
-        type: "number",
-        placeholder:
-          "Variant Stock",
-        min: "0",
-        step: "1"
-      }
-    );
-
-  const addButton =
-    createElement("button", {
-      className: "btn-small",
-      text: "Add Variant",
-      type: "button"
-    });
-
-  addButton.addEventListener(
-    "click",
-    () => {
-      addVariant(productId);
-    }
-  );
-
-  section.appendChild(
-    nameField.wrapper
-  );
-
-  section.appendChild(
-    skuField.wrapper
-  );
-
-  section.appendChild(
-    priceField.wrapper
-  );
-
-  section.appendChild(
-    stockField.wrapper
-  );
-
-  section.appendChild(addButton);
-
-  return section;
-}
-
-// ============================================================
-// CREATE PRODUCT STOCK SECTION
-// ============================================================
-
-function createProductStockSection(
-  productId
-) {
-  const section = createElement("div", {
-    className:
-      "product-stock-section"
-  });
-
-  section.appendChild(
-    createElement("h4", {
-      text: "Update Product Stock"
-    })
-  );
-
-  const stockField =
-    createLabeledInput(
-      "New product stock",
-      {
-        id: `p-stock-${productId}`,
-        type: "number",
-        placeholder: "New Stock",
-        min: "0",
-        step: "1"
-      }
-    );
-
-  const updateButton =
-    createElement("button", {
-      className: "btn-small",
-      text: "Update Stock",
-      type: "button"
-    });
-
-  updateButton.addEventListener(
-    "click",
-    () => {
-      updateProductStock(productId);
-    }
-  );
-
-  section.appendChild(
-    stockField.wrapper
-  );
-
-  section.appendChild(updateButton);
-
-  return section;
-}
-
-// ============================================================
-// ADD PRODUCT
-// ============================================================
-
-async function addProduct(event) {
-  if (event) {
-    event.preventDefault();
-  }
-
-  const nameInput =
-    document.getElementById("p-name");
-
-  const skuInput =
-    document.getElementById("p-sku");
-
-  const priceInput =
-    document.getElementById("p-price");
-
-  const imageInput =
-    document.getElementById("p-image");
-
-  const stockInput =
-    document.getElementById("p-stock");
-
-  const categoryInput =
-    document.getElementById(
-      "p-category"
-    );
-
-  const descriptionInput =
-    document.getElementById("p-desc");
-
-  const name =
-    nameInput
-      ? nameInput.value.trim()
-      : "";
-
-  const sku =
-    skuInput
-      ? skuInput.value.trim()
-      : "";
-
-  const price = Number(
-    priceInput
-      ? priceInput.value
-      : ""
-  );
-
-  const image =
-    imageInput
-      ? imageInput.value.trim()
-      : "";
-
-  const stock = Number(
-    stockInput
-      ? stockInput.value || 0
-      : 0
-  );
-
-  const category =
-    categoryInput &&
-    categoryInput.value.trim()
-      ? categoryInput.value.trim()
-      : "General";
-
-  const description =
-    descriptionInput
-      ? descriptionInput.value.trim()
-      : "";
-
-  if (!name) {
-    alert(
-      "Product name is required."
-    );
-
-    return;
-  }
-
-  if (!sku) {
-    alert(
-      "Product SKU is required."
-    );
-
-    return;
-  }
-
-  if (!image) {
-    alert(
-      "Upload a product image before adding the product."
-    );
-
-    return;
-  }
+      .trim()
+      .toLowerCase()
+      .replace(/[ -]+/g, "_");
 
   if (
-    !Number.isFinite(price) ||
-    price < 0
+    ALLOWED_ADMIN_ROLES.includes(
+      role
+    )
   ) {
-    alert(
-      "Please enter a valid product price."
-    );
-
-    return;
+    return role;
   }
 
-  if (
-    !Number.isInteger(stock) ||
-    stock < 0
-  ) {
-    alert(
-      "Please enter a valid whole-number stock amount."
-    );
-
-    return;
-  }
-
-  const product = {
-    name,
-    sku,
-    price,
-    image,
-    imagePublicId:
-      uploadedImagePublicId,
-    stock,
-    category,
-    description,
-    variants: [],
-    lowStockWarning: 5,
-    active: true
-  };
-
-  try {
-    const response = await fetch(
-      PRODUCTS_API,
-      {
-        method: "POST",
-        headers: getAdminHeaders(true),
-        body: JSON.stringify(product)
-      }
-    );
-
-    await readApiResponse(response);
-
-    alert(
-      "Product added successfully."
-    );
-
-    clearAddProductForm();
-
-    await loadAdminProducts();
-  } catch (error) {
-    console.error(
-      "Add product failed:",
-      error
-    );
-
-    alert(
-      error.message ||
-      "Failed to add product."
-    );
-  }
-}
-
-function clearAddProductForm() {
-  const inputIds = [
-    "p-name",
-    "p-sku",
-    "p-price",
-    "p-image",
-    "p-stock",
-    "p-category",
-    "p-desc",
-    "p-image-file"
-  ];
-
-  inputIds.forEach((id) => {
-    const element =
-      document.getElementById(id);
-
-    if (element) {
-      element.value = "";
-    }
-  });
-
-  uploadedImagePublicId = "";
-}
-
-// ============================================================
-// UPDATE PRODUCT STOCK
-// ============================================================
-
-async function updateProductStock(
-  productId
-) {
-  const stockInput =
-    document.getElementById(
-      `p-stock-${productId}`
-    );
-
-  const stock = Number(
-    stockInput
-      ? stockInput.value
-      : ""
+  return (
+    fallbackRole ||
+    "admin"
   );
-
-  if (
-    !Number.isInteger(stock) ||
-    stock < 0
-  ) {
-    alert(
-      "Please enter a valid whole-number stock amount."
-    );
-
-    return;
-  }
-
-  try {
-    const response = await fetch(
-      `${PRODUCTS_API}/${productId}/stock`,
-      {
-        method: "PUT",
-        headers: getAdminHeaders(true),
-        body: JSON.stringify({
-          stock
-        })
-      }
-    );
-
-    await readApiResponse(response);
-
-    alert(
-      "Product stock updated."
-    );
-
-    await loadAdminProducts();
-  } catch (error) {
-    console.error(
-      "Product stock update failed:",
-      error
-    );
-
-    alert(
-      error.message ||
-      "Failed to update product stock."
-    );
-  }
 }
 
 // ============================================================
-// ADD VARIANT
+// CLEAN BOOLEAN
 // ============================================================
 
-async function addVariant(productId) {
-  const nameInput =
-    document.getElementById(
-      `v-name-${productId}`
-    );
-
-  const skuInput =
-    document.getElementById(
-      `v-sku-${productId}`
-    );
-
-  const priceInput =
-    document.getElementById(
-      `v-price-${productId}`
-    );
-
-  const stockInput =
-    document.getElementById(
-      `v-stock-new-${productId}`
-    );
-
-  const name =
-    nameInput
-      ? nameInput.value.trim()
-      : "";
-
-  const sku =
-    skuInput
-      ? skuInput.value.trim()
-      : "";
-
-  const price = Number(
-    priceInput
-      ? priceInput.value
-      : ""
-  );
-
-  const stock = Number(
-    stockInput
-      ? stockInput.value
-      : ""
-  );
-
-  if (!name) {
-    alert(
-      "Variant name is required."
-    );
-
-    return;
-  }
-
-  if (!sku) {
-    alert(
-      "Variant SKU is required."
-    );
-
-    return;
-  }
-
-  if (
-    !Number.isFinite(price) ||
-    price < 0
-  ) {
-    alert(
-      "Please enter a valid variant price."
-    );
-
-    return;
-  }
-
-  if (
-    !Number.isInteger(stock) ||
-    stock < 0
-  ) {
-    alert(
-      "Please enter a valid whole-number variant stock amount."
-    );
-
-    return;
-  }
-
-  const variant = {
-    name,
-    sku,
-    price,
-    stock,
-    image: ""
-  };
-
-  try {
-    const response = await fetch(
-      `${PRODUCTS_API}/${productId}/variants`,
-      {
-        method: "POST",
-        headers: getAdminHeaders(true),
-        body: JSON.stringify(variant)
-      }
-    );
-
-    await readApiResponse(response);
-
-    alert(
-      "Variant added successfully."
-    );
-
-    await loadAdminProducts();
-  } catch (error) {
-    console.error(
-      "Add variant failed:",
-      error
-    );
-
-    alert(
-      error.message ||
-      "Failed to add variant."
-    );
-  }
-}
-
-// ============================================================
-// UPDATE VARIANT STOCK
-// ============================================================
-
-async function updateVariantStock(
-  productId,
-  variantIndex
+function cleanBoolean(
+  value,
+  fallbackValue
 ) {
-  const stockInput =
-    document.getElementById(
-      `v-stock-${productId}-${variantIndex}`
-    );
-
-  const stock = Number(
-    stockInput
-      ? stockInput.value
-      : ""
-  );
-
   if (
-    !Number.isInteger(stock) ||
-    stock < 0
+    value === undefined ||
+    value === null
   ) {
-    alert(
-      "Please enter a valid whole-number variant stock amount."
-    );
-
-    return;
+    return fallbackValue;
   }
 
-  try {
-    const response = await fetch(
-      `${PRODUCTS_API}/${productId}/stock`,
-      {
-        method: "PUT",
-        headers: getAdminHeaders(true),
-        body: JSON.stringify({
-          stock,
-          variantIndex
-        })
-      }
-    );
-
-    await readApiResponse(response);
-
-    alert(
-      "Variant stock updated."
-    );
-
-    await loadAdminProducts();
-  } catch (error) {
-    console.error(
-      "Variant stock update failed:",
-      error
-    );
-
-    alert(
-      error.message ||
-      "Failed to update variant stock."
-    );
+  if (typeof value === "boolean") {
+    return value;
   }
+
+  if (value === "true") {
+    return true;
+  }
+
+  if (value === "false") {
+    return false;
+  }
+
+  return fallbackValue;
 }
 
 // ============================================================
-// DELETE VARIANT
+// FORMAT ADMINISTRATOR RECORD
 // ============================================================
 
-async function deleteVariant(
-  productId,
-  variantIndex
+function formatAdmin(
+  row,
+  includePasswordHash
 ) {
-  const confirmed =
-    window.confirm(
-      "Are you sure you want to delete this variant?"
-    );
-
-  if (!confirmed) {
-    return;
-  }
-
-  try {
-    const response = await fetch(
-      `${PRODUCTS_API}/${productId}/variants/${variantIndex}`,
-      {
-        method: "DELETE",
-        headers: getAdminHeaders(false)
-      }
-    );
-
-    await readApiResponse(response);
-
-    alert("Variant deleted.");
-
-    await loadAdminProducts();
-  } catch (error) {
-    console.error(
-      "Delete variant failed:",
-      error
-    );
-
-    alert(
-      error.message ||
-      "Failed to delete variant."
-    );
-  }
-}
-
-// ============================================================
-// DELETE PRODUCT
-// ============================================================
-
-async function deleteProduct(
-  productId
-) {
-  const confirmed =
-    window.confirm(
-      "Are you sure you want to permanently delete this product?"
-    );
-
-  if (!confirmed) {
-    return;
-  }
-
-  try {
-    const response = await fetch(
-      `${PRODUCTS_API}/${productId}`,
-      {
-        method: "DELETE",
-        headers: getAdminHeaders(false)
-      }
-    );
-
-    await readApiResponse(response);
-
-    alert("Product deleted.");
-
-    await loadAdminProducts();
-  } catch (error) {
-    console.error(
-      "Delete product failed:",
-      error
-    );
-
-    alert(
-      error.message ||
-      "Failed to delete product."
-    );
-  }
-}
-
-// ============================================================
-// MULTI-ADMIN HELPERS
-// Only a super admin can use these routes successfully.
-// ============================================================
-
-async function createAdminUser(
-  username,
-  password,
-  role = "admin"
-) {
-  try {
-    const response = await fetch(
-      `${BACKEND_URL}/admin/register`,
-      {
-        method: "POST",
-        headers: getAdminHeaders(true),
-        body: JSON.stringify({
-          username,
-          password,
-          role
-        })
-      }
-    );
-
-    const data =
-      await readApiResponse(response);
-
-    alert(
-      "Administrator created successfully."
-    );
-
-    return data.admin;
-  } catch (error) {
-    console.error(
-      "Create administrator failed:",
-      error
-    );
-
-    alert(
-      error.message ||
-      "Failed to create administrator."
-    );
-
+  if (!row) {
     return null;
   }
+
+  const admin = {
+    id:
+      String(row.id),
+
+    username:
+      String(
+        row.username || ""
+      ),
+
+    role:
+      normalizeRole(
+        row.role,
+        "admin"
+      ),
+
+    active:
+      row.active !== false,
+
+    lastLoginAt:
+      row.last_login_at ||
+      null,
+
+    createdAt:
+      row.created_at ||
+      null,
+
+    updatedAt:
+      row.updated_at ||
+      null
+  };
+
+  if (
+    includePasswordHash === true
+  ) {
+    admin.passwordHash =
+      String(
+        row.password_hash || ""
+      );
+  }
+
+  return admin;
 }
 
-async function loadAdminUsers() {
-  try {
-    const response = await fetch(
-      `${BACKEND_URL}/admin/users`,
-      {
-        method: "GET",
-        headers: getAdminHeaders(false)
-      }
+// ============================================================
+// VALIDATE USERNAME
+// ============================================================
+
+function validateUsername(username) {
+  if (username.length < 3) {
+    return (
+      "Administrator username must contain at least 3 characters."
+    );
+  }
+
+  if (
+    !/^[a-z0-9._-]+$/.test(
+      username
+    )
+  ) {
+    return (
+      "Administrator username may contain only letters, " +
+      "numbers, periods, underscores, and hyphens."
+    );
+  }
+
+  return "";
+}
+
+// ============================================================
+// VALIDATE PASSWORD
+// ============================================================
+
+function validatePassword(password) {
+  const value =
+    String(password || "");
+
+  if (value.length < 12) {
+    return (
+      "Administrator password must contain at least 12 characters."
+    );
+  }
+
+  if (!/[a-z]/.test(value)) {
+    return (
+      "Administrator password must contain a lowercase letter."
+    );
+  }
+
+  if (!/[A-Z]/.test(value)) {
+    return (
+      "Administrator password must contain an uppercase letter."
+    );
+  }
+
+  if (!/[0-9]/.test(value)) {
+    return (
+      "Administrator password must contain a number."
+    );
+  }
+
+  if (
+    !/[^A-Za-z0-9]/.test(
+      value
+    )
+  ) {
+    return (
+      "Administrator password must contain a special character."
+    );
+  }
+
+  return "";
+}
+
+// ============================================================
+// CREATE MODEL ERROR
+// ============================================================
+
+function createModelError(
+  message,
+  statusCode,
+  errorCode
+) {
+  const error =
+    new Error(message);
+
+  error.statusCode =
+    statusCode;
+
+  error.code =
+    errorCode;
+
+  return error;
+}
+
+// ============================================================
+// PASSWORD SECURITY
+// ============================================================
+
+async function hashPassword(password) {
+  const validationError =
+    validatePassword(
+      password
     );
 
-    return await readApiResponse(
-      response
+  if (validationError) {
+    throw createModelError(
+      validationError,
+      400,
+      "INVALID_PASSWORD"
+    );
+  }
+
+  return bcrypt.hash(
+    String(password),
+    PASSWORD_HASH_ROUNDS
+  );
+}
+
+async function comparePassword(
+  password,
+  passwordHash
+) {
+  if (
+    !password ||
+    !passwordHash
+  ) {
+    return false;
+  }
+
+  return bcrypt.compare(
+    String(password),
+    String(passwordHash)
+  );
+}
+
+// ============================================================
+// GET ADMINISTRATOR BY ID
+// ============================================================
+
+async function getAdminById(
+  adminId,
+  includePasswordHash
+) {
+  const result =
+    await db.query(
+      `
+        SELECT
+          id,
+          username,
+          password_hash,
+          role,
+          active,
+          last_login_at,
+          created_at,
+          updated_at
+        FROM admins
+        WHERE id = $1
+        LIMIT 1
+      `,
+      [
+        adminId
+      ]
+    );
+
+  if (
+    result.rows.length === 0
+  ) {
+    return null;
+  }
+
+  return formatAdmin(
+    result.rows[0],
+    includePasswordHash
+  );
+}
+
+// ============================================================
+// GET ADMINISTRATOR BY USERNAME
+// ============================================================
+
+async function getAdminByUsername(
+  username,
+  includePasswordHash
+) {
+  const normalizedUsername =
+    normalizeUsername(
+      username
+    );
+
+  if (!normalizedUsername) {
+    return null;
+  }
+
+  const result =
+    await db.query(
+      `
+        SELECT
+          id,
+          username,
+          password_hash,
+          role,
+          active,
+          last_login_at,
+          created_at,
+          updated_at
+        FROM admins
+        WHERE
+          LOWER(username) =
+          LOWER($1)
+        LIMIT 1
+      `,
+      [
+        normalizedUsername
+      ]
+    );
+
+  if (
+    result.rows.length === 0
+  ) {
+    return null;
+  }
+
+  return formatAdmin(
+    result.rows[0],
+    includePasswordHash
+  );
+}
+
+// ============================================================
+// GET ALL ADMINISTRATORS
+// ============================================================
+
+async function getAllAdmins() {
+  const result =
+    await db.query(
+      `
+        SELECT
+          id,
+          username,
+          role,
+          active,
+          last_login_at,
+          created_at,
+          updated_at
+        FROM admins
+        ORDER BY
+          username ASC
+      `
+    );
+
+  return result.rows.map(
+    function (row) {
+      return formatAdmin(
+        row,
+        false
+      );
+    }
+  );
+}
+
+// ============================================================
+// CHECK USERNAME
+// ============================================================
+
+async function usernameExists(
+  username,
+  excludedAdminId
+) {
+  const normalizedUsername =
+    normalizeUsername(
+      username
+    );
+
+  if (!normalizedUsername) {
+    return false;
+  }
+
+  const excludedId =
+    excludedAdminId ||
+    null;
+
+  const result =
+    await db.query(
+      `
+        SELECT id
+        FROM admins
+        WHERE
+          LOWER(username) =
+            LOWER($1)
+          AND (
+            $2::BIGINT IS NULL
+            OR id <> $2
+          )
+        LIMIT 1
+      `,
+      [
+        normalizedUsername,
+        excludedId
+      ]
+    );
+
+  return (
+    result.rows.length > 0
+  );
+}
+
+// ============================================================
+// CREATE ADMINISTRATOR
+// ============================================================
+
+async function createAdmin(adminData) {
+  const input =
+    adminData || {};
+
+  const username =
+    normalizeUsername(
+      input.username
+    );
+
+  const role =
+    normalizeRole(
+      input.role,
+      "admin"
+    );
+
+  const active =
+    cleanBoolean(
+      input.active,
+      true
+    );
+
+  const usernameError =
+    validateUsername(
+      username
+    );
+
+  if (usernameError) {
+    throw createModelError(
+      usernameError,
+      400,
+      "INVALID_USERNAME"
+    );
+  }
+
+  if (
+    await usernameExists(
+      username
+    )
+  ) {
+    throw createModelError(
+      "An administrator with that username already exists.",
+      409,
+      "DUPLICATE_USERNAME"
+    );
+  }
+
+  const passwordHash =
+    await hashPassword(
+      input.password
+    );
+
+  try {
+    const result =
+      await db.query(
+        `
+          INSERT INTO admins (
+            username,
+            password_hash,
+            role,
+            active,
+            created_at,
+            updated_at
+          )
+          VALUES (
+            $1,
+            $2,
+            $3,
+            $4,
+            NOW(),
+            NOW()
+          )
+          RETURNING
+            id,
+            username,
+            role,
+            active,
+            last_login_at,
+            created_at,
+            updated_at
+        `,
+        [
+          username,
+          passwordHash,
+          role,
+          active
+        ]
+      );
+
+    return formatAdmin(
+      result.rows[0],
+      false
     );
   } catch (error) {
-    console.error(
-      "Load administrators failed:",
-      error
-    );
+    if (error.code === "23505") {
+      throw createModelError(
+        "An administrator with that username already exists.",
+        409,
+        "DUPLICATE_USERNAME"
+      );
+    }
 
-    return [];
+    throw error;
   }
 }
 
 // ============================================================
-// PAGE STARTUP
+// AUTHENTICATE ADMINISTRATOR
 // ============================================================
 
-document.addEventListener(
-  "DOMContentLoaded",
-  async () => {
-    const validSession =
-      await verifyAdminSession();
+async function authenticateAdmin(
+  username,
+  password
+) {
+  const admin =
+    await getAdminByUsername(
+      username,
+      true
+    );
 
-    if (!validSession) {
-      return;
-    }
-
-    await loadAdminProducts();
-
-    const productForm =
-      document.getElementById(
-        "add-product-form"
-      );
-
-    if (productForm) {
-      productForm.addEventListener(
-        "submit",
-        addProduct
-      );
-    }
-
-    const uploadButton =
-      document.getElementById(
-        "upload-image-button"
-      );
-
-    if (uploadButton) {
-      uploadButton.addEventListener(
-        "click",
-        uploadImage
-      );
-    }
-
-    const logoutButton =
-      document.getElementById(
-        "admin-logout-button"
-      );
-
-    if (logoutButton) {
-      logoutButton.addEventListener(
-        "click",
-        logoutAdmin
-      );
-    }
+  if (
+    !admin ||
+    !admin.active
+  ) {
+    return null;
   }
-);
+
+  const validPassword =
+    await comparePassword(
+      password,
+      admin.passwordHash
+    );
+
+  if (!validPassword) {
+    return null;
+  }
+
+  const updatedAdmin =
+    await recordSuccessfulLogin(
+      admin.id
+    );
+
+  delete admin.passwordHash;
+
+  if (updatedAdmin) {
+    admin.lastLoginAt =
+      updatedAdmin.lastLoginAt;
+  }
+
+  return admin;
+}
 
 // ============================================================
-// SUPPORT EXISTING INLINE HTML BUTTONS
+// UPDATE ADMINISTRATOR
 // ============================================================
 
-window.uploadImage =
-  uploadImage;
+async function updateAdmin(
+  adminId,
+  adminData
+) {
+  const currentAdmin =
+    await getAdminById(
+      adminId,
+      false
+    );
 
-window.addProduct =
-  addProduct;
+  if (!currentAdmin) {
+    return null;
+  }
 
-window.updateProductStock =
-  updateProductStock;
+  const input =
+    adminData || {};
 
-window.addVariant =
-  addVariant;
+  const username =
+    input.username === undefined
+      ? currentAdmin.username
+      : normalizeUsername(
+          input.username
+        );
 
-window.updateVariantStock =
-  updateVariantStock;
+  const role =
+    input.role === undefined
+      ? currentAdmin.role
+      : normalizeRole(
+          input.role,
+          currentAdmin.role
+        );
 
-window.deleteVariant =
-  deleteVariant;
+  const active =
+    cleanBoolean(
+      input.active,
+      currentAdmin.active
+    );
 
-window.deleteProduct =
-  deleteProduct;
+  const usernameError =
+    validateUsername(
+      username
+    );
 
-window.logoutAdmin =
-  logoutAdmin;
+  if (usernameError) {
+    throw createModelError(
+      usernameError,
+      400,
+      "INVALID_USERNAME"
+    );
+  }
 
-window.createAdminUser =
-  createAdminUser;
+  if (
+    await usernameExists(
+      username,
+      adminId
+    )
+  ) {
+    throw createModelError(
+      "An administrator with that username already exists.",
+      409,
+      "DUPLICATE_USERNAME"
+    );
+  }
 
-window.loadAdminUsers =
-  loadAdminUsers;
+  const result =
+    await db.query(
+      `
+        UPDATE admins
+        SET
+          username = $1,
+          role = $2,
+          active = $3,
+          updated_at = NOW()
+        WHERE id = $4
+        RETURNING
+          id,
+          username,
+          role,
+          active,
+          last_login_at,
+          created_at,
+          updated_at
+      `,
+      [
+        username,
+        role,
+        active,
+        adminId
+      ]
+    );
+
+  if (
+    result.rows.length === 0
+  ) {
+    return null;
+  }
+
+  return formatAdmin(
+    result.rows[0],
+    false
+  );
+}
+
+// ============================================================
+// UPDATE ADMINISTRATOR PASSWORD
+// ============================================================
+
+async function updateAdminPassword(
+  adminId,
+  newPassword
+) {
+  const passwordHash =
+    await hashPassword(
+      newPassword
+    );
+
+  const result =
+    await db.query(
+      `
+        UPDATE admins
+        SET
+          password_hash = $1,
+          updated_at = NOW()
+        WHERE id = $2
+        RETURNING
+          id,
+          username,
+          role,
+          active,
+          last_login_at,
+          created_at,
+          updated_at
+      `,
+      [
+        passwordHash,
+        adminId
+      ]
+    );
+
+  if (
+    result.rows.length === 0
+  ) {
+    return null;
+  }
+
+  return formatAdmin(
+    result.rows[0],
+    false
+  );
+}
+
+// ============================================================
+// RECORD SUCCESSFUL LOGIN
+// ============================================================
+
+async function recordSuccessfulLogin(
+  adminId
+) {
+  const result =
+    await db.query(
+      `
+        UPDATE admins
+        SET
+          last_login_at = NOW(),
+          updated_at = NOW()
+        WHERE id = $1
+        RETURNING
+          id,
+          username,
+          role,
+          active,
+          last_login_at,
+          created_at,
+          updated_at
+      `,
+      [
+        adminId
+      ]
+    );
+
+  if (
+    result.rows.length === 0
+  ) {
+    return null;
+  }
+
+  return formatAdmin(
+    result.rows[0],
+    false
+  );
+}
+
+// ============================================================
+// COUNT ADMINISTRATORS
+// ============================================================
+
+async function countAdmins() {
+  const result =
+    await db.query(
+      `
+        SELECT
+          COUNT(*)::INTEGER
+            AS admin_count
+        FROM admins
+      `
+    );
+
+  return Number(
+    result.rows[0]
+      .admin_count || 0
+  );
+}
+
+async function countActiveAdmins() {
+  const result =
+    await db.query(
+      `
+        SELECT
+          COUNT(*)::INTEGER
+            AS admin_count
+        FROM admins
+        WHERE active = TRUE
+      `
+    );
+
+  return Number(
+    result.rows[0]
+      .admin_count || 0
+  );
+}
+
+// ============================================================
+// DELETE ADMINISTRATOR
+// ============================================================
+
+async function deleteAdmin(adminId) {
+  const currentAdmin =
+    await getAdminById(
+      adminId,
+      false
+    );
+
+  if (!currentAdmin) {
+    return null;
+  }
+
+  const activeAdminCount =
+    await countActiveAdmins();
+
+  if (
+    currentAdmin.active &&
+    activeAdminCount <= 1
+  ) {
+    throw createModelError(
+      "The final active administrator account cannot be deleted.",
+      409,
+      "FINAL_ACTIVE_ADMIN"
+    );
+  }
+
+  const result =
+    await db.query(
+      `
+        DELETE FROM admins
+        WHERE id = $1
+        RETURNING id
+      `,
+      [
+        adminId
+      ]
+    );
+
+  if (
+    result.rows.length === 0
+  ) {
+    return null;
+  }
+
+  return currentAdmin;
+}
+
+// ============================================================
+// EXPORT ADMINISTRATOR MODEL
+// ============================================================
+
+module.exports = {
+  ALLOWED_ADMIN_ROLES:
+    ALLOWED_ADMIN_ROLES,
+
+  PASSWORD_HASH_ROUNDS:
+    PASSWORD_HASH_ROUNDS,
+
+  formatAdmin:
+    formatAdmin,
+
+  normalizeUsername:
+    normalizeUsername,
+
+  normalizeRole:
+    normalizeRole,
+
+  validateUsername:
+    validateUsername,
+
+  validatePassword:
+    validatePassword,
+
+  hashPassword:
+    hashPassword,
+
+  comparePassword:
+    comparePassword,
+
+  getAdminById:
+    getAdminById,
+
+  getAdminByUsername:
+    getAdminByUsername,
+
+  getAllAdmins:
+    getAllAdmins,
+
+  usernameExists:
+    usernameExists,
+
+  createAdmin:
+    createAdmin,
+
+  authenticateAdmin:
+    authenticateAdmin,
+
+  updateAdmin:
+    updateAdmin,
+
+  updateAdminPassword:
+    updateAdminPassword,
+
+  recordSuccessfulLogin:
+    recordSuccessfulLogin,
+
+  countAdmins:
+    countAdmins,
+
+  countActiveAdmins:
+    countActiveAdmins,
+
+  deleteAdmin:
+    deleteAdmin
+};

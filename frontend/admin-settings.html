@@ -1,88 +1,898 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Admin Settings • MMC</title>
-    <link rel="stylesheet" href="admin.css">
-    <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
+
+  <meta
+    name="description"
+    content="Manage Multi-Maniacs Customs store, contact, product, tax, and availability settings."
+  >
+
+  <title>
+    Admin Settings | Multi-Maniacs Customs LLC
+  </title>
+
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="admin.css">
+
+  <style>
+    :root {
+      --settings-background: #111111;
+      --settings-header: #000000;
+      --settings-panel: #222222;
+      --settings-inner: #191919;
+      --settings-border: #444444;
+      --settings-text: #ffffff;
+      --settings-muted: #cccccc;
+      --settings-input-background: #ffffff;
+      --settings-input-text: #111111;
+      --settings-primary: #2196f3;
+      --settings-primary-hover: #1976d2;
+      --settings-success: #4caf50;
+      --settings-success-hover: #43a047;
+      --settings-warning: #ff9800;
+      --settings-focus: #64b5f6;
+      --settings-error-text: #ff7676;
+      --settings-success-text: #79d77c;
+      --settings-information-text: #90caf9;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      min-height: 100%;
+    }
+
+    body {
+      min-height: 100vh;
+      margin: 0;
+      color: var(--settings-text);
+      background: var(--settings-background);
+      font-family: Arial, Helvetica, sans-serif;
+    }
+
+    .top-header {
+      padding: 18px 20px;
+      background: var(--settings-header);
+      border-bottom: 1px solid var(--settings-border);
+    }
+
+    .header-content {
+      width: 100%;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .site-heading {
+      margin: 0 0 16px;
+      font-size: 26px;
+      line-height: 1.25;
+    }
+
+    .header-buttons {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .header-buttons a {
+      display: inline-flex;
+      min-height: 42px;
+      align-items: center;
+      justify-content: center;
+      padding: 9px 13px;
+      color: #ffffff;
+      background: #222222;
+      border: 1px solid #353535;
+      border-radius: 7px;
+      text-decoration: none;
+    }
+
+    .header-buttons a:hover,
+    .header-buttons a:focus {
+      background: #333333;
+    }
+
+    .header-buttons a[aria-current="page"] {
+      background: var(--settings-primary);
+      border-color: var(--settings-primary);
+    }
+
+    .settings-page {
+      width: 100%;
+      max-width: 950px;
+      margin: 36px auto;
+      padding: 0 20px;
+    }
+
+    .settings-container {
+      padding: 30px;
+      background: var(--settings-panel);
+      border: 1px solid var(--settings-border);
+      border-radius: 14px;
+      box-shadow:
+        0 18px 50px rgba(0, 0, 0, 0.4);
+    }
+
+    .page-heading {
+      margin: 0 0 10px;
+      text-align: center;
+      font-size: 30px;
+    }
+
+    .page-description {
+      max-width: 720px;
+      margin: 0 auto 24px;
+      color: var(--settings-muted);
+      text-align: center;
+      line-height: 1.55;
+    }
+
+    .admin-account-bar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      margin-bottom: 24px;
+      padding: 15px;
+      background: var(--settings-inner);
+      border: 1px solid var(--settings-border);
+      border-radius: 9px;
+    }
+
+    .admin-account-bar p {
+      margin: 4px 0;
+    }
+
+    .admin-account-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .small-action-button {
+      display: inline-flex;
+      min-height: 40px;
+      align-items: center;
+      justify-content: center;
+      padding: 9px 13px;
+      color: #ffffff;
+      background: #444444;
+      border: none;
+      border-radius: 6px;
+      font: inherit;
+      font-size: 14px;
+      text-align: center;
+      text-decoration: none;
+      cursor: pointer;
+    }
+
+    .small-action-button:hover,
+    .small-action-button:focus {
+      background: #5a5a5a;
+    }
+
+    .settings-form {
+      display: flex;
+      flex-direction: column;
+      gap: 22px;
+    }
+
+    .settings-section {
+      padding: 22px;
+      background: var(--settings-inner);
+      border: 1px solid var(--settings-border);
+      border-radius: 10px;
+    }
+
+    .settings-section h2 {
+      margin: 0 0 8px;
+      font-size: 22px;
+    }
+
+    .section-description {
+      margin: 0 0 18px;
+      color: var(--settings-muted);
+      line-height: 1.5;
+    }
+
+    .settings-grid {
+      display: grid;
+      grid-template-columns:
+        repeat(2, minmax(0, 1fr));
+      gap: 18px;
+    }
+
+    .form-field {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .form-field-full {
+      grid-column: 1 / -1;
+    }
+
+    .form-field label {
+      font-size: 15px;
+      font-weight: 700;
+    }
+
+    .field-help {
+      margin: 0;
+      color: var(--settings-muted);
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    .form-field input,
+    .form-field select,
+    .form-field textarea {
+      width: 100%;
+      padding: 11px 12px;
+      color: var(--settings-input-text);
+      background: var(--settings-input-background);
+      border: 2px solid transparent;
+      border-radius: 7px;
+      font: inherit;
+      outline: none;
+    }
+
+    .form-field input,
+    .form-field select {
+      min-height: 48px;
+    }
+
+    .form-field textarea {
+      min-height: 110px;
+      resize: vertical;
+    }
+
+    .form-field input:focus,
+    .form-field select:focus,
+    .form-field textarea:focus {
+      border-color: var(--settings-focus);
+      box-shadow:
+        0 0 0 3px rgba(100, 181, 246, 0.2);
+    }
+
+    .checkbox-field {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 15px;
+      background: #101010;
+      border: 1px solid var(--settings-border);
+      border-radius: 8px;
+    }
+
+    .checkbox-field input {
+      width: 20px;
+      height: 20px;
+      margin: 1px 0 0;
+      accent-color: var(--settings-success);
+      cursor: pointer;
+    }
+
+    .checkbox-field label {
+      line-height: 1.45;
+      cursor: pointer;
+    }
+
+    .connection-information {
+      display: grid;
+      grid-template-columns:
+        repeat(2, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .connection-item {
+      padding: 14px;
+      background: #101010;
+      border: 1px solid var(--settings-border);
+      border-radius: 8px;
+    }
+
+    .connection-item h3 {
+      margin: 0 0 7px;
+      color: var(--settings-muted);
+      font-size: 13px;
+      text-transform: uppercase;
+    }
+
+    .connection-item p {
+      margin: 0;
+      overflow-wrap: anywhere;
+      line-height: 1.5;
+    }
+
+    .connection-enabled {
+      color: var(--settings-success-text);
+      font-weight: 700;
+    }
+
+    .connection-unavailable {
+      color: var(--settings-warning);
+      font-weight: 700;
+    }
+
+    .security-notice {
+      margin-top: 18px;
+      padding: 15px;
+      color: var(--settings-muted);
+      background: #2b2112;
+      border: 1px solid #785f28;
+      border-radius: 8px;
+      line-height: 1.55;
+    }
+
+    .security-notice strong {
+      color: #ffffff;
+    }
+
+    .save-settings-button {
+      width: 100%;
+      min-height: 52px;
+      padding: 13px;
+      color: #ffffff;
+      background: var(--settings-success);
+      border: none;
+      border-radius: 8px;
+      font: inherit;
+      font-size: 17px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .save-settings-button:hover:not(:disabled) {
+      background: var(--settings-success-hover);
+    }
+
+    .save-settings-button:disabled {
+      cursor: wait;
+      opacity: 0.7;
+    }
+
+    .settings-message {
+      min-height: 24px;
+      margin: 20px 0 0;
+      text-align: center;
+      font-weight: 700;
+      line-height: 1.5;
+    }
+
+    .settings-message:empty {
+      display: none;
+    }
+
+    .settings-error {
+      color: var(--settings-error-text);
+    }
+
+    .settings-success {
+      color: var(--settings-success-text);
+    }
+
+    .settings-information {
+      color: var(--settings-information-text);
+    }
+
+    .page-actions {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px;
+      margin-top: 24px;
+    }
+
+    @media (max-width: 720px) {
+      .settings-grid,
+      .connection-information {
+        grid-template-columns: 1fr;
+      }
+
+      .form-field-full {
+        grid-column: auto;
+      }
+
+      .header-buttons {
+        flex-direction: column;
+      }
+
+      .header-buttons a {
+        width: 100%;
+      }
+    }
+
+    @media (max-width: 520px) {
+      .settings-page {
+        margin: 20px auto;
+        padding: 0 14px;
+      }
+
+      .settings-container {
+        padding: 20px 14px;
+      }
+
+      .settings-section {
+        padding: 17px 13px;
+      }
+
+      .admin-account-bar {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+    }
+  </style>
+
+  <script src="navigation.js" defer></script>
+  <script src="admin-settings.js" defer></script>
 </head>
 
 <body>
+  <header class="top-header">
+    <div class="header-content">
+      <h1 class="site-heading">
+        Multi-Maniacs Customs LLC - Admin
+      </h1>
 
-<header class="top-header">
-    <h1>Multi-Maniacs Customs LLC — Admin Settings</h1>
+      <nav
+        class="header-buttons"
+        aria-label="Administrator navigation"
+      >
+        <a href="index.html">
+          Home
+        </a>
 
-    <nav class="header-buttons">
-        <button onclick="navigate('home')"><span class="icon">🏠</span> Home</button>
-        <button onclick="navigate('admin-dashboard')"><span class="icon">🔧</span> Admin</button>
-    </nav>
+        <a href="admin-dashboard.html">
+          Dashboard
+        </a>
 
-    <div class="mini-cart" id="miniCart">
-        <h3>Mini Cart</h3>
-        <div id="miniCartItems"></div>
+        <a href="admin-products.html">
+          Products
+        </a>
+
+        <a href="admin-inventory.html">
+          Inventory
+        </a>
+
+        admin-orders.html
+          Orders
+        </a>
+
+        <a href="admin-intake.html">
+          Client Intakes
+        </a>
+
+        <a
+          href="admin-settings.js">
+          Settings
+        </a>
+
+        <a href="shop.html">
+          View Shop
+        </a>
+      </nav>
     </div>
-</header>
+  </header>
 
-<script src="admin-sidebar.html"></script>
+  <main class="settings-page">
+    <section
+      class="settings-container"
+      aria-labelledby="settings-heading"
+    >
+      <h1
+        id="settings-heading"
+        class="page-heading"
+      >
+        Admin Settings
+      </h1>
 
-<script>
-    const token = localStorage.getItem("MMC_ADMIN_TOKEN");
-    if (!token) window.location.href = "admin-login.html";
-</script>
+      <p class="page-description">
+        Manage public business information, general shop
+        availability, tax settings, and default product
+        preferences.
+      </p>
 
-<div class="admin-page" style="padding: 20px;">
-    <h1>Admin Settings</h1>
+      <div class="admin-account-bar">
+        <div>
+          <p>
+            Signed in as:
+            <strong id="admin-username">
+              Loading...
+            </strong>
+          </p>
 
-    <div class="section">
-        <h2>Store Settings</h2>
-        <label>Store Name</label>
-        <input id="storeName">
+          <p>
+            Role:
+            <strong id="admin-role">
+              Loading...
+            </strong>
+          </p>
+        </div>
 
-        <label>Phone #1</label>
-        <input id="contactPhone1">
+        <div class="admin-account-actions">
+          <a
+            class="small-action-button"
+            href="admin-dashboard.html"
+          >
+            Dashboard
+          </a>
 
-        <label>Phone #2</label>
-        <input id="contactPhone2">
+          <button
+            id="admin-logout-button"
+            class="small-action-button"
+            type="button"
+          >
+            Log Out
+          </button>
+        </div>
+      </div>
 
-        <label>Email</label>
-        <input id="contactEmail">
+      <form
+        id="admin-settings-form"
+        class="settings-form"
+        novalidate
+      >
+        <section
+          class="settings-section"
+          aria-labelledby="business-settings-heading"
+        >
+          <h2 id="business-settings-heading">
+            Business Information
+          </h2>
 
-        <label>Tax Rate</label>
-        <input id="taxRate" type="number" step="0.01">
+          <p class="section-description">
+            This information may be displayed to clients on the
+            public website and in order communications.
+          </p>
 
-        <label>Store Open</label>
-        <select id="storeOpen">
-            <option value="true">Open</option>
-            <option value="false">Closed</option>
-        </select>
-    </div>
+          <div class="settings-grid">
+            <div class="form-field form-field-full">
+              <label for="storeName">
+                Business Name
+              </label>
 
-    <div class="section">
-        <h2>Product System Settings</h2>
-        <label>Default Stock</label>
-        <input id="defaultStock" type="number">
+              <input
+                id="storeName"
+                name="storeName"
+                type="text"
+                maxlength="200"
+                value="Multi-Maniacs Customs LLC"
+                required
+              >
+            </div>
 
-        <label>Auto-Activate New Products</label>
-        <select id="autoActivateProducts">
-            <option value="true">Yes</option>
-            <option value="false">No</option>
-        </select>
-    </div>
+            <div class="form-field">
+              <label for="contactPhone1">
+                Primary Phone
+              </label>
 
-    <div class="section">
-        <h2>Backend API Keys (View Only)</h2>
-        <p><strong>Backend URL:</strong> <span id="backendURL"></span></p>
-        <p><strong>Stripe Public Key:</strong> <span id="stripePublicKey"></span></p>
-        <p><strong>Stripe Secret Key:</strong> <span id="stripeSecretKey"></span></p>
-        <p><strong>Cloudinary Key:</strong> <span id="cloudinaryKey"></span></p>
-        <p><strong>Cloudinary Secret:</strong> <span id="cloudinarySecret"></span></p>
-    </div>
+              <input
+                id="contactPhone1"
+                name="contactPhone1"
+                type="tel"
+                maxlength="30"
+                value="(606) 220-0185"
+              >
+            </div>
 
-    <button onclick="saveSettings()" class="btn">Save Settings</button>
-</div>
+            <div class="form-field">
+              <label for="contactPhone2">
+                Secondary Phone
+              </label>
 
-<script src="admin-settings.js"></script>
-<script src="navigation.js"></script>
+              <input
+                id="contactPhone2"
+                name="contactPhone2"
+                type="tel"
+                maxlength="30"
+                value="(606) 212-4695"
+              >
+            </div>
 
+            <div class="form-field form-field-full">
+              <label for="contactEmail">
+                Business Email
+              </label>
+
+              <input
+                id="contactEmail"
+                name="contactEmail"
+                type="email"
+                maxlength="254"
+                value="multimaniacscustoms@gmail.com"
+                required
+              >
+            </div>
+
+            <div class="form-field form-field-full">
+              <label for="businessLocation">
+                Business Location
+              </label>
+
+              <input
+                id="businessLocation"
+                name="businessLocation"
+                type="text"
+                maxlength="250"
+                value="Essie, Kentucky"
+              >
+            </div>
+          </div>
+        </section>
+
+        <section
+          class="settings-section"
+          aria-labelledby="store-settings-heading"
+        >
+          <h2 id="store-settings-heading">
+            Store Settings
+          </h2>
+
+          <p class="section-description">
+            Control whether clients can place online orders and
+            set the tax rate used by the checkout calculation.
+          </p>
+
+          <div class="settings-grid">
+            <div class="form-field">
+              <label for="taxRate">
+                Tax Rate Percentage
+              </label>
+
+              <input
+                id="taxRate"
+                name="taxRate"
+                type="number"
+                min="0"
+                max="100"
+                step="0.01"
+                value="0"
+                required
+              >
+
+              <p class="field-help">
+                Enter the percentage as a regular number. For
+                example, enter 6 for 6%.
+              </p>
+            </div>
+
+            <div class="form-field">
+              <label for="storeOpen">
+                Online Store Status
+              </label>
+
+              <select
+                id="storeOpen"
+                name="storeOpen"
+              >
+                <option value="true">
+                  Open
+                </option>
+
+                <option value="false">
+                  Temporarily Closed
+                </option>
+              </select>
+            </div>
+
+            <div class="form-field form-field-full">
+              <label for="closedStoreMessage">
+                Closed Store Message
+              </label>
+
+              <textarea
+                id="closedStoreMessage"
+                name="closedStoreMessage"
+                maxlength="500"
+                placeholder="The online shop is temporarily unavailable. Please contact MMC for assistance."
+              ></textarea>
+
+              <p class="field-help">
+                This message can be displayed when the online
+                store is temporarily closed.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        <section
+          class="settings-section"
+          aria-labelledby="product-settings-heading"
+        >
+          <h2 id="product-settings-heading">
+            Product Defaults
+          </h2>
+
+          <p class="section-description">
+            Set the default values used when administrators create
+            new products.
+          </p>
+
+          <div class="settings-grid">
+            <div class="form-field">
+              <label for="defaultStock">
+                Default Product Stock
+              </label>
+
+              <input
+                id="defaultStock"
+                name="defaultStock"
+                type="number"
+                min="0"
+                step="1"
+                value="0"
+                required
+              >
+            </div>
+
+            <div class="form-field">
+              <label for="defaultLowStockWarning">
+                Default Low-Stock Warning
+              </label>
+
+              <input
+                id="defaultLowStockWarning"
+                name="defaultLowStockWarning"
+                type="number"
+                min="0"
+                step="1"
+                value="5"
+                required
+              >
+            </div>
+
+            <div class="form-field form-field-full">
+              <label for="autoActivateProducts">
+                New Product Visibility
+              </label>
+
+              <select
+                id="autoActivateProducts"
+                name="autoActivateProducts"
+              >
+                <option value="true">
+                  Automatically show new products to clients
+                </option>
+
+                <option value="false">
+                  Keep new products hidden until reviewed
+                </option>
+              </select>
+            </div>
+          </div>
+        </section>
+
+        <section
+          class="settings-section"
+          aria-labelledby="system-connections-heading"
+        >
+          <h2 id="system-connections-heading">
+            System Connections
+          </h2>
+
+          <p class="section-description">
+            Review whether the website can connect to its required
+            services. Secret credentials are never displayed in
+            the browser.
+          </p>
+
+          <div class="connection-information">
+            <article class="connection-item">
+              <h3>
+                Backend
+              </h3>
+
+              <p id="backendURL">
+                Checking...
+              </p>
+            </article>
+
+            <article class="connection-item">
+              <h3>
+                Neon Database
+              </h3>
+
+              <p id="databaseStatus">
+                Checking...
+              </p>
+            </article>
+
+            <article class="connection-item">
+              <h3>
+                Stripe
+              </h3>
+
+              <p id="stripeStatus">
+                Checking...
+              </p>
+            </article>
+
+            <article class="connection-item">
+              <h3>
+                Cloudinary
+              </h3>
+
+              <p id="cloudinaryStatus">
+                Checking...
+              </p>
+            </article>
+          </div>
+
+          <div class="security-notice">
+            <strong>
+              Security notice:
+            </strong>
+
+            Stripe secret keys, Cloudinary secrets, database
+            credentials, and JWT secrets must remain in Vercel
+            environment variables. They should never be placed in
+            HTML, browser JavaScript, local storage, or a public
+            API response.
+          </div>
+        </section>
+
+        <button
+          id="save-settings-button"
+          class="save-settings-button"
+          type="submit"
+        >
+          Save Settings
+        </button>
+      </form>
+
+      <p
+        id="settings-message"
+        class="settings-message"
+        role="status"
+        aria-live="polite"
+      ></p>
+
+      <div class="page-actions">
+        <a
+          class="small-action-button"
+          href="admin-dashboard.html"
+        >
+          Return to Dashboard
+        </a>
+
+        <a
+          class="small-action-button"
+          href="admin-products.html"
+        >
+          Manage Products
+        </a>
+
+        <a
+          class="small-action-button"
+          href="admin-orders.html"
+        >
+          View Orders
+        </a>
+
+        <a
+          class="small-action-button"
+          href="shop.html"
+        >
+          View Client Shop
+        </a>
+      </div>
+    </section>
+  </main>
+
+  <noscript>
+    <p>
+      JavaScript must be enabled to manage administrator settings.
+    </p>
+  </noscript>
 </body>
 </html>

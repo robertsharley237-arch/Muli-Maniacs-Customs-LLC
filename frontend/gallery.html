@@ -1,106 +1,695 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Gallery • Multi-Maniacs Customs LLC</title>
-    <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
+
+  <meta
+    name="description"
+    content="Explore custom projects completed by Multi-Maniacs Customs LLC for clients throughout the United States."
+  >
+
+  <title>Gallery | Multi-Maniacs Customs LLC</title>
+
+  <link rel="stylesheet" href="style.css">
+
+  <style>
+    :root {
+      --gallery-background: #000000;
+      --gallery-header: #111111;
+      --gallery-panel: #181818;
+      --gallery-card: #ffffff;
+      --gallery-card-text: #111111;
+      --gallery-border: #3d3d3d;
+      --gallery-text: #ffffff;
+      --gallery-muted: #cccccc;
+      --gallery-accent: #d32f2f;
+      --gallery-accent-hover: #b71c1c;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      min-height: 100%;
+    }
+
+    body {
+      min-height: 100vh;
+      margin: 0;
+      color: var(--gallery-text);
+      background: var(--gallery-background);
+      font-family: Arial, Helvetica, sans-serif;
+    }
+
+    .top-header {
+      padding: 18px 20px;
+      background: var(--gallery-header);
+      border-bottom: 1px solid var(--gallery-border);
+    }
+
+    .header-content {
+      width: 100%;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .site-heading {
+      margin: 0 0 16px;
+      font-size: 26px;
+      line-height: 1.25;
+    }
+
+    .header-buttons {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .header-buttons a {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      min-height: 42px;
+      padding: 9px 13px;
+      color: var(--gallery-text);
+      background: #222222;
+      border: 1px solid #353535;
+      border-radius: 7px;
+      text-decoration: none;
+      transition:
+        background-color 0.2s ease,
+        transform 0.2s ease;
+    }
+
+    .header-buttons a:hover,
+    .header-buttons a:focus {
+      background: #333333;
+      transform: translateY(-1px);
+    }
+
+    .header-buttons a[aria-current="page"] {
+      background: var(--gallery-accent);
+      border-color: var(--gallery-accent);
+    }
+
+    .admin-navigation-link {
+      margin-left: auto;
+    }
+
+    .mini-cart {
+      margin-top: 16px;
+      padding: 14px;
+      background: #191919;
+      border: 1px solid var(--gallery-border);
+      border-radius: 8px;
+    }
+
+    .mini-cart h2 {
+      margin: 0 0 10px;
+      font-size: 18px;
+    }
+
+    .mini-cart p {
+      margin: 0;
+      color: var(--gallery-muted);
+    }
+
+    .gallery-page {
+      width: 100%;
+      max-width: 1200px;
+      margin: 42px auto;
+      padding: 0 20px;
+    }
+
+    .gallery-heading-section {
+      margin-bottom: 30px;
+      text-align: center;
+    }
+
+    .gallery-heading {
+      margin: 0 0 12px;
+      font-size: 34px;
+      line-height: 1.2;
+    }
+
+    .gallery-description {
+      max-width: 780px;
+      margin: 0 auto;
+      color: var(--gallery-muted);
+      font-size: 16px;
+      line-height: 1.65;
+    }
+
+    .gallery-filter-section {
+      margin-bottom: 28px;
+      padding: 18px;
+      background: var(--gallery-panel);
+      border: 1px solid var(--gallery-border);
+      border-radius: 10px;
+    }
+
+    .gallery-filter-section h2 {
+      margin: 0 0 14px;
+      font-size: 20px;
+      text-align: center;
+    }
+
+    .gallery-filter-buttons {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px;
+    }
+
+    .gallery-filter-button {
+      min-height: 42px;
+      padding: 9px 15px;
+      color: #ffffff;
+      background: #353535;
+      border: 1px solid #4b4b4b;
+      border-radius: 7px;
+      font: inherit;
+      font-weight: 700;
+      cursor: pointer;
+      transition:
+        background-color 0.2s ease,
+        transform 0.2s ease;
+    }
+
+    .gallery-filter-button:hover,
+    .gallery-filter-button:focus {
+      background: #4a4a4a;
+      transform: translateY(-1px);
+    }
+
+    .gallery-filter-button.active {
+      background: var(--gallery-accent);
+      border-color: var(--gallery-accent);
+    }
+
+    .gallery-grid {
+      display: grid;
+      grid-template-columns:
+        repeat(auto-fill, minmax(260px, 1fr));
+      gap: 22px;
+    }
+
+    .gallery-card {
+      overflow: hidden;
+      color: var(--gallery-card-text);
+      background: var(--gallery-card);
+      border-radius: 10px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+      transition:
+        transform 0.2s ease,
+        box-shadow 0.2s ease;
+    }
+
+    .gallery-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.42);
+    }
+
+    .gallery-card[hidden] {
+      display: none;
+    }
+
+    .gallery-image-container {
+      display: flex;
+      width: 100%;
+      height: 220px;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      color: #444444;
+      background:
+        linear-gradient(
+          135deg,
+          #eeeeee,
+          #cccccc
+        );
+      text-align: center;
+      font-weight: 700;
+    }
+
+    .gallery-card-content {
+      padding: 18px;
+    }
+
+    .gallery-category-tag {
+      display: inline-block;
+      margin-bottom: 10px;
+      padding: 5px 9px;
+      color: #ffffff;
+      background: var(--gallery-accent);
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .gallery-card h3 {
+      margin: 0 0 10px;
+      font-size: 20px;
+      line-height: 1.3;
+    }
+
+    .gallery-card p {
+      margin: 0;
+      color: #444444;
+      line-height: 1.55;
+    }
+
+    .gallery-empty-message {
+      grid-column: 1 / -1;
+      padding: 30px;
+      color: var(--gallery-muted);
+      background: var(--gallery-panel);
+      border: 1px solid var(--gallery-border);
+      border-radius: 10px;
+      text-align: center;
+    }
+
+    .gallery-intake-section {
+      margin-top: 36px;
+      padding: 26px;
+      background: var(--gallery-panel);
+      border: 1px solid var(--gallery-border);
+      border-radius: 12px;
+      text-align: center;
+    }
+
+    .gallery-intake-section h2 {
+      margin: 0 0 10px;
+      font-size: 24px;
+    }
+
+    .gallery-intake-section p {
+      max-width: 700px;
+      margin: 0 auto 18px;
+      color: var(--gallery-muted);
+      line-height: 1.55;
+    }
+
+    .gallery-intake-button {
+      display: inline-block;
+      padding: 12px 18px;
+      color: #ffffff;
+      background: var(--gallery-accent);
+      border-radius: 8px;
+      font-weight: 700;
+      text-decoration: none;
+    }
+
+    .gallery-intake-button:hover,
+    .gallery-intake-button:focus {
+      background: var(--gallery-accent-hover);
+    }
+
+    .site-footer {
+      margin-top: 42px;
+      padding: 24px 20px;
+      color: #ffffff;
+      background: #000000;
+      border-top: 1px solid var(--gallery-border);
+      text-align: center;
+    }
+
+    .site-footer p {
+      margin: 6px 0;
+      color: var(--gallery-muted);
+      line-height: 1.5;
+    }
+
+    .site-footer a {
+      color: #ffffff;
+      text-decoration: underline;
+      text-underline-offset: 3px;
+    }
+
+    @media (max-width: 780px) {
+      .admin-navigation-link {
+        margin-left: 0;
+      }
+    }
+
+    @media (max-width: 600px) {
+      .gallery-page {
+        margin: 24px auto;
+        padding: 0 14px;
+      }
+
+      .header-buttons {
+        flex-direction: column;
+      }
+
+      .header-buttons a {
+        width: 100%;
+        justify-content: center;
+      }
+
+      .gallery-filter-buttons {
+        flex-direction: column;
+      }
+
+      .gallery-filter-button {
+        width: 100%;
+      }
+
+      .gallery-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+
+  <script src="navigation.js" defer></script>
+  <script src="gallery.js" defer></script>
 </head>
 
 <body>
+  <header class="top-header">
+    <div class="header-content">
+      <h1 class="site-heading">
+        Multi-Maniacs Customs LLC
+      </h1>
 
-    <!-- ============================
-         UPDATED BLACK HEADER
-         ============================ -->
-    <header class="top-header">
-        <h1>Multi-Maniacs Customs LLC</h1>
+      <nav
+        class="header-buttons"
+        aria-label="Main website navigation"
+      >
+        <a href="index.html">
+          <span class="icon" aria-hidden="true">🏠</span>
+          Home
+        </a>
 
-        <nav class="header-buttons">
+        <a href="about.html">
+          <span class="icon" aria-hidden="true">📘</span>
+          About
+        </a>
 
-            <button onclick="navigate('home')">
-                <span class="icon">🏠</span> Home
-            </button>
+        <a href="services.html">
+          <span class="icon" aria-hidden="true">🛠️</span>
+          Services
+        </a>
 
-            <button onclick="navigate('about')">
-                <span class="icon">📘</span> About
-            </button>
+        <a href="shop.html">
+          <span class="icon" aria-hidden="true">🛒</span>
+          Shop
+        </a>
 
-            <button onclick="navigate('services')">
-                <span class="icon">🛠️</span> Services
-            </button>
+        <a href="Cart.html">
+          <span class="icon" aria-hidden="true">🛍️</span>
+          Cart
+        </a>
 
-            <button onclick="navigate('shop')">
-                <span class="icon">🛒</span> Shop
-            </button>
+        <a href="contact.html">
+          <span class="icon" aria-hidden="true">📞</span>
+          Contact
+        </a>
 
-            <button onclick="navigate('cart')">
-                <span class="icon">🛍️</span> Cart
-            </button>
+        <a
+          href="gallery.html"
+          aria-current="page"
+        >
+          <span class="icon" aria-hidden="true">🖼️</span>
+          Gallery
+        </a>
 
-            <button onclick="navigate('contact')">
-                <span class="icon">📞</span> Contact
-            </button>
+        <a
+          class="admin-navigation-link"
+          href="admin-login.html"
+        >
+          <span class="icon" aria-hidden="true">🔧</span>
+          Admin
+        </a>
+      </nav>
 
-            <button onclick="navigate('gallery')">
-                <span class="icon">🖼️</span> Gallery
-            </button>
+      <section
+        class="mini-cart"
+        id="miniCart"
+        aria-labelledby="mini-cart-heading"
+      >
+        <h2 id="mini-cart-heading">
+          Mini Cart
+        </h2>
 
-            <!-- ⭐ ADMIN BUTTON ⭐ -->
-            <button class="admin-btn" onclick="navigate('admin-dashboard')">
-                <span class="icon">🔧</span> Admin
-            </button>
-
-        </nav>
-
-        <!-- MINI CART -->
-        <div class="mini-cart" id="miniCart">
-            <h3>Mini Cart</h3>
-            <div id="miniCartItems"></div>
+        <div id="miniCartItems">
+          <p>Your cart is empty.</p>
         </div>
-    </header>
-
-
-    <!-- ============================
-         GALLERY PAGE CONTENT
-         ============================ -->
-    <div class="page" style="padding: 20px;">
-        <h1>Gallery</h1>
-
-        <p>
-            A look at some of the custom work, builds, and projects we’ve completed. This is a small sample—
-            many projects are one-off and built specifically for each client.
-        </p>
-
-        <div class="grid" style="margin-top: 20px; display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 20px;">
-
-            <div class="card" style="background:#fff; padding:15px; border-radius:6px; box-shadow:0 0 10px rgba(0,0,0,0.1);">
-                <h3>Custom Automotive Build</h3>
-                <p>Full custom styling, accessories, and detail work.</p>
-            </div>
-
-            <div class="card" style="background:#fff; padding:15px; border-radius:6px; box-shadow:0 0 10px rgba(0,0,0,0.1);">
-                <h3>Shop & Garage Decor</h3>
-                <p>Custom signage, wall art, and display pieces.</p>
-            </div>
-
-            <div class="card" style="background:#fff; padding:15px; border-radius:6px; box-shadow:0 0 10px rgba(0,0,0,0.1);">
-                <h3>Branding & Display</h3>
-                <p>Custom branded pieces for small businesses and events.</p>
-            </div>
-
-        </div>
+      </section>
     </div>
+  </header>
 
+  <main class="gallery-page">
+    <section
+      class="gallery-heading-section"
+      aria-labelledby="gallery-heading"
+    >
+      <h1
+        id="gallery-heading"
+        class="gallery-heading"
+      >
+        Custom Project Gallery
+      </h1>
 
-    <!-- ============================
-         FOOTER
-         ============================ -->
-    <footer style="background:#000; color:#fff; padding:20px; text-align:center; margin-top:40px;">
-        © 2026 Multi-Maniacs Customs LLC • Essie, KY • Clients accepted anywhere in the U.S.<br>
-        Phone: (606) 220-0185 • (606) 212-4695 • Email: multimaniacscustoms@gmail.com
-    </footer>
+      <p class="gallery-description">
+        Explore a selection of custom work, creative builds, and
+        one-of-a-kind projects completed for Multi-Maniacs Customs
+        clients. Each project is created around the individual
+        client’s ideas, preferences, and customization needs.
+      </p>
+    </section>
 
-    <!-- NAVIGATION SYSTEM -->
-    <script src="navigation.js"></script>
+    <section
+      class="gallery-filter-section"
+      aria-labelledby="gallery-filter-heading"
+    >
+      <h2 id="gallery-filter-heading">
+        Browse Project Categories
+      </h2>
 
+      <div
+        id="gallery-filter-buttons"
+        class="gallery-filter-buttons"
+      >
+        <button
+          class="gallery-filter-button active"
+          type="button"
+          data-gallery-filter="all"
+        >
+          All Projects
+        </button>
+
+        <button
+          class="gallery-filter-button"
+          type="button"
+          data-gallery-filter="automotive"
+        >
+          Automotive
+        </button>
+
+        <button
+          class="gallery-filter-button"
+          type="button"
+          data-gallery-filter="decor"
+        >
+          Shop and Garage Decor
+        </button>
+
+        <button
+          class="gallery-filter-button"
+          type="button"
+          data-gallery-filter="branding"
+        >
+          Branding and Display
+        </button>
+
+        <button
+          class="gallery-filter-button"
+          type="button"
+          data-gallery-filter="custom"
+        >
+          Custom Projects
+        </button>
+      </div>
+    </section>
+
+    <section
+      id="gallery-grid"
+      class="gallery-grid"
+      aria-label="Completed client projects"
+    >
+      <article
+        class="gallery-card"
+        data-gallery-category="automotive"
+      >
+        <div class="gallery-image-container">
+          Automotive project image coming soon
+        </div>
+
+        <div class="gallery-card-content">
+          <span class="gallery-category-tag">
+            Automotive
+          </span>
+
+          <h3>
+            Custom Automotive Build
+          </h3>
+
+          <p>
+            Custom styling, accessories, detailed finishing, and
+            personalized automotive elements created around the
+            client’s requested design.
+          </p>
+        </div>
+      </article>
+
+      <article
+        class="gallery-card"
+        data-gallery-category="decor"
+      >
+        <div class="gallery-image-container">
+          Shop and garage decor image coming soon
+        </div>
+
+        <div class="gallery-card-content">
+          <span class="gallery-category-tag">
+            Shop and Garage Decor
+          </span>
+
+          <h3>
+            Custom Shop and Garage Decor
+          </h3>
+
+          <p>
+            Personalized signs, wall art, display pieces, and
+            decorative designs made for client shops, garages,
+            and workspaces.
+          </p>
+        </div>
+      </article>
+
+      <article
+        class="gallery-card"
+        data-gallery-category="branding"
+      >
+        <div class="gallery-image-container">
+          Branding project image coming soon
+        </div>
+
+        <div class="gallery-card-content">
+          <span class="gallery-category-tag">
+            Branding and Display
+          </span>
+
+          <h3>
+            Client Branding and Display
+          </h3>
+
+          <p>
+            Custom branded pieces, promotional displays, event
+            materials, and visual elements for businesses,
+            organizations, and independent clients.
+          </p>
+        </div>
+      </article>
+
+      <article
+        class="gallery-card"
+        data-gallery-category="custom"
+      >
+        <div class="gallery-image-container">
+          Custom project image coming soon
+        </div>
+
+        <div class="gallery-card-content">
+          <span class="gallery-category-tag">
+            Custom Project
+          </span>
+
+          <h3>
+            One-of-a-Kind Client Projects
+          </h3>
+
+          <p>
+            Unique customization projects combining different
+            materials, ideas, designs, and industries to meet a
+            client’s specific request.
+          </p>
+        </div>
+      </article>
+
+      <p
+        id="gallery-empty-message"
+        class="gallery-empty-message"
+        hidden
+      >
+        No gallery projects match the selected category.
+      </p>
+    </section>
+
+    <section
+      class="gallery-intake-section"
+      aria-labelledby="gallery-intake-heading"
+    >
+      <h2 id="gallery-intake-heading">
+        Have a Custom Project Idea?
+      </h2>
+
+      <p>
+        Multi-Maniacs Customs works with clients across industries
+        to develop unique projects. Use the client intake system
+        to provide project details, reference images, budget
+        information, and your preferred timeline.
+      </p>
+
+      <a
+        class="gallery-intake-button"
+        href="client-intake.html"
+      >
+        Start a Client Intake Request
+      </a>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <p>
+      &copy; 2026 Multi-Maniacs Customs LLC
+    </p>
+
+    <p>
+      Essie, Kentucky | Clients accepted throughout the United
+      States
+    </p>
+
+    <p>
+      tel:+16062200185
+        (606) 220-0185
+      </a>
+
+      |
+
+      tel:+16062124695
+        (606) 212-4695
+      </a>
+
+      |
+
+      <a href="mailto:multimaniacscustoms@gmail.com">
+        multimaniacscustoms@gmail.com
+      </a>
+    </p>
+  </footer>
+
+  <noscript>
+    <p>
+      JavaScript must be enabled to use the gallery filters.
+    </p>
+  </noscript>
 </body>
 </html>

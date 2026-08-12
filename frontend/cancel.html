@@ -2,19 +2,272 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Payment Canceled - Multi-Maniacs Customs LLC</title>
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
+
+  <meta
+    name="description"
+    content="Your Multi-Maniacs Customs payment was canceled before completion."
+  >
+
+  <title>
+    Payment Canceled | Multi-Maniacs Customs LLC
+  </title>
+
+  <link rel="stylesheet" href="style.css">
+
   <style>
-    body { background:#000; color:#f00; font-family:Arial; text-align:center; padding-top:60px; }
-    a { color:#fff; text-decoration:none; margin-top:20px; display:inline-block; }
+    :root {
+      --page-background: #111111;
+      --panel-background: #222222;
+      --panel-border: #444444;
+      --primary-text: #ffffff;
+      --muted-text: #cccccc;
+      --danger-color: #e53935;
+      --danger-background: #5f1d1d;
+      --primary-button: #2196f3;
+      --primary-button-hover: #1976d2;
+      --secondary-button: #444444;
+      --secondary-button-hover: #5a5a5a;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      min-height: 100%;
+    }
+
+    body {
+      display: flex;
+      min-height: 100vh;
+      margin: 0;
+      flex-direction: column;
+      color: var(--primary-text);
+      background:
+        radial-gradient(
+          circle at top,
+          #321515 0%,
+          var(--page-background) 48%,
+          #080808 100%
+        );
+      font-family: Arial, Helvetica, sans-serif;
+    }
+
+    .top-header {
+      padding: 18px 20px;
+      background: #000000;
+      border-bottom: 1px solid var(--panel-border);
+    }
+
+    .header-content {
+      width: 100%;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .site-heading {
+      margin: 0 0 16px;
+      font-size: 26px;
+      line-height: 1.25;
+    }
+
+    .header-buttons {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .header-buttons a {
+      display: inline-flex;
+      min-height: 42px;
+      align-items: center;
+      justify-content: center;
+      padding: 9px 13px;
+      color: #ffffff;
+      background: #222222;
+      border: 1px solid #353535;
+      border-radius: 7px;
+      text-decoration: none;
+    }
+
+    .header-buttons a:hover,
+    .header-buttons a:focus {
+      background: #333333;
+    }
+
+    .payment-canceled-page {
+      display: flex;
+      width: 100%;
+      max-width: 760px;
+      margin: auto;
+      flex: 1;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 20px;
+    }
+
+    .payment-canceled-panel {
+      width: 100%;
+      padding: 42px 30px;
+      background: var(--panel-background);
+      border: 1px solid var(--panel-border);
+      border-radius: 16px;
+      text-align: center;
+      box-shadow:
+        0 20px 60px rgba(0, 0, 0, 0.5);
+    }
+
+    .canceled-icon {
+      display: flex;
+      width: 76px;
+      height: 76px;
+      margin: 0 auto 20px;
+      align-items: center;
+      justify-content: center;
+      color: #ffffff;
+      background: var(--danger-background);
+      border: 2px solid var(--danger-color);
+      border-radius: 50%;
+      font-size: 40px;
+      font-weight: 700;
+    }
+
+    .payment-canceled-heading {
+      margin: 0 0 14px;
+      font-size: clamp(30px, 6vw, 44px);
+      line-height: 1.15;
+    }
+
+    .payment-canceled-description {
+      max-width: 590px;
+      margin: 0 auto;
+      color: var(--muted-text);
+      font-size: 17px;
+      line-height: 1.65;
+    }
+
+    .payment-notice {
+      margin-top: 24px;
+      padding: 16px;
+      color: var(--muted-text);
+      background: #151515;
+      border: 1px solid var(--panel-border);
+      border-radius: 9px;
+      line-height: 1.55;
+    }
+
+    .payment-notice strong {
+      color: var(--primary-text);
+    }
+
+    .payment-actions {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 12px;
+      margin-top: 26px;
+    }
+
+    .payment-action {
+      display: inline-flex;
+      min-height: 48px;
+      align-items: center;
+      justify-content: center;
+      padding: 11px 18px;
+      color: #ffffff;
+      border-radius: 8px;
+      font-weight: 700;
+      text-decoration: none;
+      transition:
+        background-color 0.2s ease,
+        transform 0.2s ease;
+    }
+
+    .return-cart-action {
+      background: var(--primary-button);
+    }
+
+    .return-cart-action:hover,
+    .return-cart-action:focus {
+      background: var(--primary-button-hover);
+      transform: translateY(-1px);
+    }
+
+    .continue-shopping-action {
+      background: var(--secondary-button);
+    }
+
+    .continue-shopping-action:hover,
+    .continue-shopping-action:focus {
+      background: var(--secondary-button-hover);
+      transform: translateY(-1px);
+    }
+
+    .contact-link {
+      display: inline-block;
+      margin-top: 22px;
+      color: #ffffff;
+      text-decoration: underline;
+      text-underline-offset: 3px;
+    }
+
+    .site-footer {
+      padding: 24px 20px;
+      color: var(--muted-text);
+      background: #000000;
+      border-top: 1px solid var(--panel-border);
+      text-align: center;
+    }
+
+    .site-footer p {
+      margin: 5px 0;
+      line-height: 1.5;
+    }
+
+    .site-footer a {
+      color: #ffffff;
+      text-decoration: underline;
+      text-underline-offset: 3px;
+    }
+
+    @media (max-width: 600px) {
+      .header-buttons {
+        flex-direction: column;
+      }
+
+      .header-buttons a {
+        width: 100%;
+      }
+
+      .payment-canceled-page {
+        padding: 24px 14px;
+      }
+
+      .payment-canceled-panel {
+        padding: 34px 18px;
+      }
+
+      .payment-actions {
+        flex-direction: column;
+      }
+
+      .payment-action {
+        width: 100%;
+      }
+    }
   </style>
+
+  <script src="navigation.js" defer></script>
 </head>
-<script src="navigation.js"></script>
+
 <body>
-
-<h1>Payment Canceled</h1>
-<p>Your payment was not completed. You may return to your cart and try again.</p>
-
-<a href="cart.html">Return to Cart</a>
-
-</body>
-</html>
+  <header class="top-header">
+    <div class="header-content">
+      <h1 class="site-heading">
+        Multi-Maniacs
+ 

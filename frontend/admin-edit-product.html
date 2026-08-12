@@ -2,41 +2,1028 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Edit Product - MMC Admin</title>
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
+
+  <meta
+    name="description"
+    content="Edit products, variants, categories, pricing, images, and inventory for Multi-Maniacs Customs LLC."
+  >
+
+  <title>
+    Edit Product | Multi-Maniacs Customs LLC
+  </title>
+
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="admin.css">
+
   <style>
-    body { background:#111; color:white; font-family:Arial; padding:20px; }
-    .container { max-width:500px; margin:auto; background:#222; padding:20px; border-radius:10px; }
-    input, textarea, select { width:100%; padding:10px; margin-top:10px; border-radius:6px; border:none; }
-    button { width:100%; padding:12px; margin-top:15px; background:#2196F3; border:none; color:white; font-size:16px; border-radius:6px; cursor:pointer; }
-    button:hover { background:#1976D2; }
+    :root {
+      --edit-product-background: #111111;
+      --edit-product-panel: #222222;
+      --edit-product-inner: #191919;
+      --edit-product-border: #444444;
+      --edit-product-text: #ffffff;
+      --edit-product-muted: #cccccc;
+      --edit-product-input-background: #ffffff;
+      --edit-product-input-text: #111111;
+      --edit-product-button: #2196f3;
+      --edit-product-button-hover: #1976d2;
+      --edit-product-success: #4caf50;
+      --edit-product-success-hover: #43a047;
+      --edit-product-danger: #e53935;
+      --edit-product-danger-hover: #c62828;
+      --edit-product-focus: #64b5f6;
+      --edit-product-error-text: #ff7676;
+      --edit-product-success-text: #79d77c;
+      --edit-product-information-text: #90caf9;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      min-height: 100%;
+    }
+
+    body {
+      min-height: 100vh;
+      margin: 0;
+      color: var(--edit-product-text);
+      background: var(--edit-product-background);
+      font-family: Arial, Helvetica, sans-serif;
+    }
+
+    .top-header {
+      padding: 18px 20px;
+      background: #000000;
+      border-bottom: 1px solid var(--edit-product-border);
+    }
+
+    .header-content {
+      width: 100%;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .site-heading {
+      margin: 0 0 16px;
+      font-size: 26px;
+      line-height: 1.25;
+    }
+
+    .header-buttons {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .header-buttons a {
+      display: inline-flex;
+      min-height: 42px;
+      align-items: center;
+      justify-content: center;
+      padding: 9px 13px;
+      color: #ffffff;
+      background: #222222;
+      border: 1px solid #353535;
+      border-radius: 7px;
+      text-decoration: none;
+    }
+
+    .header-buttons a:hover,
+    .header-buttons a:focus {
+      background: #333333;
+    }
+
+    .header-buttons a[aria-current="page"] {
+      background: var(--edit-product-button);
+      border-color: var(--edit-product-button);
+    }
+
+    .edit-product-page {
+      width: 100%;
+      max-width: 950px;
+      margin: 36px auto;
+      padding: 0 20px;
+    }
+
+    .edit-product-container {
+      padding: 30px;
+      background: var(--edit-product-panel);
+      border: 1px solid var(--edit-product-border);
+      border-radius: 14px;
+      box-shadow:
+        0 18px 50px rgba(0, 0, 0, 0.4);
+    }
+
+    .page-heading {
+      margin: 0 0 10px;
+      text-align: center;
+      font-size: 30px;
+    }
+
+    .page-description {
+      max-width: 700px;
+      margin: 0 auto 24px;
+      color: var(--edit-product-muted);
+      text-align: center;
+      line-height: 1.55;
+    }
+
+    .admin-account-bar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 24px;
+      padding: 14px;
+      background: var(--edit-product-inner);
+      border: 1px solid var(--edit-product-border);
+      border-radius: 8px;
+    }
+
+    .admin-account-bar p {
+      margin: 4px 0;
+    }
+
+    .admin-account-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .small-action-button {
+      display: inline-block;
+      padding: 9px 13px;
+      color: #ffffff;
+      background: #444444;
+      border: none;
+      border-radius: 6px;
+      font: inherit;
+      font-size: 14px;
+      text-align: center;
+      text-decoration: none;
+      cursor: pointer;
+    }
+
+    .small-action-button:hover,
+    .small-action-button:focus {
+      background: #5a5a5a;
+    }
+
+    .product-selection {
+      margin-bottom: 24px;
+      padding: 20px;
+      background: var(--edit-product-inner);
+      border: 1px solid var(--edit-product-border);
+      border-radius: 10px;
+    }
+
+    .edit-product-form {
+      display: flex;
+      flex-direction: column;
+      gap: 22px;
+    }
+
+    .edit-product-form[hidden] {
+      display: none;
+    }
+
+    .product-section {
+      padding: 22px;
+      background: var(--edit-product-inner);
+      border: 1px solid var(--edit-product-border);
+      border-radius: 10px;
+    }
+
+    .product-section h2 {
+      margin: 0 0 18px;
+      font-size: 22px;
+    }
+
+    .product-section h3 {
+      margin: 22px 0 14px;
+      font-size: 18px;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 18px;
+    }
+
+    .form-field {
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+    }
+
+    .form-field-full {
+      grid-column: 1 / -1;
+    }
+
+    .form-field label {
+      font-size: 15px;
+      font-weight: 700;
+    }
+
+    .required-marker {
+      color: #ff8585;
+    }
+
+    .field-help {
+      margin: 0;
+      color: var(--edit-product-muted);
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    .form-field input,
+    .form-field select,
+    .form-field textarea {
+      width: 100%;
+      padding: 11px 12px;
+      color: var(--edit-product-input-text);
+      background: var(--edit-product-input-background);
+      border: 2px solid transparent;
+      border-radius: 7px;
+      font: inherit;
+      outline: none;
+    }
+
+    .form-field input,
+    .form-field select {
+      min-height: 48px;
+    }
+
+    .form-field textarea {
+      min-height: 140px;
+      resize: vertical;
+    }
+
+    .form-field input:focus,
+    .form-field select:focus,
+    .form-field textarea:focus {
+      border-color: var(--edit-product-focus);
+      box-shadow:
+        0 0 0 3px rgba(100, 181, 246, 0.2);
+    }
+
+    .form-field select:disabled {
+      cursor: wait;
+      opacity: 0.7;
+    }
+
+    .image-upload-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: flex-end;
+      gap: 12px;
+    }
+
+    .image-upload-row .form-field {
+      flex: 1;
+      min-width: 220px;
+    }
+
+    .upload-image-button {
+      min-height: 48px;
+      padding: 11px 16px;
+      color: #ffffff;
+      background: var(--edit-product-button);
+      border: none;
+      border-radius: 7px;
+      font: inherit;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .upload-image-button:hover:not(:disabled) {
+      background: var(--edit-product-button-hover);
+    }
+
+    .upload-image-button:disabled {
+      cursor: wait;
+      opacity: 0.7;
+    }
+
+    .product-preview-container {
+      margin-top: 18px;
+      padding: 16px;
+      text-align: center;
+      background: #101010;
+      border: 1px solid var(--edit-product-border);
+      border-radius: 8px;
+    }
+
+    .product-preview-container[hidden] {
+      display: none;
+    }
+
+    .product-preview-container h3 {
+      margin: 0 0 14px;
+    }
+
+    .product-preview {
+      display: block;
+      width: 100%;
+      max-width: 350px;
+      max-height: 300px;
+      margin: 0 auto;
+      border-radius: 8px;
+      object-fit: contain;
+    }
+
+    .variant-entry-grid {
+      display: grid;
+      grid-template-columns:
+        repeat(4, minmax(120px, 1fr));
+      gap: 12px;
+    }
+
+    .add-variant-button {
+      width: 100%;
+      min-height: 46px;
+      margin-top: 14px;
+      padding: 11px;
+      color: #ffffff;
+      background: var(--edit-product-button);
+      border: none;
+      border-radius: 7px;
+      font: inherit;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .add-variant-button:hover {
+      background: var(--edit-product-button-hover);
+    }
+
+    .variant-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-top: 18px;
+    }
+
+    .variant-list:empty::before {
+      content: "This product currently has no variants.";
+      display: block;
+      padding: 14px;
+      color: var(--edit-product-muted);
+      background: #101010;
+      border: 1px solid var(--edit-product-border);
+      border-radius: 7px;
+    }
+
+    .variant-item {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 14px;
+      align-items: center;
+      padding: 14px;
+      background: #101010;
+      border: 1px solid var(--edit-product-border);
+      border-radius: 8px;
+    }
+
+    .variant-item h4 {
+      margin: 0 0 8px;
+    }
+
+    .variant-item p {
+      margin: 4px 0;
+      color: var(--edit-product-muted);
+    }
+
+    .remove-variant-button {
+      padding: 9px 12px;
+      color: #ffffff;
+      background: var(--edit-product-danger);
+      border: none;
+      border-radius: 6px;
+      font: inherit;
+      cursor: pointer;
+    }
+
+    .remove-variant-button:hover {
+      background: var(--edit-product-danger-hover);
+    }
+
+    .checkbox-field {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 14px;
+      background: #101010;
+      border: 1px solid var(--edit-product-border);
+      border-radius: 8px;
+    }
+
+    .checkbox-field input {
+      width: 20px;
+      height: 20px;
+      margin: 1px 0 0;
+      accent-color: var(--edit-product-success);
+      cursor: pointer;
+    }
+
+    .checkbox-field label {
+      line-height: 1.45;
+      cursor: pointer;
+    }
+
+    .save-product-button {
+      width: 100%;
+      min-height: 52px;
+      padding: 13px;
+      color: #ffffff;
+      background: var(--edit-product-success);
+      border: none;
+      border-radius: 8px;
+      font: inherit;
+      font-size: 17px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .save-product-button:hover:not(:disabled) {
+      background: var(--edit-product-success-hover);
+    }
+
+    .save-product-button:disabled {
+      cursor: wait;
+      opacity: 0.7;
+    }
+
+    .product-message {
+      min-height: 24px;
+      margin: 20px 0 0;
+      text-align: center;
+      font-weight: 700;
+      line-height: 1.5;
+    }
+
+    .product-message:empty {
+      display: none;
+    }
+
+    .product-error {
+      color: var(--edit-product-error-text);
+    }
+
+    .product-success-message {
+      color: var(--edit-product-success-text);
+    }
+
+    .product-information-message {
+      color: var(--edit-product-information-text);
+    }
+
+    .page-actions {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px;
+      margin-top: 24px;
+    }
+
+    @media (max-width: 760px) {
+      .form-grid,
+      .variant-entry-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .form-field-full {
+        grid-column: auto;
+      }
+
+      .header-buttons {
+        flex-direction: column;
+      }
+
+      .header-buttons a {
+        width: 100%;
+      }
+    }
+
+    @media (max-width: 520px) {
+      .edit-product-page {
+        margin: 20px auto;
+        padding: 0 14px;
+      }
+
+      .edit-product-container {
+        padding: 20px 14px;
+      }
+
+      .product-section,
+      .product-selection {
+        padding: 17px 13px;
+      }
+
+      .admin-account-bar {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+    }
   </style>
+
+  <script src="navigation.js" defer></script>
+  <script src="edit-product.js" defer></script>
 </head>
-<script src="navigation.js"></script>
+
 <body>
+  <header class="top-header">
+    <div class="header-content">
+      <h1 class="site-heading">
+        Multi-Maniacs Customs LLC - Admin
+      </h1>
 
-<div class="container">
-  <h2>Edit Product</h2>
+      <nav
+        class="header-buttons"
+        aria-label="Administrator navigation"
+      >
+        <a href="index.html">
+          Home
+        </a>
 
-  <select id="productSelect">
-    <option value="">Select a product...</option>
-  </select>
+        <a href="admin-dashboard.html">
+          Dashboard
+        </a>
 
-  <input id="name" type="text" placeholder="Product Name">
-  <input id="price" type="number" placeholder="Price">
-  <textarea id="description" placeholder="Description"></textarea>
-  <input id="category" type="text" placeholder="Category">
-  <input id="stock" type="number" placeholder="Stock">
-  <input id="image" type="text" placeholder="Image URL (Cloudinary)">
-  
-  <label>
-    <input id="active" type="checkbox"> Active
-  </label>
+        <a href="admin-add-product.html">
+          Add Product
+        </a>
 
-  <button onclick="saveProduct()">Save Changes</button>
+        <a href="admin-products.html">
+          Manage Products
+        </a>
 
-  <p id="message"></p>
-</div>
+        <a
+          href="edit-product.js">
+          Edit Product
+        </a>
 
-<script src="edit-product.js"></script>
+        <a href="shop.html">
+          View Shop
+        </a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="edit-product-page">
+    <section
+      class="edit-product-container"
+      aria-labelledby="edit-product-heading"
+    >
+      <h1
+        id="edit-product-heading"
+        class="page-heading"
+      >
+        Edit Product
+      </h1>
+
+      <p class="page-description">
+        Select a product and update its name, SKU, pricing,
+        category, inventory, image, description, variants, and
+        client-facing visibility.
+      </p>
+
+      <div class="admin-account-bar">
+        <div>
+          <p>
+            Signed in as:
+            <strong id="admin-username">
+              Loading...
+            </strong>
+          </p>
+
+          <p>
+            Role:
+            <strong id="admin-role">
+              Loading...
+            </strong>
+          </p>
+        </div>
+
+        <div class="admin-account-actions">
+          <a
+            class="small-action-button"
+            href="admin-dashboard.html"
+          >
+            Dashboard
+          </a>
+
+          <button
+            id="admin-logout-button"
+            class="small-action-button"
+            type="button"
+          >
+            Log Out
+          </button>
+        </div>
+      </div>
+
+      <section class="product-selection">
+        <div class="form-field">
+          <label for="productSelect">
+            Select Product
+          </label>
+
+          <select
+            id="productSelect"
+            name="productId"
+            required
+            disabled
+          >
+            <option value="">
+              Loading products...
+            </option>
+          </select>
+
+          <p class="field-help">
+            Select the product you want to edit.
+          </p>
+        </div>
+      </section>
+
+      <form
+        id="edit-product-form"
+        class="edit-product-form"
+        hidden
+        novalidate
+      >
+        <input
+          id="edit-product-id"
+          name="productId"
+          type="hidden"
+        >
+
+        <section
+          class="product-section"
+          aria-labelledby="edit-product-details-heading"
+        >
+          <h2 id="edit-product-details-heading">
+            Product Details
+          </h2>
+
+          <div class="form-grid">
+            <div class="form-field form-field-full">
+              <label for="edit-product-name">
+                Product Name
+                <span
+                  class="required-marker"
+                  aria-hidden="true"
+                >
+                  *
+                </span>
+              </label>
+
+              <input
+                id="edit-product-name"
+                name="name"
+                type="text"
+                minlength="2"
+                maxlength="200"
+                required
+              >
+            </div>
+
+            <div class="form-field">
+              <label for="edit-product-sku">
+                Product SKU
+                <span
+                  class="required-marker"
+                  aria-hidden="true"
+                >
+                  *
+                </span>
+              </label>
+
+              <input
+                id="edit-product-sku"
+                name="sku"
+                type="text"
+                minlength="2"
+                maxlength="100"
+                required
+              >
+            </div>
+
+            <div class="form-field">
+              <label for="edit-product-price">
+                Base Price
+                <span
+                  class="required-marker"
+                  aria-hidden="true"
+                >
+                  *
+                </span>
+              </label>
+
+              <input
+                id="edit-product-price"
+                name="price"
+                type="number"
+                min="0"
+                step="0.01"
+                required
+              >
+            </div>
+
+            <div class="form-field">
+              <label for="edit-product-stock">
+                Base Stock
+              </label>
+
+              <input
+                id="edit-product-stock"
+                name="stock"
+                type="number"
+                min="0"
+                step="1"
+              >
+            </div>
+
+            <div class="form-field">
+              <label for="edit-product-low-stock">
+                Low Stock Warning
+              </label>
+
+              <input
+                id="edit-product-low-stock"
+                name="lowStockWarning"
+                type="number"
+                min="0"
+                step="1"
+              >
+            </div>
+
+            <div class="form-field form-field-full">
+              <label for="edit-product-category">
+                Product Category
+              </label>
+
+              <select
+                id="edit-product-category"
+                name="category"
+                disabled
+              >
+                <option value="">
+                  Loading categories...
+                </option>
+              </select>
+
+              <p class="field-help">
+                This category is shown to clients through shop
+                category buttons, dropdowns, and product groups.
+              </p>
+            </div>
+
+            <div class="form-field form-field-full">
+              <label for="edit-product-description">
+                Product Description
+              </label>
+
+              <textarea
+                id="edit-product-description"
+                name="description"
+                maxlength="5000"
+              ></textarea>
+            </div>
+          </div>
+        </section>
+
+        <section
+          class="product-section"
+          aria-labelledby="edit-product-image-heading"
+        >
+          <h2 id="edit-product-image-heading">
+            Product Image
+          </h2>
+
+          <div class="form-field">
+            <label for="edit-product-image">
+              Image URL
+              <span
+                class="required-marker"
+                aria-hidden="true"
+              >
+                *
+              </span>
+            </label>
+
+            <input
+              id="edit-product-image"
+              name="image"
+              type="url"
+              required
+            >
+          </div>
+
+          <div class="image-upload-row">
+            <div class="form-field">
+              <label for="edit-product-image-file">
+                Replace Product Image
+              </label>
+
+              <input
+                id="edit-product-image-file"
+                type="file"
+                accept="image/jpeg,image/png,image/webp,image/gif"
+              >
+
+              <p class="field-help">
+                Upload a new image only if you want to replace the
+                current product image. Maximum size: 10 MB.
+              </p>
+            </div>
+
+            <button
+              id="upload-edit-product-image-button"
+              class="upload-image-button"
+              type="button"
+            >
+              Upload Replacement Image
+            </button>
+          </div>
+
+          <section
+            id="edit-product-preview-container"
+            class="product-preview-container"
+            aria-labelledby="edit-product-preview-heading"
+            hidden
+          >
+            <h3 id="edit-product-preview-heading">
+              Product Image Preview
+            </h3>
+
+            <img
+              id="edit-product-preview"
+              class="product-preview"
+              alt="Product image preview"
+            >
+          </section>
+        </section>
+
+        <section
+          class="product-section"
+          aria-labelledby="edit-product-variants-heading"
+        >
+          <h2 id="edit-product-variants-heading">
+            Product Variants
+          </h2>
+
+          <p class="field-help">
+            Review, remove, or add choices such as colors, sizes,
+            materials, finishes, and package types.
+          </p>
+
+          <div
+            id="edit-variant-list"
+            class="variant-list"
+          ></div>
+
+          <h3>
+            Add Variant
+          </h3>
+
+          <div class="variant-entry-grid">
+            <div class="form-field">
+              <label for="edit-variant-name">
+                Variant Name
+              </label>
+
+              <input
+                id="edit-variant-name"
+                type="text"
+                placeholder="Example: Red or XL"
+                maxlength="150"
+              >
+            </div>
+
+            <div class="form-field">
+              <label for="edit-variant-sku">
+                Variant SKU
+              </label>
+
+              <input
+                id="edit-variant-sku"
+                type="text"
+                placeholder="Example: MMC-001-RED"
+                maxlength="100"
+              >
+            </div>
+
+            <div class="form-field">
+              <label for="edit-variant-price">
+                Variant Price
+              </label>
+
+              <input
+                id="edit-variant-price"
+                type="number"
+                min="0"
+                step="0.01"
+              >
+            </div>
+
+            <div class="form-field">
+              <label for="edit-variant-stock">
+                Variant Stock
+              </label>
+
+              <input
+                id="edit-variant-stock"
+                type="number"
+                min="0"
+                step="1"
+              >
+            </div>
+          </div>
+
+          <button
+            id="add-edit-variant-button"
+            class="add-variant-button"
+            type="button"
+          >
+            Add Variant
+          </button>
+        </section>
+
+        <section class="product-section">
+          <div class="checkbox-field">
+            <input
+              id="edit-product-active"
+              name="active"
+              type="checkbox"
+            >
+
+            <label for="edit-product-active">
+              Show this product to clients in the public shop.
+            </label>
+          </div>
+        </section>
+
+        <button
+          id="save-product-changes-button"
+          class="save-product-button"
+          type="submit"
+        >
+          Save Product Changes
+        </button>
+      </form>
+
+      <p
+        id="product-message"
+        class="product-message"
+        role="status"
+        aria-live="polite"
+      ></p>
+
+      <div class="page-actions">
+        <a
+          class="small-action-button"
+          href="admin-dashboard.html"
+        >
+          Return to Dashboard
+        </a>
+
+        <a
+          class="small-action-button"
+          href="admin-products.html"
+        >
+          Manage Products
+        </a>
+
+        <a
+          class="small-action-button"
+          href="admin-add-product.html"
+        >
+          Add Product
+        </a>
+
+        <a
+          class="small-action-button"
+          href="shop.html"
+        >
+          View Shop
+        </a>
+      </div>
+    </section>
+  </main>
+
+  <noscript>
+    <p>
+      JavaScript must be enabled to edit products.
+    </p>
+  </noscript>
 </body>
 </html>

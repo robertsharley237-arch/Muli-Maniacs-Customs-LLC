@@ -1,109 +1,824 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>MMC Admin – Inventory Management</title>
-    <link rel="stylesheet" href="admin.css">
-    <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
+
+  <meta
+    name="description"
+    content="Manage product and variant inventory for Multi-Maniacs Customs LLC."
+  >
+
+  <title>
+    Inventory Management | Multi-Maniacs Customs LLC
+  </title>
+
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="admin.css">
+
+  <style>
+    :root {
+      --inventory-background: #111111;
+      --inventory-header: #000000;
+      --inventory-panel: #222222;
+      --inventory-inner: #191919;
+      --inventory-border: #444444;
+      --inventory-text: #ffffff;
+      --inventory-muted: #cccccc;
+      --inventory-input-background: #ffffff;
+      --inventory-input-text: #111111;
+      --inventory-primary: #2196f3;
+      --inventory-primary-hover: #1976d2;
+      --inventory-success: #4caf50;
+      --inventory-success-hover: #43a047;
+      --inventory-danger: #e53935;
+      --inventory-danger-hover: #c62828;
+      --inventory-warning: #ff9800;
+      --inventory-focus: #64b5f6;
+      --inventory-error-text: #ff7676;
+      --inventory-success-text: #79d77c;
+      --inventory-information-text: #90caf9;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      min-height: 100%;
+    }
+
+    body {
+      min-height: 100vh;
+      margin: 0;
+      color: var(--inventory-text);
+      background: var(--inventory-background);
+      font-family: Arial, Helvetica, sans-serif;
+    }
+
+    .top-header {
+      padding: 18px 20px;
+      background: var(--inventory-header);
+      border-bottom: 1px solid var(--inventory-border);
+    }
+
+    .header-content {
+      width: 100%;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .site-heading {
+      margin: 0 0 16px;
+      font-size: 26px;
+      line-height: 1.25;
+    }
+
+    .header-buttons {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .header-buttons a {
+      display: inline-flex;
+      min-height: 42px;
+      align-items: center;
+      justify-content: center;
+      padding: 9px 13px;
+      color: #ffffff;
+      background: #222222;
+      border: 1px solid #353535;
+      border-radius: 7px;
+      text-decoration: none;
+    }
+
+    .header-buttons a:hover,
+    .header-buttons a:focus {
+      background: #333333;
+    }
+
+    .header-buttons a[aria-current="page"] {
+      background: var(--inventory-primary);
+      border-color: var(--inventory-primary);
+    }
+
+    .inventory-page {
+      width: 100%;
+      max-width: 900px;
+      margin: 36px auto;
+      padding: 0 20px;
+    }
+
+    .inventory-container {
+      padding: 30px;
+      background: var(--inventory-panel);
+      border: 1px solid var(--inventory-border);
+      border-radius: 14px;
+      box-shadow: 0 18px 50px rgba(0, 0, 0, 0.4);
+    }
+
+    .page-heading {
+      margin: 0 0 10px;
+      text-align: center;
+      font-size: 30px;
+    }
+
+    .page-description {
+      max-width: 700px;
+      margin: 0 auto 24px;
+      color: var(--inventory-muted);
+      text-align: center;
+      line-height: 1.55;
+    }
+
+    .admin-account-bar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      margin-bottom: 24px;
+      padding: 15px;
+      background: var(--inventory-inner);
+      border: 1px solid var(--inventory-border);
+      border-radius: 9px;
+    }
+
+    .admin-account-bar p {
+      margin: 4px 0;
+    }
+
+    .admin-account-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .small-action-button {
+      display: inline-block;
+      padding: 9px 13px;
+      color: #ffffff;
+      background: #444444;
+      border: none;
+      border-radius: 6px;
+      font: inherit;
+      font-size: 14px;
+      text-align: center;
+      text-decoration: none;
+      cursor: pointer;
+    }
+
+    .small-action-button:hover,
+    .small-action-button:focus {
+      background: #5a5a5a;
+    }
+
+    .inventory-form {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .inventory-section {
+      padding: 20px;
+      background: var(--inventory-inner);
+      border: 1px solid var(--inventory-border);
+      border-radius: 10px;
+    }
+
+    .inventory-section h2 {
+      margin: 0 0 16px;
+      font-size: 21px;
+    }
+
+    .form-field {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .form-field label {
+      font-size: 15px;
+      font-weight: 700;
+    }
+
+    .field-help {
+      margin: 0;
+      color: var(--inventory-muted);
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    .form-field select,
+    .form-field input {
+      width: 100%;
+      min-height: 48px;
+      padding: 11px 12px;
+      color: var(--inventory-input-text);
+      background: var(--inventory-input-background);
+      border: 2px solid transparent;
+      border-radius: 7px;
+      font: inherit;
+      outline: none;
+    }
+
+    .form-field select:focus,
+    .form-field input:focus {
+      border-color: var(--inventory-focus);
+      box-shadow: 0 0 0 3px rgba(100, 181, 246, 0.2);
+    }
+
+    .form-field select:disabled,
+    .form-field input:disabled {
+      cursor: not-allowed;
+      opacity: 0.7;
+    }
+
+    .product-details {
+      margin-top: 18px;
+      padding: 16px;
+      background: #101010;
+      border: 1px solid var(--inventory-border);
+      border-radius: 9px;
+    }
+
+    .product-details[hidden] {
+      display: none;
+    }
+
+    .product-details h2 {
+      margin: 0 0 14px;
+      font-size: 19px;
+    }
+
+    .product-details-grid {
+      display: grid;
+      grid-template-columns:
+        repeat(2, minmax(0, 1fr));
+      gap: 13px;
+    }
+
+    .product-detail {
+      padding: 12px;
+      background: var(--inventory-inner);
+      border: 1px solid var(--inventory-border);
+      border-radius: 7px;
+    }
+
+    .product-detail h3 {
+      margin: 0 0 6px;
+      color: var(--inventory-muted);
+      font-size: 13px;
+      text-transform: uppercase;
+    }
+
+    .product-detail p {
+      margin: 0;
+      overflow-wrap: anywhere;
+      line-height: 1.45;
+    }
+
+    .stock-display {
+      margin: 18px 0 0;
+      padding: 20px;
+      background: #101010;
+      border: 1px solid var(--inventory-border);
+      border-radius: 9px;
+      text-align: center;
+    }
+
+    .stock-display[hidden] {
+      display: none;
+    }
+
+    .stock-display h3 {
+      margin: 0 0 8px;
+      color: var(--inventory-muted);
+      font-size: 15px;
+    }
+
+    .current-stock-number {
+      margin: 0 0 8px;
+      font-size: 38px;
+      font-weight: 700;
+    }
+
+    .stock-normal {
+      color: var(--inventory-success-text);
+    }
+
+    .stock-low {
+      color: var(--inventory-warning);
+    }
+
+    .stock-empty {
+      color: var(--inventory-error-text);
+    }
+
+    .inventory-adjustment-grid {
+      display: grid;
+      grid-template-columns:
+        minmax(140px, 220px)
+        1fr;
+      gap: 16px;
+      align-items: end;
+    }
+
+    .inventory-button-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .inventory-action-button {
+      min-height: 48px;
+      padding: 11px 15px;
+      color: #ffffff;
+      border: none;
+      border-radius: 7px;
+      font: inherit;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .increase-stock-button {
+      background: var(--inventory-success);
+    }
+
+    .increase-stock-button:hover:not(:disabled) {
+      background: var(--inventory-success-hover);
+    }
+
+    .decrease-stock-button {
+      background: var(--inventory-danger);
+    }
+
+    .decrease-stock-button:hover:not(:disabled) {
+      background: var(--inventory-danger-hover);
+    }
+
+    .inventory-action-button:disabled {
+      cursor: not-allowed;
+      opacity: 0.6;
+    }
+
+    .set-stock-button {
+      width: 100%;
+      min-height: 48px;
+      margin-top: 12px;
+      padding: 11px 15px;
+      color: #ffffff;
+      background: var(--inventory-primary);
+      border: none;
+      border-radius: 7px;
+      font: inherit;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .set-stock-button:hover:not(:disabled) {
+      background: var(--inventory-primary-hover);
+    }
+
+    .set-stock-button:disabled {
+      cursor: not-allowed;
+      opacity: 0.6;
+    }
+
+    .inventory-message {
+      min-height: 24px;
+      margin: 20px 0 0;
+      text-align: center;
+      font-weight: 700;
+      line-height: 1.5;
+    }
+
+    .inventory-message:empty {
+      display: none;
+    }
+
+    .inventory-error {
+      color: var(--inventory-error-text);
+    }
+
+    .inventory-success {
+      color: var(--inventory-success-text);
+    }
+
+    .inventory-information {
+      color: var(--inventory-information-text);
+    }
+
+    .page-actions {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px;
+      margin-top: 24px;
+    }
+
+    @media (max-width: 700px) {
+      .inventory-adjustment-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .product-details-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .header-buttons {
+        flex-direction: column;
+      }
+
+      .header-buttons a {
+        width: 100%;
+      }
+    }
+
+    @media (max-width: 520px) {
+      .inventory-page {
+        margin: 20px auto;
+        padding: 0 14px;
+      }
+
+      .inventory-container {
+        padding: 20px 14px;
+      }
+
+      .inventory-section {
+        padding: 17px 13px;
+      }
+
+      .admin-account-bar {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .inventory-button-row {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+
+  <script src="navigation.js" defer></script>
+  admin-inventory.jsscript>
 </head>
 
 <body>
+  <header class="top-header">
+    <div class="header-content">
+      <h1 class="site-heading">
+        Multi-Maniacs Customs LLC - Admin
+      </h1>
 
-    <!-- ============================
-         UPDATED BLACK HEADER
-         ============================ -->
-    <header class="top-header">
-        <h1>Multi-Maniacs Customs LLC — Admin</h1>
+      <nav
+        class="header-buttons"
+        aria-label="Administrator navigation"
+      >
+        <a href="index.html">
+          Home
+        </a>
 
-        <nav class="header-buttons">
+        <a href="admin-dashboard.html">
+          Dashboard
+        </a>
 
-            <button onclick="navigate('home')">
-                <span class="icon">🏠</span> Home
-            </button>
+        <a href="admin-products.html">
+          Products
+        </a>
 
-            <button onclick="navigate('about')">
-                <span class="icon">📘</span> About
-            </button>
+        <a
+          href="admin-inventory.html"
+          aria-current="page"
+        >
+          Inventory
+        </a>
 
-            <button onclick="navigate('services')">
-                <span class="icon">🛠️</span> Services
-            </button>
+        <a href="admin-intake.html">
+          Client Intakes
+        </a>
 
-            <button onclick="navigate('shop')">
-                <span class="icon">🛒</span> Shop
-            </button>
+        <a href="shop.html">
+          View Shop
+        </a>
+      </nav>
+    </div>
+  </header>
 
-            <button onclick="navigate('cart')">
-                <span class="icon">🛍️</span> Cart
-            </button>
+  <main class="inventory-page">
+    <section
+      class="inventory-container"
+      aria-labelledby="inventory-heading"
+    >
+      <h1
+        id="inventory-heading"
+        class="page-heading"
+      >
+        Inventory Management
+      </h1>
 
-            <button onclick="navigate('contact')">
-                <span class="icon">📞</span> Contact
-            </button>
+      <p class="page-description">
+        Select a product or product variant, review its current
+        inventory, and increase, decrease, or set its stock
+        amount.
+      </p>
 
-            <button onclick="navigate('gallery')">
-                <span class="icon">🖼️</span> Gallery
-            </button>
+      <div class="admin-account-bar">
+        <div>
+          <p>
+            Signed in as:
+            <strong id="admin-username">
+              Loading...
+            </strong>
+          </p>
 
-            <!-- ⭐ ADMIN BUTTON ⭐ -->
-            <button class="admin-btn" onclick="navigate('admin-dashboard')">
-                <span class="icon">🔧</span> Admin
-            </button>
-
-        </nav>
-
-        <!-- MINI CART -->
-        <div class="mini-cart" id="miniCart">
-            <h3>Mini Cart</h3>
-            <div id="miniCartItems"></div>
+          <p>
+            Role:
+            <strong id="admin-role">
+              Loading...
+            </strong>
+          </p>
         </div>
-    </header>
 
+        <div class="admin-account-actions">
+          <a
+            class="small-action-button"
+            href="admin-dashboard.html"
+          >
+            Dashboard
+          </a>
 
-    <!-- ============================
-         SIDEBAR + AUTH PROTECTION
-         ============================ -->
-    <script src="admin-sidebar.html"></script>
+          <button
+            id="admin-logout-button"
+            class="small-action-button"
+            type="button"
+          >
+            Log Out
+          </button>
+        </div>
+      </div>
 
-    <script>
-        const token = localStorage.getItem("MMC_ADMIN_TOKEN");
-        if (!token) window.location.href = "admin-login.html";
-    </script>
+      <form
+        id="inventory-form"
+        class="inventory-form"
+        novalidate
+      >
+        <section class="inventory-section">
+          <h2>
+            Select Inventory Item
+          </h2>
 
+          <div class="form-field">
+            <label for="productSelect">
+              Product
+            </label>
 
-    <!-- ============================
-         PAGE CONTENT
-         ============================ -->
-    <div class="admin-page" style="padding: 20px;">
+            <select
+              id="productSelect"
+              name="productId"
+              required
+              disabled
+            >
+              <option value="">
+                Loading products...
+              </option>
+            </select>
+          </div>
 
-        <div class="section" style="max-width: 500px; margin: auto;">
-            <h2>Inventory Management</h2>
+          <div
+            id="variant-field"
+            class="form-field"
+            hidden
+          >
+            <label for="variantSelect">
+              Product Variant
+            </label>
 
-            <select id="productSelect">
-                <option value="">Select a product...</option>
+            <select
+              id="variantSelect"
+              name="variantIndex"
+              disabled
+            >
+              <option value="">
+                Use Base Product Stock
+              </option>
             </select>
 
-            <p id="stockDisplay" style="margin-top: 10px;"></p>
+            <p class="field-help">
+              Select a variant to manage its separate stock.
+              Choose the base product option to edit the product’s
+              main stock amount.
+            </p>
+          </div>
 
-            <button onclick="increaseStock()" class="btn" style="margin-top: 15px;">
+          <section
+            id="selected-inventory-details"
+            class="product-details"
+            aria-labelledby="inventory-details-heading"
+            hidden
+          >
+            <h2 id="inventory-details-heading">
+              Selected Inventory Item
+            </h2>
+
+            <div class="product-details-grid">
+              <article class="product-detail">
+                <h3>
+                  Product
+                </h3>
+
+                <p id="inventory-product-name">
+                  Not selected
+                </p>
+              </article>
+
+              <article class="product-detail">
+                <h3>
+                  SKU
+                </h3>
+
+                <p id="inventory-product-sku">
+                  Not available
+                </p>
+              </article>
+
+              <article class="product-detail">
+                <h3>
+                  Category
+                </h3>
+
+                <p id="inventory-product-category">
+                  Not available
+                </p>
+              </article>
+
+              <article class="product-detail">
+                <h3>
+                  Inventory Type
+                </h3>
+
+                <p id="inventory-type">
+                  Base product
+                </p>
+              </article>
+            </div>
+          </section>
+
+          <section
+            id="stock-display"
+            class="stock-display"
+            aria-labelledby="current-stock-heading"
+            hidden
+          >
+            <h3 id="current-stock-heading">
+              Current Stock
+            </h3>
+
+            <p
+              id="current-stock-number"
+              class="current-stock-number"
+            >
+              0
+            </p>
+
+            <p id="stock-warning-display">
+              Select a product to view its inventory.
+            </p>
+          </section>
+        </section>
+
+        <section class="inventory-section">
+          <h2>
+            Adjust Stock
+          </h2>
+
+          <div class="inventory-adjustment-grid">
+            <div class="form-field">
+              <label for="stock-adjustment-amount">
+                Adjustment Amount
+              </label>
+
+              <input
+                id="stock-adjustment-amount"
+                name="adjustmentAmount"
+                type="number"
+                min="1"
+                step="1"
+                value="1"
+                required
+              >
+
+              <p class="field-help">
+                Enter how many units to add or subtract.
+              </p>
+            </div>
+
+            <div class="inventory-button-row">
+              <button
+                id="increase-stock-button"
+                class="inventory-action-button increase-stock-button"
+                type="button"
+                disabled
+              >
                 Increase Stock
-            </button>
+              </button>
 
-            <button onclick="decreaseStock()" class="btn danger" style="margin-top: 10px;">
+              <button
+                id="decrease-stock-button"
+                class="inventory-action-button decrease-stock-button"
+                type="button"
+                disabled
+              >
                 Decrease Stock
-            </button>
+              </button>
+            </div>
+          </div>
+        </section>
 
-            <p id="message" style="margin-top: 15px;"></p>
-        </div>
+        <section class="inventory-section">
+          <h2>
+            Set Exact Stock Amount
+          </h2>
 
-    </div>
+          <div class="form-field">
+            <label for="exact-stock-amount">
+              New Stock Amount
+            </label>
 
+            <input
+              id="exact-stock-amount"
+              name="exactStock"
+              type="number"
+              min="0"
+              step="1"
+              placeholder="Enter the exact stock amount"
+            >
 
-    <!-- ============================
-         SCRIPTS
-         ============================ -->
-    <script src="inventory.js"></script>
-    <script src="navigation.js"></script>
+            <p class="field-help">
+              This replaces the current stock amount instead of
+              increasing or decreasing it.
+            </p>
+          </div>
 
+          <button
+            id="set-stock-button"
+            class="set-stock-button"
+            type="button"
+            disabled
+          >
+            Set Exact Stock Amount
+          </button>
+        </section>
+      </form>
+
+      <p
+        id="inventory-message"
+        class="inventory-message"
+        role="status"
+        aria-live="polite"
+      ></p>
+
+      <div class="page-actions">
+        <a
+          class="small-action-button"
+          href="admin-dashboard.html"
+        >
+          Return to Dashboard
+        </a>
+
+        <a
+          class="small-action-button"
+          href="admin-products.html"
+        >
+          Manage Products
+        </a>
+
+        <a
+          class="small-action-button"
+          href="admin-add-product.html"
+        >
+          Add Product
+        </a>
+
+        <a
+          class="small-action-button"
+          href="shop.html"
+        >
+          View Shop
+        </a>
+      </div>
+    </section>
+  </main>
+
+  <noscript>
+    <p>
+      JavaScript must be enabled to manage inventory.
+    </p>
+  </noscript>
 </body>
 </html>

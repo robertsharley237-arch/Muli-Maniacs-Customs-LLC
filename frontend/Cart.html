@@ -1,99 +1,749 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Cart • Multi-Maniacs Customs LLC</title>
-    <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
+
+  <meta
+    name="description"
+    content="Review your Multi-Maniacs Customs cart, update quantities, save items for later, and proceed to secure checkout."
+  >
+
+  <title>
+    Cart | Multi-Maniacs Customs LLC
+  </title>
+
+  <link rel="stylesheet" href="style.css">
+
+  <style>
+    :root {
+      --cart-background: #111111;
+      --cart-header: #000000;
+      --cart-panel: #222222;
+      --cart-inner: #191919;
+      --cart-card: #101010;
+      --cart-border: #444444;
+      --cart-text: #ffffff;
+      --cart-muted: #cccccc;
+      --cart-primary: #2196f3;
+      --cart-primary-hover: #1976d2;
+      --cart-success: #4caf50;
+      --cart-success-hover: #43a047;
+      --cart-danger: #e53935;
+      --cart-danger-hover: #c62828;
+      --cart-warning: #ff9800;
+      --cart-error-text: #ff7676;
+      --cart-success-text: #79d77c;
+      --cart-information-text: #90caf9;
+      --cart-input-background: #ffffff;
+      --cart-input-text: #111111;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      min-height: 100%;
+    }
+
+    body {
+      min-height: 100vh;
+      margin: 0;
+      color: var(--cart-text);
+      background: var(--cart-background);
+      font-family: Arial, Helvetica, sans-serif;
+    }
+
+    .top-header {
+      padding: 18px 20px;
+      background: var(--cart-header);
+      border-bottom: 1px solid var(--cart-border);
+    }
+
+    .header-content {
+      width: 100%;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .site-heading {
+      margin: 0 0 16px;
+      font-size: 26px;
+      line-height: 1.25;
+    }
+
+    .header-buttons {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .header-buttons a {
+      display: inline-flex;
+      min-height: 42px;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      padding: 9px 13px;
+      color: #ffffff;
+      background: #222222;
+      border: 1px solid #353535;
+      border-radius: 7px;
+      text-decoration: none;
+    }
+
+    .header-buttons a:hover,
+    .header-buttons a:focus {
+      background: #333333;
+    }
+
+    .header-buttons a[aria-current="page"] {
+      background: var(--cart-primary);
+      border-color: var(--cart-primary);
+    }
+
+    .cart-count-badge {
+      display: inline-flex;
+      min-width: 24px;
+      height: 24px;
+      align-items: center;
+      justify-content: center;
+      padding: 0 7px;
+      color: #ffffff;
+      background: var(--cart-danger);
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .cart-page {
+      width: 100%;
+      max-width: 1200px;
+      margin: 36px auto;
+      padding: 0 20px;
+    }
+
+    .cart-heading {
+      margin: 0 0 10px;
+      text-align: center;
+      font-size: 34px;
+    }
+
+    .cart-description {
+      max-width: 720px;
+      margin: 0 auto 28px;
+      color: var(--cart-muted);
+      text-align: center;
+      line-height: 1.55;
+    }
+
+    .cart-layout {
+      display: grid;
+      grid-template-columns:
+        minmax(0, 1fr)
+        minmax(300px, 380px);
+      gap: 24px;
+      align-items: start;
+    }
+
+    .cart-section,
+    .cart-summary {
+      background: var(--cart-panel);
+      border: 1px solid var(--cart-border);
+      border-radius: 14px;
+      box-shadow:
+        0 18px 50px rgba(0, 0, 0, 0.35);
+    }
+
+    .cart-section {
+      padding: 24px;
+    }
+
+    .cart-section-heading {
+      margin: 0 0 18px;
+      font-size: 24px;
+    }
+
+    .cart-items,
+    .saved-items {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .cart-loading,
+    .cart-empty-message {
+      margin: 0;
+      padding: 28px 18px;
+      color: var(--cart-muted);
+      background: var(--cart-inner);
+      border: 1px solid var(--cart-border);
+      border-radius: 9px;
+      text-align: center;
+      line-height: 1.55;
+    }
+
+    .cart-empty-message a {
+      color: #ffffff;
+      font-weight: 700;
+      text-underline-offset: 3px;
+    }
+
+    .cart-item {
+      display: grid;
+      grid-template-columns: 130px minmax(0, 1fr);
+      gap: 18px;
+      padding: 16px;
+      background: var(--cart-card);
+      border: 1px solid var(--cart-border);
+      border-radius: 10px;
+    }
+
+    .cart-item-image-container {
+      width: 130px;
+      height: 130px;
+      overflow: hidden;
+      background: #080808;
+      border: 1px solid var(--cart-border);
+      border-radius: 8px;
+    }
+
+    .cart-item-image {
+      display: block;
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+
+    .cart-item-image-placeholder {
+      display: flex;
+      width: 100%;
+      height: 100%;
+      align-items: center;
+      justify-content: center;
+      padding: 12px;
+      color: var(--cart-muted);
+      text-align: center;
+    }
+
+    .cart-item-content {
+      min-width: 0;
+    }
+
+    .cart-item-heading {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .cart-item-heading h2 {
+      margin: 0;
+      font-size: 20px;
+      line-height: 1.3;
+    }
+
+    .cart-item-price {
+      margin: 0;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .cart-item-detail {
+      margin: 7px 0;
+      color: var(--cart-muted);
+      line-height: 1.45;
+    }
+
+    .cart-item-actions {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: flex-end;
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    .quantity-field {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .quantity-field label {
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .quantity-input {
+      width: 86px;
+      min-height: 42px;
+      padding: 8px 10px;
+      color: var(--cart-input-text);
+      background: var(--cart-input-background);
+      border: 2px solid transparent;
+      border-radius: 7px;
+      font: inherit;
+    }
+
+    .quantity-input:focus {
+      border-color: var(--cart-primary);
+      outline: none;
+      box-shadow:
+        0 0 0 3px rgba(33, 150, 243, 0.2);
+    }
+
+    .cart-item-button {
+      min-height: 42px;
+      padding: 9px 12px;
+      color: #ffffff;
+      background: #444444;
+      border: none;
+      border-radius: 7px;
+      font: inherit;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .cart-item-button:hover:not(:disabled) {
+      background: #5a5a5a;
+    }
+
+    .remove-item-button {
+      background: var(--cart-danger);
+    }
+
+    .remove-item-button:hover:not(:disabled) {
+      background: var(--cart-danger-hover);
+    }
+
+    .cart-item-button:disabled {
+      cursor: not-allowed;
+      opacity: 0.65;
+    }
+
+    .stock-message {
+      margin: 10px 0 0;
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .stock-available {
+      color: var(--cart-success-text);
+    }
+
+    .stock-low {
+      color: var(--cart-warning);
+    }
+
+    .stock-unavailable {
+      color: var(--cart-error-text);
+    }
+
+    .cart-summary {
+      position: sticky;
+      top: 20px;
+      padding: 24px;
+    }
+
+    .cart-summary h2 {
+      margin: 0 0 20px;
+      font-size: 24px;
+    }
+
+    .summary-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin: 12px 0;
+      color: var(--cart-muted);
+    }
+
+    .summary-row span:last-child {
+      color: var(--cart-text);
+      font-weight: 700;
+    }
+
+    .summary-total {
+      margin-top: 18px;
+      padding-top: 18px;
+      color: var(--cart-text);
+      border-top: 1px solid var(--cart-border);
+      font-size: 21px;
+      font-weight: 700;
+    }
+
+    .checkout-button {
+      width: 100%;
+      min-height: 52px;
+      margin-top: 22px;
+      padding: 13px;
+      color: #ffffff;
+      background: var(--cart-success);
+      border: none;
+      border-radius: 8px;
+      font: inherit;
+      font-size: 17px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .checkout-button:hover:not(:disabled) {
+      background: var(--cart-success-hover);
+    }
+
+    .checkout-button:disabled {
+      cursor: not-allowed;
+      opacity: 0.65;
+    }
+
+    .continue-shopping-link {
+      display: flex;
+      min-height: 46px;
+      align-items: center;
+      justify-content: center;
+      margin-top: 12px;
+      padding: 10px 14px;
+      color: #ffffff;
+      background: #444444;
+      border-radius: 8px;
+      font-weight: 700;
+      text-decoration: none;
+    }
+
+    .continue-shopping-link:hover,
+    .continue-shopping-link:focus {
+      background: #5a5a5a;
+    }
+
+    .checkout-notice {
+      margin: 18px 0 0;
+      color: var(--cart-muted);
+      font-size: 13px;
+      line-height: 1.5;
+      text-align: center;
+    }
+
+    .cart-message {
+      min-height: 24px;
+      margin: 20px 0 0;
+      font-weight: 700;
+      line-height: 1.5;
+      text-align: center;
+    }
+
+    .cart-message:empty {
+      display: none;
+    }
+
+    .cart-error {
+      color: var(--cart-error-text);
+    }
+
+    .cart-success {
+      color: var(--cart-success-text);
+    }
+
+    .cart-information {
+      color: var(--cart-information-text);
+    }
+
+    .saved-section {
+      margin-top: 26px;
+    }
+
+    .site-footer {
+      margin-top: 42px;
+      padding: 24px 20px;
+      color: var(--cart-muted);
+      background: #000000;
+      border-top: 1px solid var(--cart-border);
+      text-align: center;
+    }
+
+    .site-footer p {
+      margin: 5px 0;
+      line-height: 1.5;
+    }
+
+    .site-footer a {
+      color: #ffffff;
+      text-decoration: underline;
+      text-underline-offset: 3px;
+    }
+
+    @media (max-width: 850px) {
+      .cart-layout {
+        grid-template-columns: 1fr;
+      }
+
+      .cart-summary {
+        position: static;
+      }
+    }
+
+    @media (max-width: 600px) {
+      .header-buttons {
+        flex-direction: column;
+      }
+
+      .header-buttons a {
+        width: 100%;
+      }
+
+      .cart-page {
+        margin: 22px auto;
+        padding: 0 14px;
+      }
+
+      .cart-section,
+      .cart-summary {
+        padding: 18px 14px;
+      }
+
+      .cart-item {
+        grid-template-columns: 1fr;
+      }
+
+      .cart-item-image-container {
+        width: 100%;
+        height: 220px;
+      }
+
+      .cart-item-heading {
+        flex-direction: column;
+      }
+
+      .cart-item-price {
+        white-space: normal;
+      }
+
+      .cart-item-actions {
+        align-items: stretch;
+        flex-direction: column;
+      }
+
+      .quantity-input,
+      .cart-item-button {
+        width: 100%;
+      }
+    }
+  </style>
+
+  <script src="navigation.js" defer></script>
+  <script src="cart.js" defer></script>
 </head>
 
 <body>
+  <header class="top-header">
+    <div class="header-content">
+      <h1 class="site-heading">
+        Multi-Maniacs Customs LLC
+      </h1>
 
-    <!-- ============================
-         UPDATED BLACK HEADER
-         ============================ -->
-    <header class="top-header">
-        <h1>Multi-Maniacs Customs LLC</h1>
+      <nav
+        class="header-buttons"
+        aria-label="Main website navigation"
+      >
+        <a href="index.html">
+          Home
+        </a>
 
-        <nav class="header-buttons">
+        <a href="about.html">
+          About
+        </a>
 
-            <button onclick="navigate('home')">
-                <span class="icon">🏠</span> Home
-            </button>
+        <a href="services.html">
+          Services
+        </a>
 
-            <button onclick="navigate('about')">
-                <span class="icon">📘</span> About
-            </button>
+        <a href="shop.html">
+          Shop
+        </a>
 
-            <button onclick="navigate('services')">
-                <span class="icon">🛠️</span> Services
-            </button>
+        <a
+          href="cart.html"
+          aria-current="page"
+        >
+          Cart
 
-            <button onclick="navigate('shop')">
-                <span class="icon">🛒</span> Shop
-            </button>
+          <span
+            id="cart-count"
+            class="cart-count-badge"
+            aria-label="0 items in cart"
+          >
+            0
+          </span>
+        </a>
 
-            <button onclick="navigate('cart')">
-                <span class="icon">🛍️</span> Cart
-            </button>
+        <a href="contact.html">
+          Contact
+        </a>
 
-            <button onclick="navigate('contact')">
-                <span class="icon">📞</span> Contact
-            </button>
+        <a href="gallery.html">
+          Gallery
+        </a>
+      </nav>
+    </div>
+  </header>
 
-            <button onclick="navigate('gallery')">
-                <span class="icon">🖼️</span> Gallery
-            </button>
+  <main class="cart-page">
+    <h1 class="cart-heading">
+      Your Cart
+    </h1>
 
-            <!-- ⭐ ADMIN BUTTON ⭐ -->
-            <button class="admin-btn" onclick="navigate('admin-dashboard')">
-                <span class="icon">🔧</span> Admin
-            </button>
+    <p class="cart-description">
+      Review your selected products, customization choices,
+      quantities, and totals before proceeding to secure checkout.
+    </p>
 
-        </nav>
+    <div class="cart-layout">
+      <div>
+        <section
+          class="cart-section"
+          aria-labelledby="cart-items-heading"
+        >
+          <h2
+            id="cart-items-heading"
+            class="cart-section-heading"
+          >
+            Cart Items
+          </h2>
 
-        <!-- MINI CART -->
-        <div class="mini-cart" id="miniCart">
-            <h3>Mini Cart</h3>
-            <div id="miniCartItems"></div>
+          <div
+            id="cart-items"
+            class="cart-items"
+            aria-live="polite"
+          >
+            <p class="cart-loading">
+              Loading your cart...
+            </p>
+          </div>
+        </section>
+
+        <section
+          class="cart-section saved-section"
+          aria-labelledby="saved-items-heading"
+        >
+          <h2
+            id="saved-items-heading"
+            class="cart-section-heading"
+          >
+            Saved for Later
+          </h2>
+
+          <div
+            id="saved-items"
+            class="saved-items"
+            aria-live="polite"
+          >
+            <p class="cart-loading">
+              Loading saved items...
+            </p>
+          </div>
+        </section>
+      </div>
+
+      <aside
+        class="cart-summary"
+        aria-labelledby="order-summary-heading"
+      >
+        <h2 id="order-summary-heading">
+          Order Summary
+        </h2>
+
+        <div class="summary-row">
+          <span>
+            Subtotal
+          </span>
+
+          <span id="subtotal">
+            $0.00
+          </span>
         </div>
-    </header>
 
+        <div class="summary-row">
+          <span>
+            Tax
+            <span id="tax-rate-label">
+              (0%)
+            </span>
+          </span>
 
-    <!-- ============================
-         CART PAGE CONTENT
-         ============================ -->
-    <div class="page" style="padding: 20px;">
-        <h1>Your Cart</h1>
-
-        <div id="cart-items"></div>
-
-        <div class="totals-box" style="margin-top: 20px;">
-            <p>Subtotal: <span id="subtotal">$0.00</span></p>
-            <p>Tax (6%): <span id="tax">$0.00</span></p>
-            <h2>Total: <span id="total">$0.00</span></h2>
-
-            <button onclick="checkout()" class="btn" style="margin-top: 10px;">Proceed to Checkout</button>
-            <button onclick="navigate('shop')" class="btn" style="margin-left: 10px;">Back to Shop</button>
+          <span id="tax">
+            $0.00
+          </span>
         </div>
 
-        <h2 style="margin-top: 30px;">Saved for later</h2>
-        <div id="saved-items"></div>
+        <div class="summary-row summary-total">
+          <span>
+            Total
+          </span>
+
+          <span id="total">
+            $0.00
+          </span>
+        </div>
+
+        <button
+          id="checkout-button"
+          class="checkout-button"
+          type="button"
+          disabled
+        >
+          Proceed to Secure Checkout
+        </button>
+
+        <a
+          class="continue-shopping-link"
+          href="shop.html"
+        >
+          Continue Shopping
+        </a>
+
+        <p class="checkout-notice">
+          Checkout is securely processed through Stripe. Final
+          availability and totals will be verified before payment.
+        </p>
+      </aside>
     </div>
 
+    <p
+      id="cart-message"
+      class="cart-message"
+      role="status"
+      aria-live="polite"
+    ></p>
+  </main>
 
-    <!-- ============================
-         FOOTER
-         ============================ -->
-    <footer style="background:#000; color:#fff; padding:20px; text-align:center; margin-top:40px;">
-        © 2026 Multi-Maniacs Customs LLC • Essie, KY • Clients accepted anywhere in the U.S.
-    </footer>
+  <footer class="site-footer">
+    <p>
+      &copy; 2026 Multi-Maniacs Customs LLC
+    </p>
 
-    <!-- ============================
-         CART SCRIPTS
-         ============================ -->
-    <script src="products.js"></script>
-    <script src="cart.js"></script>
-    <script src="navigation.js"></script>
+    <p>
+      Essie, Kentucky | Serving clients throughout the United
+      States
+    </p>
 
+    <p>
+      <a href="contact.html">
+        Contact Multi-Maniacs Customs
+      </a>
+    </p>
+  </footer>
+
+  <noscript>
+    <p>
+      JavaScript must be enabled to review your cart and proceed
+      to checkout.
+    </p>
+  </noscript>
 </body>
 </html>

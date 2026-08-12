@@ -1,130 +1,827 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>MMC Admin – Orders</title>
-    <link rel="stylesheet" href="admin.css">
-    <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
+
+  <meta
+    name="description"
+    content="Review and manage Multi-Maniacs Customs client orders."
+  >
+
+  <title>
+    Orders | Multi-Maniacs Customs LLC
+  </title>
+
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="admin.css">
+
+  <style>
+    :root {
+      --orders-background: #111111;
+      --orders-header: #000000;
+      --orders-panel: #222222;
+      --orders-inner: #181818;
+      --orders-card: #101010;
+      --orders-border: #444444;
+      --orders-text: #ffffff;
+      --orders-muted: #cccccc;
+      --orders-input-background: #ffffff;
+      --orders-input-text: #111111;
+      --orders-primary: #2196f3;
+      --orders-primary-hover: #1976d2;
+      --orders-success: #4caf50;
+      --orders-warning: #ff9800;
+      --orders-danger: #e53935;
+      --orders-error-text: #ff7676;
+      --orders-success-text: #79d77c;
+      --orders-information-text: #90caf9;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      min-height: 100%;
+    }
+
+    body {
+      min-height: 100vh;
+      margin: 0;
+      color: var(--orders-text);
+      background: var(--orders-background);
+      font-family: Arial, Helvetica, sans-serif;
+    }
+
+    .top-header {
+      padding: 18px 20px;
+      background: var(--orders-header);
+      border-bottom: 1px solid var(--orders-border);
+    }
+
+    .header-content {
+      width: 100%;
+      max-width: 1300px;
+      margin: 0 auto;
+    }
+
+    .site-heading {
+      margin: 0 0 16px;
+      font-size: 26px;
+      line-height: 1.25;
+    }
+
+    .header-buttons {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .header-buttons a {
+      display: inline-flex;
+      min-height: 42px;
+      align-items: center;
+      justify-content: center;
+      padding: 9px 13px;
+      color: #ffffff;
+      background: #222222;
+      border: 1px solid #353535;
+      border-radius: 7px;
+      text-decoration: none;
+    }
+
+    .header-buttons a:hover,
+    .header-buttons a:focus {
+      background: #333333;
+    }
+
+    .header-buttons a[aria-current="page"] {
+      background: var(--orders-primary);
+      border-color: var(--orders-primary);
+    }
+
+    .orders-page {
+      width: 100%;
+      max-width: 1300px;
+      margin: 36px auto;
+      padding: 0 20px;
+    }
+
+    .orders-container {
+      padding: 30px;
+      background: var(--orders-panel);
+      border: 1px solid var(--orders-border);
+      border-radius: 14px;
+      box-shadow:
+        0 18px 50px rgba(0, 0, 0, 0.4);
+    }
+
+    .page-heading {
+      margin: 0 0 10px;
+      text-align: center;
+      font-size: 30px;
+    }
+
+    .page-description {
+      max-width: 760px;
+      margin: 0 auto 24px;
+      color: var(--orders-muted);
+      text-align: center;
+      line-height: 1.55;
+    }
+
+    .admin-account-bar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      margin-bottom: 24px;
+      padding: 15px;
+      background: var(--orders-inner);
+      border: 1px solid var(--orders-border);
+      border-radius: 9px;
+    }
+
+    .admin-account-bar p {
+      margin: 4px 0;
+    }
+
+    .admin-account-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .small-action-button {
+      display: inline-block;
+      padding: 9px 13px;
+      color: #ffffff;
+      background: #444444;
+      border: none;
+      border-radius: 6px;
+      font: inherit;
+      font-size: 14px;
+      text-align: center;
+      text-decoration: none;
+      cursor: pointer;
+    }
+
+    .small-action-button:hover,
+    .small-action-button:focus {
+      background: #5a5a5a;
+    }
+
+    .orders-toolbar {
+      display: grid;
+      grid-template-columns:
+        minmax(220px, 1fr)
+        minmax(180px, 240px)
+        auto;
+      gap: 14px;
+      align-items: end;
+      margin-bottom: 24px;
+      padding: 18px;
+      background: var(--orders-inner);
+      border: 1px solid var(--orders-border);
+      border-radius: 10px;
+    }
+
+    .toolbar-field {
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+    }
+
+    .toolbar-field label {
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    .toolbar-field input,
+    .toolbar-field select {
+      width: 100%;
+      min-height: 44px;
+      padding: 10px 11px;
+      color: var(--orders-input-text);
+      background: var(--orders-input-background);
+      border: 2px solid transparent;
+      border-radius: 7px;
+      font: inherit;
+      outline: none;
+    }
+
+    .toolbar-field input:focus,
+    .toolbar-field select:focus {
+      border-color: var(--orders-primary);
+      box-shadow:
+        0 0 0 3px rgba(33, 150, 243, 0.2);
+    }
+
+    .refresh-orders-button {
+      min-height: 44px;
+      padding: 10px 15px;
+      color: #ffffff;
+      background: var(--orders-primary);
+      border: none;
+      border-radius: 7px;
+      font: inherit;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .refresh-orders-button:hover:not(:disabled) {
+      background: var(--orders-primary-hover);
+    }
+
+    .refresh-orders-button:disabled {
+      cursor: wait;
+      opacity: 0.7;
+    }
+
+    .orders-summary {
+      display: grid;
+      grid-template-columns:
+        repeat(auto-fit, minmax(150px, 1fr));
+      gap: 14px;
+      margin-bottom: 24px;
+    }
+
+    .summary-card {
+      padding: 17px;
+      background: var(--orders-inner);
+      border: 1px solid var(--orders-border);
+      border-radius: 9px;
+      text-align: center;
+    }
+
+    .summary-card h2 {
+      margin: 0 0 8px;
+      color: var(--orders-muted);
+      font-size: 15px;
+    }
+
+    .summary-number {
+      margin: 0;
+      font-size: 28px;
+      font-weight: 700;
+    }
+
+    .order-list {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .order-list-loading,
+    .order-list-empty {
+      padding: 30px 20px;
+      color: var(--orders-muted);
+      background: var(--orders-inner);
+      border: 1px solid var(--orders-border);
+      border-radius: 10px;
+      text-align: center;
+    }
+
+    .order-card {
+      overflow: hidden;
+      background: var(--orders-inner);
+      border: 1px solid var(--orders-border);
+      border-radius: 11px;
+    }
+
+    .order-card-header {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 14px;
+      padding: 18px;
+      background: var(--orders-card);
+      border-bottom: 1px solid var(--orders-border);
+    }
+
+    .order-card-header h2 {
+      margin: 0 0 7px;
+      font-size: 21px;
+    }
+
+    .order-date {
+      margin: 0;
+      color: var(--orders-muted);
+      font-size: 14px;
+    }
+
+    .order-status {
+      display: inline-block;
+      padding: 6px 10px;
+      color: #ffffff;
+      background: #555555;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .status-pending {
+      background: var(--orders-warning);
+    }
+
+    .status-paid {
+      background: var(--orders-success);
+    }
+
+    .status-processing {
+      background: var(--orders-primary);
+    }
+
+    .status-completed {
+      background: #2e7d32;
+    }
+
+    .status-cancelled,
+    .status-refunded {
+      background: var(--orders-danger);
+    }
+
+    .order-card-body {
+      padding: 20px;
+    }
+
+    .order-information-grid {
+      display: grid;
+      grid-template-columns:
+        repeat(auto-fit, minmax(190px, 1fr));
+      gap: 14px;
+    }
+
+    .order-information-item {
+      padding: 13px;
+      background: var(--orders-card);
+      border: 1px solid var(--orders-border);
+      border-radius: 8px;
+    }
+
+    .order-information-item h3 {
+      margin: 0 0 6px;
+      color: var(--orders-muted);
+      font-size: 13px;
+      text-transform: uppercase;
+    }
+
+    .order-information-item p {
+      margin: 0;
+      overflow-wrap: anywhere;
+      line-height: 1.5;
+    }
+
+    .order-information-item a {
+      color: #ffffff;
+      text-decoration: underline;
+      text-underline-offset: 3px;
+    }
+
+    .order-items-section {
+      margin-top: 18px;
+      padding: 16px;
+      background: var(--orders-card);
+      border: 1px solid var(--orders-border);
+      border-radius: 8px;
+    }
+
+    .order-items-section h3 {
+      margin: 0 0 13px;
+      font-size: 18px;
+    }
+
+    .order-items-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .order-item {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 14px;
+      padding: 12px;
+      background: var(--orders-inner);
+      border: 1px solid var(--orders-border);
+      border-radius: 7px;
+    }
+
+    .order-item h4 {
+      margin: 0 0 6px;
+      font-size: 16px;
+    }
+
+    .order-item p {
+      margin: 4px 0;
+      color: var(--orders-muted);
+    }
+
+    .order-item-total {
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .order-card-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      padding: 18px 20px;
+      background: var(--orders-card);
+      border-top: 1px solid var(--orders-border);
+    }
+
+    .order-card-actions select {
+      min-height: 42px;
+      padding: 9px 11px;
+      color: var(--orders-input-text);
+      background: var(--orders-input-background);
+      border: none;
+      border-radius: 7px;
+      font: inherit;
+    }
+
+    .order-action-button {
+      min-height: 42px;
+      padding: 9px 13px;
+      color: #ffffff;
+      background: var(--orders-primary);
+      border: none;
+      border-radius: 7px;
+      font: inherit;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .order-action-button:hover:not(:disabled) {
+      background: var(--orders-primary-hover);
+    }
+
+    .order-action-button:disabled {
+      cursor: wait;
+      opacity: 0.7;
+    }
+
+    .orders-message {
+      min-height: 24px;
+      margin: 20px 0 0;
+      text-align: center;
+      font-weight: 700;
+      line-height: 1.5;
+    }
+
+    .orders-message:empty {
+      display: none;
+    }
+
+    .orders-error {
+      color: var(--orders-error-text);
+    }
+
+    .orders-success {
+      color: var(--orders-success-text);
+    }
+
+    .orders-information {
+      color: var(--orders-information-text);
+    }
+
+    .page-actions {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px;
+      margin-top: 24px;
+    }
+
+    @media (max-width: 800px) {
+      .orders-toolbar {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 600px) {
+      .orders-page {
+        margin: 20px auto;
+        padding: 0 14px;
+      }
+
+      .orders-container {
+        padding: 20px 14px;
+      }
+
+      .admin-account-bar {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .header-buttons {
+        flex-direction: column;
+      }
+
+      .header-buttons a {
+        width: 100%;
+      }
+
+      .order-card-actions {
+        flex-direction: column;
+      }
+
+      .order-card-actions select,
+      .order-action-button {
+        width: 100%;
+      }
+
+      .order-item {
+        grid-template-columns: 1fr;
+      }
+
+      .order-item-total {
+        white-space: normal;
+      }
+    }
+  </style>
+
+  <script src="navigation.js" defer></script>
+  admin-orders.jsscript>
 </head>
 
 <body>
+  <header class="top-header">
+    <div class="header-content">
+      <h1 class="site-heading">
+        Multi-Maniacs Customs LLC - Admin
+      </h1>
 
-    <!-- ============================
-         UPDATED BLACK HEADER
-         ============================ -->
-    <header class="top-header">
-        <h1>Multi-Maniacs Customs LLC — Admin</h1>
+      <nav
+        class="header-buttons"
+        aria-label="Administrator navigation"
+      >
+        <a href="index.html">
+          Home
+        </a>
 
-        <nav class="header-buttons">
+        <a href="admin-dashboard.html">
+          Dashboard
+        </a>
 
-            <button onclick="navigate('home')">
-                <span class="icon">🏠</span> Home
-            </button>
+        <a href="admin-products.html">
+          Products
+        </a>
 
-            <button onclick="navigate('about')">
-                <span class="icon">📘</span> About
-            </button>
+        <a href="admin-inventory.html">
+          Inventory
+        </a>
 
-            <button onclick="navigate('services')">
-                <span class="icon">🛠️</span> Services
-            </button>
+        admin-orders.html
+          Orders
+        </a>
 
-            <button onclick="navigate('shop')">
-                <span class="icon">🛒</span> Shop
-            </button>
+        <a href="admin-intake.html">
+          Client Intakes
+        </a>
 
-            <button onclick="navigate('cart')">
-                <span class="icon">🛍️</span> Cart
-            </button>
-
-            <button onclick="navigate('contact')">
-                <span class="icon">📞</span> Contact
-            </button>
-
-            <button onclick="navigate('gallery')">
-                <span class="icon">🖼️</span> Gallery
-            </button>
-
-            <!-- ⭐ ADMIN BUTTON ⭐ -->
-            <button class="admin-btn" onclick="navigate('admin-dashboard')">
-                <span class="icon">🔧</span> Admin
-            </button>
-
-        </nav>
-
-        <!-- MINI CART -->
-        <div class="mini-cart" id="miniCart">
-            <h3>Mini Cart</h3>
-            <div id="miniCartItems"></div>
-        </div>
-    </header>
-
-
-    <!-- ============================
-         SIDEBAR + AUTH PROTECTION
-         ============================ -->
-    <script src="admin-sidebar.html"></script>
-
-    <script>
-        const token = localStorage.getItem("MMC_ADMIN_TOKEN");
-        if (!token) window.location.href = "admin-login.html";
-    </script>
-
-
-    <!-- ============================
-         PAGE CONTENT
-         ============================ -->
-    <div class="admin-page" style="padding: 20px;">
-
-        <h1>Orders</h1>
-
-        <div id="orderList"></div>
-
+        <a href="shop.html">
+          View Shop
+        </a>
+      </nav>
     </div>
+  </header>
 
+  <main class="orders-page">
+    <section
+      class="orders-container"
+      aria-labelledby="orders-heading"
+    >
+      <h1
+        id="orders-heading"
+        class="page-heading"
+      >
+        Client Orders
+      </h1>
 
-    <!-- ============================
-         SCRIPTS
-         ============================ -->
-    <script>
-        async function loadOrders() {
-            try {
-                const res = await fetch("/orders", {
-                    headers: {
-                        "Authorization": localStorage.getItem("MMC_ADMIN_TOKEN")
-                    }
-                });
+      <p class="page-description">
+        Review Stripe orders, client contact information, order
+        totals, purchased items, payment status, and order
+        progress.
+      </p>
 
-                const orders = await res.json();
-                const list = document.getElementById("orderList");
+      <div class="admin-account-bar">
+        <div>
+          <p>
+            Signed in as:
+            <strong id="admin-username">
+              Loading...
+            </strong>
+          </p>
 
-                if (!orders.length) {
-                    list.innerHTML = "<p>No orders found.</p>";
-                    return;
-                }
+          <p>
+            Role:
+            <strong id="admin-role">
+              Loading...
+            </strong>
+          </p>
+        </div>
 
-                orders.forEach(o => {
-                    list.innerHTML += `
-                        <div class="section">
-                            <p><b>Order ID:</b> ${o._id}</p>
-                            <p><b>Email:</b> ${o.email}</p>
-                            <p><b>Total:</b> $${o.total}</p>
-                            <p><b>Date:</b> ${new Date(o.createdAt).toLocaleString()}</p>
-                        </div>
-                    `;
-                });
+        <div class="admin-account-actions">
+          <a
+            class="small-action-button"
+            href="admin-dashboard.html"
+          >
+            Dashboard
+          </a>
 
-            } catch (err) {
-                console.error("Order load error:", err);
-                document.getElementById("orderList").innerHTML =
-                    "<p style='color:red;'>Failed to load orders.</p>";
-            }
-        }
+          <button
+            id="admin-logout-button"
+            class="small-action-button"
+            type="button"
+          >
+            Log Out
+          </button>
+        </div>
+      </div>
 
-        loadOrders();
-    </script>
+      <section
+        class="orders-toolbar"
+        aria-label="Order filters"
+      >
+        <div class="toolbar-field">
+          <label for="order-search">
+            Search Orders
+          </label>
 
-    <script src="navigation.js"></script>
+          <input
+            id="order-search"
+            type="search"
+            placeholder="Search by order ID, client email, or product"
+          >
+        </div>
 
+        <div class="toolbar-field">
+          <label for="order-status-filter">
+            Order Status
+          </label>
+
+          <select id="order-status-filter">
+            <option value="all">
+              All Statuses
+            </option>
+
+            <option value="pending">
+              Pending
+            </option>
+
+            <option value="paid">
+              Paid
+            </option>
+
+            <option value="processing">
+              Processing
+            </option>
+
+            <option value="completed">
+              Completed
+            </option>
+
+            <option value="cancelled">
+              Cancelled
+            </option>
+
+            <option value="refunded">
+              Refunded
+            </option>
+          </select>
+        </div>
+
+        <button
+          id="refresh-orders-button"
+          class="refresh-orders-button"
+          type="button"
+        >
+          Refresh Orders
+        </button>
+      </section>
+
+      <section
+        class="orders-summary"
+        aria-label="Order summary"
+      >
+        <article class="summary-card">
+          <h2>
+            Total Orders
+          </h2>
+
+          <p
+            id="total-orders"
+            class="summary-number"
+          >
+            0
+          </p>
+        </article>
+
+        <article class="summary-card">
+          <h2>
+            Paid Orders
+          </h2>
+
+          <p
+            id="paid-orders"
+            class="summary-number"
+          >
+            0
+          </p>
+        </article>
+
+        <article class="summary-card">
+          <h2>
+            Processing
+          </h2>
+
+          <p
+            id="processing-orders"
+            class="summary-number"
+          >
+            0
+          </p>
+        </article>
+
+        <article class="summary-card">
+          <h2>
+            Total Revenue
+          </h2>
+
+          <p
+            id="total-order-revenue"
+            class="summary-number"
+          >
+            $0.00
+          </p>
+        </article>
+      </section>
+
+      <section
+        id="orderList"
+        class="order-list"
+        aria-label="Client orders"
+      >
+        <p class="order-list-loading">
+          Loading client orders...
+        </p>
+      </section>
+
+      <p
+        id="orders-message"
+        class="orders-message"
+        role="status"
+        aria-live="polite"
+      ></p>
+
+      <div class="page-actions">
+        <a
+          class="small-action-button"
+          href="admin-dashboard.html"
+        >
+          Return to Dashboard
+        </a>
+
+        <a
+          class="small-action-button"
+          href="admin-products.html"
+        >
+          Manage Products
+        </a>
+
+        <a
+          class="small-action-button"
+          href="admin-inventory.html"
+        >
+          Manage Inventory
+        </a>
+
+        <a
+          class="small-action-button"
+          href="shop.html"
+        >
+          View Shop
+        </a>
+      </div>
+    </section>
+  </main>
+
+  <noscript>
+    <p>
+      JavaScript must be enabled to review client orders.
+    </p>
+  </noscript>
 </body>
 </html>

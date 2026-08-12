@@ -1,101 +1,795 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Services • Multi-Maniacs Customs LLC</title>
-    <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
+
+  <meta
+    name="description"
+    content="Explore the multi-industry customization, fabrication, design, branding, decor, and project services offered by Multi-Maniacs Customs LLC."
+  >
+
+  <title>
+    Services | Multi-Maniacs Customs LLC
+  </title>
+
+  <link rel="stylesheet" href="style.css">
+
+  <style>
+    :root {
+      --services-background: #111111;
+      --services-header: #000000;
+      --services-panel: #222222;
+      --services-card: #191919;
+      --services-border: #444444;
+      --services-text: #ffffff;
+      --services-muted: #cccccc;
+      --services-primary: #2196f3;
+      --services-primary-hover: #1976d2;
+      --services-secondary: #444444;
+      --services-secondary-hover: #5a5a5a;
+      --services-accent: #4caf50;
+      --services-danger: #e53935;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      min-height: 100%;
+    }
+
+    body {
+      min-height: 100vh;
+      margin: 0;
+      color: var(--services-text);
+      background: var(--services-background);
+      font-family: Arial, Helvetica, sans-serif;
+    }
+
+    .top-header {
+      padding: 18px 20px;
+      background: var(--services-header);
+      border-bottom: 1px solid var(--services-border);
+    }
+
+    .header-content {
+      width: 100%;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .site-heading {
+      margin: 0 0 16px;
+      font-size: 26px;
+      line-height: 1.25;
+    }
+
+    .header-buttons {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .header-buttons a {
+      display: inline-flex;
+      min-height: 42px;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      padding: 9px 13px;
+      color: #ffffff;
+      background: #222222;
+      border: 1px solid #353535;
+      border-radius: 7px;
+      text-decoration: none;
+      transition:
+        background-color 0.2s ease,
+        transform 0.2s ease;
+    }
+
+    .header-buttons a:hover,
+    .header-buttons a:focus {
+      background: #333333;
+      transform: translateY(-1px);
+    }
+
+    .header-buttons a[aria-current="page"] {
+      background: var(--services-primary);
+      border-color: var(--services-primary);
+    }
+
+    .cart-count-badge {
+      display: inline-flex;
+      min-width: 24px;
+      height: 24px;
+      align-items: center;
+      justify-content: center;
+      padding: 0 7px;
+      color: #ffffff;
+      background: var(--services-danger);
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .services-page {
+      width: 100%;
+      max-width: 1200px;
+      margin: 36px auto;
+      padding: 0 20px;
+    }
+
+    .services-hero {
+      padding: 48px 30px;
+      background:
+        linear-gradient(
+          135deg,
+          #232323 0%,
+          #181818 100%
+        );
+      border: 1px solid var(--services-border);
+      border-radius: 16px;
+      text-align: center;
+      box-shadow:
+        0 18px 50px rgba(0, 0, 0, 0.4);
+    }
+
+    .services-heading {
+      margin: 0 0 16px;
+      font-size: clamp(34px, 7vw, 54px);
+      line-height: 1.1;
+    }
+
+    .services-introduction {
+      max-width: 820px;
+      margin: 0 auto;
+      color: var(--services-muted);
+      font-size: 18px;
+      line-height: 1.7;
+    }
+
+    .hero-actions {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 12px;
+      margin-top: 28px;
+    }
+
+    .hero-action {
+      display: inline-flex;
+      min-height: 48px;
+      align-items: center;
+      justify-content: center;
+      padding: 11px 18px;
+      color: #ffffff;
+      border-radius: 8px;
+      font-weight: 700;
+      text-decoration: none;
+      transition:
+        background-color 0.2s ease,
+        transform 0.2s ease;
+    }
+
+    .primary-action {
+      background: var(--services-primary);
+    }
+
+    .primary-action:hover,
+    .primary-action:focus {
+      background: var(--services-primary-hover);
+      transform: translateY(-1px);
+    }
+
+    .secondary-action {
+      background: var(--services-secondary);
+    }
+
+    .secondary-action:hover,
+    .secondary-action:focus {
+      background: var(--services-secondary-hover);
+      transform: translateY(-1px);
+    }
+
+    .services-section {
+      margin-top: 30px;
+      padding: 30px;
+      background: var(--services-panel);
+      border: 1px solid var(--services-border);
+      border-radius: 14px;
+    }
+
+    .section-heading {
+      margin: 0 0 10px;
+      text-align: center;
+      font-size: 30px;
+    }
+
+    .section-description {
+      max-width: 760px;
+      margin: 0 auto 24px;
+      color: var(--services-muted);
+      text-align: center;
+      line-height: 1.6;
+    }
+
+    .services-grid {
+      display: grid;
+      grid-template-columns:
+        repeat(2, minmax(0, 1fr));
+      gap: 20px;
+    }
+
+    .service-card {
+      padding: 24px;
+      background: var(--services-card);
+      border: 1px solid var(--services-border);
+      border-radius: 11px;
+    }
+
+    .service-icon {
+      display: flex;
+      width: 52px;
+      height: 52px;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 16px;
+      background: #292929;
+      border: 1px solid var(--services-border);
+      border-radius: 10px;
+      font-size: 27px;
+    }
+
+    .service-card h3 {
+      margin: 0 0 10px;
+      font-size: 21px;
+    }
+
+    .service-card p {
+      margin: 0;
+      color: var(--services-muted);
+      line-height: 1.6;
+    }
+
+    .process-grid {
+      display: grid;
+      grid-template-columns:
+        repeat(4, minmax(0, 1fr));
+      gap: 16px;
+    }
+
+    .process-step {
+      padding: 20px;
+      background: var(--services-card);
+      border: 1px solid var(--services-border);
+      border-radius: 10px;
+      text-align: center;
+    }
+
+    .process-number {
+      display: flex;
+      width: 42px;
+      height: 42px;
+      margin: 0 auto 14px;
+      align-items: center;
+      justify-content: center;
+      color: #ffffff;
+      background: var(--services-primary);
+      border-radius: 50%;
+      font-size: 18px;
+      font-weight: 700;
+    }
+
+    .process-step h3 {
+      margin: 0 0 9px;
+      font-size: 18px;
+    }
+
+    .process-step p {
+      margin: 0;
+      color: var(--services-muted);
+      line-height: 1.55;
+    }
+
+    .custom-project-notice {
+      margin-top: 30px;
+      padding: 30px;
+      background: #172219;
+      border: 1px solid #355b3b;
+      border-radius: 14px;
+      text-align: center;
+    }
+
+    .custom-project-notice h2 {
+      margin: 0 0 12px;
+      font-size: 28px;
+    }
+
+    .custom-project-notice p {
+      max-width: 760px;
+      margin: 0 auto;
+      color: var(--services-muted);
+      line-height: 1.65;
+    }
+
+    .custom-project-action {
+      display: inline-flex;
+      min-height: 48px;
+      align-items: center;
+      justify-content: center;
+      margin-top: 22px;
+      padding: 11px 18px;
+      color: #ffffff;
+      background: var(--services-accent);
+      border-radius: 8px;
+      font-weight: 700;
+      text-decoration: none;
+    }
+
+    .custom-project-action:hover,
+    .custom-project-action:focus {
+      background: #43a047;
+    }
+
+    .service-disclaimer {
+      margin: 28px 0 0;
+      padding: 18px;
+      color: var(--services-muted);
+      background: #181818;
+      border: 1px solid var(--services-border);
+      border-radius: 9px;
+      line-height: 1.6;
+    }
+
+    .service-disclaimer strong {
+      color: var(--services-text);
+    }
+
+    .site-footer {
+      margin-top: 42px;
+      padding: 24px 20px;
+      color: var(--services-muted);
+      background: #000000;
+      border-top: 1px solid var(--services-border);
+      text-align: center;
+    }
+
+    .site-footer p {
+      margin: 5px 0;
+      line-height: 1.5;
+    }
+
+    .site-footer a {
+      color: #ffffff;
+      text-decoration: underline;
+      text-underline-offset: 3px;
+    }
+
+    @media (max-width: 900px) {
+      .process-grid {
+        grid-template-columns:
+          repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 720px) {
+      .services-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 600px) {
+      .header-buttons {
+        flex-direction: column;
+      }
+
+      .header-buttons a {
+        width: 100%;
+      }
+
+      .services-page {
+        margin: 22px auto;
+        padding: 0 14px;
+      }
+
+      .services-hero,
+      .services-section,
+      .custom-project-notice {
+        padding: 26px 17px;
+      }
+
+      .hero-actions {
+        flex-direction: column;
+      }
+
+      .hero-action {
+        width: 100%;
+      }
+
+      .process-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+
+  <script src="navigation.js" defer></script>
+  <script src="cart.js" defer></script>
 </head>
 
 <body>
+  <header class="top-header">
+    <div class="header-content">
+      <h1 class="site-heading">
+        Multi-Maniacs Customs LLC
+      </h1>
 
-    <!-- ============================
-         UPDATED BLACK HEADER
-         ============================ -->
-    <header class="top-header">
-        <h1>Multi-Maniacs Customs LLC</h1>
+      <nav
+        class="header-buttons"
+        aria-label="Main website navigation"
+      >
+        <a href="index.html">
+          Home
+        </a>
 
-        <nav class="header-buttons">
+        <a href="about.html">
+          About
+        </a>
 
-            <button onclick="navigate('home')">
-                <span class="icon">🏠</span> Home
-            </button>
+        <a
+          href="services.html"
+          aria-current="page"
+        >
+          Services
+        </a>
 
-            <button onclick="navigate('about')">
-                <span class="icon">📘</span> About
-            </button>
+        <a href="shop.html">
+          Shop
+        </a>
 
-            <button onclick="navigate('services')">
-                <span class="icon">🛠️</span> Services
-            </button>
+        <a href="cart.html">
+          Cart
 
-            <button onclick="navigate('shop')">
-                <span class="icon">🛒</span> Shop
-            </button>
+          <span
+            id="cart-count"
+            class="cart-count-badge"
+            aria-label="0 items in cart"
+          >
+            0
+          </span>
+        </a>
 
-            <button onclick="navigate('cart')">
-                <span class="icon">🛍️</span> Cart
-            </button>
+        <a href="contact.html">
+          Contact
+        </a>
 
-            <button onclick="navigate('contact')">
-                <span class="icon">📞</span> Contact
-            </button>
-
-            <button onclick="navigate('gallery')">
-                <span class="icon">🖼️</span> Gallery
-            </button>
-
-            <!-- ⭐ ADMIN BUTTON ⭐ -->
-            <button class="admin-btn" onclick="navigate('admin-dashboard')">
-                <span class="icon">🔧</span> Admin
-            </button>
-
-        </nav>
-
-        <!-- MINI CART -->
-        <div class="mini-cart" id="miniCart">
-            <h3>Mini Cart</h3>
-            <div id="miniCartItems"></div>
-        </div>
-    </header>
-
-
-    <!-- ============================
-         SERVICES PAGE CONTENT
-         ============================ -->
-    <div class="page" style="padding: 20px;">
-        <h1>Services</h1>
-
-        <p>
-            We offer a wide range of custom services across multiple industries. Every project is scoped and
-            priced based on complexity, materials, and client vision.
-        </p>
-
-        <h2>Popular Service Categories</h2>
-        <ul>
-            <li>Custom automotive styling and accessories</li>
-            <li>Custom fabrication and one-off builds</li>
-            <li>Custom signage, branding, and display pieces</li>
-            <li>Custom home, office, and shop decor</li>
-            <li>Freelance design and concept development</li>
-        </ul>
-
-        <p style="margin-top: 15px;">
-            To discuss a specific project, use our contact page to send details and we’ll follow up with options,
-            pricing, and timelines.
-        </p>
+        <a href="gallery.html">
+          Gallery
+        </a>
+      </nav>
     </div>
+  </header>
 
+  <main class="services-page">
+    <section
+      class="services-hero"
+      aria-labelledby="services-heading"
+    >
+      <h1
+        id="services-heading"
+        class="services-heading"
+      >
+        Custom Services for Every Kind of Vision
+      </h1>
 
-    <!-- ============================
-         FOOTER
-         ============================ -->
-    <footer style="background:#000; color:#fff; padding:20px; text-align:center; margin-top:40px;">
-        © 2026 Multi-Maniacs Customs LLC • Essie, KY • Clients accepted anywhere in the U.S.<br>
-        Phone: (606) 220-0185 • (606) 212-4695 • Email: multimaniacscustoms@gmail.com
-    </footer>
+      <p class="services-introduction">
+        Multi-Maniacs Customs is a multi-industry customization
+        shop offering creative services for a wide range of
+        personal, professional, automotive, decorative, and
+        promotional projects. Each request is reviewed
+        individually so the finished project can reflect the
+        client’s needs, preferences, budget, and intended use.
+      </p>
 
-    <!-- NAVIGATION SYSTEM -->
-    <script src="navigation.js"></script>
+      <div class="hero-actions">
+        <a
+          class="hero-action primary-action"
+          href="contact.html"
+        >
+          Start a Custom Project
+        </a>
 
+        <a
+          class="hero-action secondary-action"
+          href="gallery.html"
+        >
+          View Our Gallery
+        </a>
+      </div>
+    </section>
+
+    <section
+      class="services-section"
+      aria-labelledby="service-categories-heading"
+    >
+      <h2
+        id="service-categories-heading"
+        class="section-heading"
+      >
+        Popular Service Categories
+      </h2>
+
+      <p class="section-description">
+        The categories below represent common project types, but
+        they do not limit what MMC can consider. Clients are
+        welcome to submit unique ideas through the client intake
+        process.
+      </p>
+
+      <div class="services-grid">
+        <article class="service-card">
+          <div
+            class="service-icon"
+            aria-hidden="true"
+          >
+            🚗
+          </div>
+
+          <h3>
+            Automotive Customization
+          </h3>
+
+          <p>
+            Custom styling, accessories, decorative components,
+            personalized details, visual upgrades, and creative
+            automotive project concepts.
+          </p>
+        </article>
+
+        <article class="service-card">
+          <div
+            class="service-icon"
+            aria-hidden="true"
+          >
+            🛠️
+          </div>
+
+          <h3>
+            Fabrication and One-Off Builds
+          </h3>
+
+          <p>
+            Unique pieces and project-specific builds developed
+            around a client’s measurements, intended use,
+            materials, style, and functional requirements.
+          </p>
+        </article>
+
+        <article class="service-card">
+          <div
+            class="service-icon"
+            aria-hidden="true"
+          >
+            🪧
+          </div>
+
+          <h3>
+            Signs, Branding, and Displays
+          </h3>
+
+          <p>
+            Custom signs, branded elements, promotional displays,
+            event pieces, decorative business materials, and
+            visual presentation concepts.
+          </p>
+        </article>
+
+        <article class="service-card">
+          <div
+            class="service-icon"
+            aria-hidden="true"
+          >
+            🏠
+          </div>
+
+          <h3>
+            Home, Office, and Shop Decor
+          </h3>
+
+          <p>
+            Personalized decor, organized display pieces,
+            decorative accents, themed designs, and custom
+            elements for residential or professional spaces.
+          </p>
+        </article>
+
+        <article class="service-card">
+          <div
+            class="service-icon"
+            aria-hidden="true"
+          >
+            🎨
+          </div>
+
+          <h3>
+            Design and Concept Development
+          </h3>
+
+          <p>
+            Creative planning, visual concepts, design
+            development, project organization, and assistance
+            turning an early idea into a workable project plan.
+          </p>
+        </article>
+
+        <article class="service-card">
+          <div
+            class="service-icon"
+            aria-hidden="true"
+          >
+            🎁
+          </div>
+
+          <h3>
+            Personalized Products and Gifts
+          </h3>
+
+          <p>
+            Customized items for personal use, celebrations,
+            special occasions, businesses, organizations, events,
+            and meaningful gifts.
+          </p>
+        </article>
+      </div>
+    </section>
+
+    <section
+      class="services-section"
+      aria-labelledby="service-process-heading"
+    >
+      <h2
+        id="service-process-heading"
+        class="section-heading"
+      >
+        How the Custom Project Process Works
+      </h2>
+
+      <p class="section-description">
+        Custom projects begin with information gathering so MMC
+        can understand the request before discussing pricing,
+        materials, and scheduling.
+      </p>
+
+      <div class="process-grid">
+        <article class="process-step">
+          <div class="process-number">
+            1
+          </div>
+
+          <h3>
+            Submit Your Idea
+          </h3>
+
+          <p>
+            Share the project type, description, goals, budget,
+            timeline, location, and any available reference
+            images.
+          </p>
+        </article>
+
+        <article class="process-step">
+          <div class="process-number">
+            2
+          </div>
+
+          <h3>
+            Project Review
+          </h3>
+
+          <p>
+            MMC reviews the request and identifies questions,
+            material needs, customization options, and possible
+            project limitations.
+          </p>
+        </article>
+
+        <article class="process-step">
+          <div class="process-number">
+            3
+          </div>
+
+          <h3>
+            Scope and Pricing
+          </h3>
+
+          <p>
+            The project scope, estimated cost, payment
+            requirements, production expectations, and timeline
+            are discussed with the client.
+          </p>
+        </article>
+
+        <article class="process-step">
+          <div class="process-number">
+            4
+          </div>
+
+          <h3>
+            Creation and Completion
+          </h3>
+
+          <p>
+            Once approved, MMC begins the project and communicates
+            with the client about progress, changes, and
+            completion arrangements.
+          </p>
+        </article>
+      </div>
+    </section>
+
+    <section
+      class="custom-project-notice"
+      aria-labelledby="custom-project-heading"
+    >
+      <h2 id="custom-project-heading">
+        Have an Idea That Is Not Listed?
+      </h2>
+
+      <p>
+        MMC is built around customization, creativity, and
+        open-minded project development. If a request does not fit
+        one of the service categories above, submit the idea
+        anyway. The project can be reviewed to determine whether
+        it is a good fit for MMC.
+      </p>
+
+      <a
+        class="custom-project-action"
+        href="contact.html"
+      >
+        Submit a Client Intake Request
+      </a>
+    </section>
+
+    <div class="service-disclaimer">
+      <strong>
+        Project availability:
+      </strong>
+
+      Services, materials, pricing, timelines, shipping options,
+      and project acceptance depend on the specific request.
+      Submitting an intake request does not guarantee project
+      acceptance or establish a final price.
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <p>
+      &copy; 2026 Multi-Maniacs Customs LLC
+    </p>
+
+    <p>
+      Essie, Kentucky | Serving clients throughout the United
+      States
+    </p>
+
+    <p>
+      <a href="contact.html">
+        Contact Multi-Maniacs Customs
+      </a>
+    </p>
+  </footer>
+
+  <noscript>
+    <p>
+      JavaScript is disabled, but the service information and
+      navigation links will still work.
+    </p>
+  </noscript>
 </body>
 </html>

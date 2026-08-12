@@ -1,100 +1,714 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>About • Multi-Maniacs Customs LLC</title>
-    <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
+
+  <meta
+    name="description"
+    content="Learn about Multi-Maniacs Customs LLC, a multi-industry customization shop serving clients throughout the United States."
+  >
+
+  <title>
+    About | Multi-Maniacs Customs LLC
+  </title>
+
+  <link rel="stylesheet" href="style.css">
+
+  <style>
+    :root {
+      --about-background: #000000;
+      --about-header: #111111;
+      --about-panel: #181818;
+      --about-card: #101010;
+      --about-border: #3d3d3d;
+      --about-text: #ffffff;
+      --about-muted: #cccccc;
+      --about-accent: #d32f2f;
+      --about-accent-hover: #b71c1c;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      min-height: 100%;
+    }
+
+    body {
+      min-height: 100vh;
+      margin: 0;
+      color: var(--about-text);
+      background: var(--about-background);
+      font-family: Arial, Helvetica, sans-serif;
+    }
+
+    .top-header {
+      padding: 18px 20px;
+      background: var(--about-header);
+      border-bottom: 1px solid var(--about-border);
+    }
+
+    .header-content {
+      width: 100%;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .site-heading {
+      margin: 0 0 16px;
+      font-size: 28px;
+      line-height: 1.25;
+    }
+
+    .header-buttons {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .header-buttons a,
+    .header-buttons button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      min-height: 42px;
+      padding: 9px 13px;
+      color: var(--about-text);
+      background: #222222;
+      border: 1px solid #353535;
+      border-radius: 7px;
+      font: inherit;
+      text-decoration: none;
+      cursor: pointer;
+      transition:
+        background-color 0.2s ease,
+        transform 0.2s ease;
+    }
+
+    .header-buttons a:hover,
+    .header-buttons a:focus,
+    .header-buttons button:hover,
+    .header-buttons button:focus {
+      background: #333333;
+      transform: translateY(-1px);
+    }
+
+    .header-buttons a[aria-current="page"] {
+      background: var(--about-accent);
+      border-color: var(--about-accent);
+    }
+
+    .admin-navigation-button {
+      margin-left: auto;
+    }
+
+    .mini-cart {
+      margin-top: 16px;
+      padding: 14px;
+      background: #191919;
+      border: 1px solid var(--about-border);
+      border-radius: 8px;
+    }
+
+    .mini-cart h2 {
+      margin: 0 0 10px;
+      font-size: 18px;
+    }
+
+    .mini-cart p {
+      margin: 0;
+      color: var(--about-muted);
+    }
+
+    .mini-cart a {
+      display: inline-block;
+      margin-top: 8px;
+      color: #ffffff;
+      text-decoration: underline;
+      text-underline-offset: 3px;
+    }
+
+    .about-page {
+      width: 100%;
+      max-width: 1100px;
+      margin: 42px auto;
+      padding: 0 20px;
+    }
+
+    .about-hero {
+      padding: 42px 28px;
+      background:
+        linear-gradient(
+          135deg,
+          #1a1a1a,
+          #101010,
+          #281010
+        );
+      border: 1px solid var(--about-border);
+      border-radius: 16px;
+      text-align: center;
+      box-shadow:
+        0 18px 50px rgba(0, 0, 0, 0.4);
+    }
+
+    .about-heading {
+      margin: 0 0 16px;
+      font-size: clamp(32px, 5vw, 48px);
+      line-height: 1.15;
+    }
+
+    .about-introduction {
+      max-width: 820px;
+      margin: 0 auto;
+      color: var(--about-muted);
+      font-size: 17px;
+      line-height: 1.7;
+    }
+
+    .about-section {
+      margin-top: 28px;
+      padding: 28px;
+      background: var(--about-panel);
+      border: 1px solid var(--about-border);
+      border-radius: 12px;
+    }
+
+    .about-section h2 {
+      margin: 0 0 14px;
+      font-size: 28px;
+    }
+
+    .about-section p {
+      margin: 0;
+      color: var(--about-muted);
+      line-height: 1.7;
+    }
+
+    .about-grid {
+      display: grid;
+      grid-template-columns:
+        repeat(auto-fit, minmax(230px, 1fr));
+      gap: 18px;
+      margin-top: 20px;
+    }
+
+    .about-card {
+      padding: 22px;
+      background: var(--about-card);
+      border: 1px solid var(--about-border);
+      border-radius: 10px;
+    }
+
+    .about-card-icon {
+      display: block;
+      margin-bottom: 12px;
+      font-size: 30px;
+    }
+
+    .about-card h3 {
+      margin: 0 0 10px;
+      font-size: 20px;
+    }
+
+    .about-card p {
+      margin: 0;
+      color: var(--about-muted);
+      line-height: 1.55;
+    }
+
+    .about-values-list {
+      display: grid;
+      grid-template-columns:
+        repeat(auto-fit, minmax(220px, 1fr));
+      gap: 16px;
+      margin: 20px 0 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .about-values-list li {
+      padding: 18px;
+      color: var(--about-muted);
+      background: var(--about-card);
+      border: 1px solid var(--about-border);
+      border-radius: 9px;
+      line-height: 1.55;
+    }
+
+    .about-values-list strong {
+      display: block;
+      margin-bottom: 7px;
+      color: var(--about-text);
+      font-size: 17px;
+    }
+
+    .client-intake-callout {
+      margin-top: 28px;
+      padding: 30px;
+      background:
+        linear-gradient(
+          135deg,
+          #251010,
+          #151515
+        );
+      border: 1px solid #5e2828;
+      border-radius: 12px;
+      text-align: center;
+    }
+
+    .client-intake-callout h2 {
+      margin: 0 0 12px;
+      font-size: 27px;
+    }
+
+    .client-intake-callout p {
+      max-width: 760px;
+      margin: 0 auto 20px;
+      color: var(--about-muted);
+      line-height: 1.6;
+    }
+
+    .about-action {
+      display: inline-block;
+      padding: 12px 18px;
+      color: #ffffff;
+      background: var(--about-accent);
+      border-radius: 8px;
+      font-weight: 700;
+      text-decoration: none;
+      transition:
+        background-color 0.2s ease,
+        transform 0.2s ease;
+    }
+
+    .about-action:hover,
+    .about-action:focus {
+      background: var(--about-accent-hover);
+      transform: translateY(-1px);
+    }
+
+    .site-footer {
+      margin-top: 42px;
+      padding: 26px 20px;
+      color: #ffffff;
+      background: #000000;
+      border-top: 1px solid var(--about-border);
+      text-align: center;
+    }
+
+    .site-footer p {
+      margin: 6px 0;
+      color: var(--about-muted);
+      line-height: 1.5;
+    }
+
+    .site-footer a {
+      color: #ffffff;
+      text-decoration: underline;
+      text-underline-offset: 3px;
+    }
+
+    @media (max-width: 820px) {
+      .admin-navigation-button {
+        margin-left: 0;
+      }
+    }
+
+    @media (max-width: 600px) {
+      .top-header {
+        padding: 16px 14px;
+      }
+
+      .header-buttons {
+        flex-direction: column;
+      }
+
+      .header-buttons a,
+      .header-buttons button {
+        width: 100%;
+      }
+
+      .about-page {
+        margin: 24px auto;
+        padding: 0 14px;
+      }
+
+      .about-hero {
+        padding: 34px 18px;
+      }
+
+      .about-section {
+        padding: 22px 16px;
+      }
+    }
+  </style>
+
+  <script src="navigation.js" defer></script>
+  <script src="script.js" defer></script>
 </head>
 
 <body>
+  <header class="top-header">
+    <div class="header-content">
+      <h1 class="site-heading">
+        Multi-Maniacs Customs LLC
+      </h1>
 
-    <!-- ============================
-         UPDATED BLACK HEADER
-         ============================ -->
-    <header class="top-header">
-        <h1>Multi-Maniacs Customs LLC</h1>
+      <nav
+        class="header-buttons"
+        aria-label="Main website navigation"
+      >
+        <a href="index.html">
+          <span class="icon" aria-hidden="true">
+            🏠
+          </span>
+          Home
+        </a>
 
-        <nav class="header-buttons">
+        <a
+          href="about.html"
+          aria-current="page"
+        >
+          <span class="icon" aria-hidden="true">
+            📘
+          </span>
+          About
+        </a>
 
-            <button onclick="navigate('home')">
-                <span class="icon">🏠</span> Home
-            </button>
+        <a href="services.html">
+          <span class="icon" aria-hidden="true">
+            🛠️
+          </span>
+          Services
+        </a>
 
-            <button onclick="navigate('about')">
-                <span class="icon">📘</span> About
-            </button>
+        <a href="shop.html">
+          <span class="icon" aria-hidden="true">
+            🛒
+          </span>
+          Shop
+        </a>
 
-            <button onclick="navigate('services')">
-                <span class="icon">🛠️</span> Services
-            </button>
+        <a href="Cart.html">
+          <span class="icon" aria-hidden="true">
+            🛍️
+          </span>
+          Cart
+        </a>
 
-            <button onclick="navigate('shop')">
-                <span class="icon">🛒</span> Shop
-            </button>
+        <a href="contact.html">
+          <span class="icon" aria-hidden="true">
+            📞
+          </span>
+          Contact
+        </a>
 
-            <button onclick="navigate('cart')">
-                <span class="icon">🛍️</span> Cart
-            </button>
+        <a href="gallery.html">
+          <span class="icon" aria-hidden="true">
+            🖼️
+          </span>
+          Gallery
+        </a>
 
-            <button onclick="navigate('contact')">
-                <span class="icon">📞</span> Contact
-            </button>
+        <a href="client-intake.html">
+          <span class="icon" aria-hidden="true">
+            📋
+          </span>
+          Client Intake
+        </a>
 
-            <button onclick="navigate('gallery')">
-                <span class="icon">🖼️</span> Gallery
-            </button>
+        <button
+          class="admin-navigation-button"
+          type="button"
+          onclick="navigateToAdmin()"
+        >
+          <span class="icon" aria-hidden="true">
+            🔧
+          </span>
+          Admin
+        </button>
+      </nav>
 
-            <!-- ⭐ ADMIN BUTTON ⭐ -->
-            <button class="admin-btn" onclick="navigate('admin-dashboard')">
-                <span class="icon">🔧</span> Admin
-            </button>
+      <section
+        class="mini-cart"
+        id="miniCart"
+        aria-labelledby="mini-cart-heading"
+      >
+        <h2 id="mini-cart-heading">
+          Mini Cart
+        </h2>
 
-        </nav>
-
-        <!-- MINI CART -->
-        <div class="mini-cart" id="miniCart">
-            <h3>Mini Cart</h3>
-            <div id="miniCartItems"></div>
+        <div id="miniCartItems">
+          <p>Your cart is empty.</p>
         </div>
-    </header>
-
-
-    <!-- ============================
-         ABOUT PAGE CONTENT
-         ============================ -->
-    <div class="page" style="padding: 20px;">
-        <h1>About Multi-Maniacs Customs LLC</h1>
-
-        <p>
-            Multi-Maniacs Customs LLC is a multi-industry customization and freelance business based in Essie, KY,
-            serving clients across the United States. We specialize in custom builds, custom products, and unique
-            one-off projects tailored to each client’s vision.
-        </p>
-
-        <h2>Our Mission</h2>
-        <p>
-            To bring wild ideas, bold concepts, and personal visions to life through high-quality custom work,
-            attention to detail, and a relentless commitment to creativity.
-        </p>
-
-        <h2>Who We Work With</h2>
-        <p>
-            We work with individuals, small businesses, enthusiasts, and anyone who wants something that doesn’t
-            exist off the shelf. If you can imagine it, we’ll help you build it.
-        </p>
+      </section>
     </div>
+  </header>
 
+  <main class="about-page">
+    <section
+      class="about-hero"
+      aria-labelledby="about-heading"
+    >
+      <h1
+        id="about-heading"
+        class="about-heading"
+      >
+        About Multi-Maniacs Customs LLC
+      </h1>
 
-    <!-- ============================
-         FOOTER
-         ============================ -->
-    <footer style="background:#000; color:#fff; padding:20px; text-align:center; margin-top:40px;">
-        © 2026 Multi-Maniacs Customs LLC • Essie, KY • Clients accepted anywhere in the U.S.<br>
-        Phone: (606) 220-0185 • (606) 212-4695 • Email: multimaniacscustoms@gmail.com
-    </footer>
+      <p class="about-introduction">
+        Multi-Maniacs Customs LLC is a multi-industry
+        customization shop based in Essie, Kentucky, serving
+        clients throughout the United States. MMC creates custom
+        products, personalized builds, creative designs, and
+        one-of-a-kind projects developed around each client’s
+        individual vision.
+      </p>
+    </section>
 
-    <!-- NAVIGATION SYSTEM -->
-    <script src="navigation.js"></script>
+    <section
+      class="about-section"
+      aria-labelledby="mission-heading"
+    >
+      <h2 id="mission-heading">
+        Our Mission
+      </h2>
 
+      <p>
+        The mission of Multi-Maniacs Customs is to bring bold
+        ideas, personal visions, and unique concepts to life
+        through thoughtful planning, quality custom work,
+        attention to detail, and a strong commitment to
+        creativity.
+      </p>
+    </section>
+
+    <section
+      class="about-section"
+      aria-labelledby="customization-heading"
+    >
+      <h2 id="customization-heading">
+        A Multi-Industry Customization Shop
+      </h2>
+
+      <p>
+        MMC is not limited to one type of product, material,
+        service, or industry. Each request is reviewed
+        individually so that the project can be approached based
+        on its purpose, size, materials, design requirements,
+        budget, timeline, and customization needs.
+      </p>
+
+      <div class="about-grid">
+        <article class="about-card">
+          <span
+            class="about-card-icon"
+            aria-hidden="true"
+          >
+            🎨
+          </span>
+
+          <h3>
+            Personalized Products
+          </h3>
+
+          <p>
+            Custom products based on names, colors, wording,
+            themes, events, branding, and personal preferences.
+          </p>
+        </article>
+
+        <article class="about-card">
+          <span
+            class="about-card-icon"
+            aria-hidden="true"
+          >
+            🛠️
+          </span>
+
+          <h3>
+            Custom Builds
+          </h3>
+
+          <p>
+            Creative builds, decor, displays, signs, accessories,
+            and custom elements designed for a specific purpose.
+          </p>
+        </article>
+
+        <article class="about-card">
+          <span
+            class="about-card-icon"
+            aria-hidden="true"
+          >
+            💡
+          </span>
+
+          <h3>
+            Unique Requests
+          </h3>
+
+          <p>
+            Projects that do not fit into a standard product
+            category can be reviewed through the client intake
+            system.
+          </p>
+        </article>
+      </div>
+    </section>
+
+    <section
+      class="about-section"
+      aria-labelledby="clients-heading"
+    >
+      <h2 id="clients-heading">
+        Who We Work With
+      </h2>
+
+      <p>
+        Multi-Maniacs Customs works with individuals, small
+        businesses, organizations, enthusiasts, event planners,
+        and clients who need something that is not readily
+        available off the shelf. Whether the request is personal,
+        professional, decorative, functional, promotional, or
+        experimental, the client intake system provides a place
+        to explain the idea.
+      </p>
+    </section>
+
+    <section
+      class="about-section"
+      aria-labelledby="values-heading"
+    >
+      <h2 id="values-heading">
+        Our Values
+      </h2>
+
+      <ul class="about-values-list">
+        <li>
+          <strong>
+            Client-Centered Service
+          </strong>
+
+          Each project starts with understanding the client’s
+          purpose, expectations, preferences, and goals.
+        </li>
+
+        <li>
+          <strong>
+            Creativity
+          </strong>
+
+          MMC welcomes unusual ideas and looks for practical ways
+          to turn concepts into custom results.
+        </li>
+
+        <li>
+          <strong>
+            Quality
+          </strong>
+
+          Materials, design choices, production methods, and
+          finishing details are considered carefully for each
+          project.
+        </li>
+
+        <li>
+          <strong>
+            Clear Communication
+          </strong>
+
+          Project scope, options, pricing, timelines, and possible
+          limitations should be discussed before custom work
+          moves forward.
+        </li>
+
+        <li>
+          <strong>
+            Flexibility
+          </strong>
+
+          Every request is different, so the process can be
+          adapted to the project rather than forcing every client
+          into the same standard option.
+        </li>
+
+        <li>
+          <strong>
+            Collaboration
+          </strong>
+
+          Custom work is strongest when the client’s vision and
+          MMC’s creative and technical experience work together.
+        </li>
+      </ul>
+    </section>
+
+    <section
+      class="client-intake-callout"
+      aria-labelledby="client-intake-heading"
+    >
+      <h2 id="client-intake-heading">
+        Have a Custom Project in Mind?
+      </h2>
+
+      <p>
+        Use the client intake system to provide project details,
+        preferred colors, materials, measurements, quantities,
+        budget information, timeline preferences, and optional
+        reference images.
+      </p>
+
+      <a
+        class="about-action"
+        href="client-intake.html"
+      >
+        Start a Client Intake Request
+      </a>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <p>
+      &copy; 2026 Multi-Maniacs Customs LLC
+    </p>
+
+    <p>
+      Essie, Kentucky | Clients accepted throughout the United
+      States
+    </p>
+
+    <p>
+      tel:+16062200185
+        (606) 220-0185
+      </a>
+
+      |
+
+      tel:+16062124695
+        (606) 212-4695
+      </a>
+
+      |
+
+      <a href="mailto:multimaniacscustoms@gmail.com">
+        multimaniacscustoms@gmail.com
+      </a>
+    </p>
+  </footer>
+
+  <noscript>
+    <p>
+      JavaScript must be enabled to use all website features.
+    </p>
+  </noscript>
 </body>
 </html>

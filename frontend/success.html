@@ -1,43 +1,350 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Multi-Maniacs Customs</title>
+  <meta charset="UTF-8">
 
-    <!-- MMC Neon Theme -->
-    <link rel="stylesheet" href="style.css">
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
+
+  <meta
+    name="description"
+    content="Your Multi-Maniacs Customs submission was successfully received."
+  >
+
+  <title>
+    Success | Multi-Maniacs Customs LLC
+  </title>
+
+  <link rel="stylesheet" href="style.css">
+
+  <style>
+    .success-page {
+      display: flex;
+      width: 100%;
+      max-width: 760px;
+      min-height: 65vh;
+      margin: 0 auto;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 20px;
+    }
+
+    .success-panel {
+      width: 100%;
+      padding: 42px 30px;
+      color: #000000;
+      background: rgba(255, 255, 255, 0.94);
+      border: 3px solid #000000;
+      border-radius: 16px;
+      text-align: center;
+      box-shadow:
+        0 20px 60px rgba(0, 0, 0, 0.4),
+        0 0 22px rgba(255, 0, 168, 0.35),
+        0 0 30px rgba(0, 234, 255, 0.25);
+    }
+
+    .success-color-bar {
+      width: 100%;
+      height: 9px;
+      margin-bottom: 26px;
+      background:
+        linear-gradient(
+          90deg,
+          #ff1493,
+          #ef00ff,
+          #007bff,
+          #00eaff,
+          #34e600,
+          #ffe600,
+          #ff7a00,
+          #ff1493
+        );
+      border: 2px solid #000000;
+      border-radius: 999px;
+    }
+
+    .success-icon {
+      display: flex;
+      width: 82px;
+      height: 82px;
+      margin: 0 auto 22px;
+      align-items: center;
+      justify-content: center;
+      color: #000000;
+      background:
+        linear-gradient(
+          135deg,
+          #ff1493,
+          #ffe600,
+          #34e600,
+          #00eaff
+        );
+      border: 3px solid #000000;
+      border-radius: 50%;
+      font-size: 42px;
+      font-weight: 900;
+      box-shadow:
+        0 6px 0 #000000,
+        0 0 18px rgba(255, 0, 168, 0.45);
+    }
+
+    .success-heading {
+      margin: 0 0 14px;
+      color: #000000;
+      font-size: clamp(34px, 7vw, 48px);
+      line-height: 1.1;
+    }
+
+    .success-description {
+      max-width: 610px;
+      margin: 0 auto;
+      color: #222222;
+      font-size: 17px;
+      line-height: 1.65;
+    }
+
+    .success-notice {
+      margin-top: 24px;
+      padding: 16px;
+      color: #000000;
+      background:
+        linear-gradient(
+          135deg,
+          rgba(255, 20, 147, 0.20),
+          rgba(255, 230, 0, 0.22),
+          rgba(52, 230, 0, 0.20),
+          rgba(0, 234, 255, 0.22)
+        );
+      border: 2px solid #000000;
+      border-radius: 10px;
+      line-height: 1.55;
+    }
+
+    .success-actions {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 12px;
+      margin-top: 28px;
+    }
+
+    .success-action {
+      display: inline-flex;
+      min-height: 48px;
+      align-items: center;
+      justify-content: center;
+      padding: 11px 18px;
+      color: #000000;
+      background:
+        linear-gradient(
+          135deg,
+          #ff1493,
+          #ffe600,
+          #34e600,
+          #00eaff
+        );
+      border: 2px solid #000000;
+      border-radius: 8px;
+      font-weight: 800;
+      text-decoration: none;
+      box-shadow: 0 5px 0 #000000;
+      transition:
+        transform 0.2s ease,
+        box-shadow 0.2s ease,
+        filter 0.2s ease;
+    }
+
+    .success-action:hover,
+    .success-action:focus {
+      filter: saturate(1.2) brightness(1.04);
+      transform: translateY(-2px);
+      box-shadow:
+        0 7px 0 #000000,
+        0 0 14px rgba(255, 0, 168, 0.45);
+    }
+
+    .secondary-success-action {
+      color: #ffffff;
+      background: #000000;
+    }
+
+    .secondary-success-action:hover,
+    .secondary-success-action:focus {
+      color: #000000;
+      background: #00eaff;
+    }
+
+    @media (max-width: 600px) {
+      .success-page {
+        min-height: 55vh;
+        padding: 26px 14px;
+      }
+
+      .success-panel {
+        padding: 32px 18px;
+      }
+
+      .success-actions {
+        flex-direction: column;
+      }
+
+      .success-action {
+        width: 100%;
+      }
+    }
+  </style>
+
+  <script src="navigation.js" defer></script>
+  <script src="cart.js" defer></script>
 </head>
-<script src="navigation.js"></script>
+
 <body>
+  <header class="top-header">
+    <div class="header-content">
+      <a
+        class="site-logo-link"
+        href="index.html"
+        aria-label="Go to the Multi-Maniacs Customs home page"
+      >
+        mmc-logo.png
+      </a>
 
-<nav class="navbar">
-    <ul>
-        <li><a href="index.html">Home</a></li>
-        <li><a href="about.html">About</a></li>
-        <li><a href="services.html">Services</a></li>
-        <li><a href="gallery.html">Gallery</a></li>
-        <li><a href="shop.html">Shop</a></li>
-        <li><a href="cart.html">Cart</a></li>
-        <li><a href="contact.html">Contact</a></li>
-    </ul>
-</nav>
+      <div class="site-branding">
+        <h1 class="site-heading">
+          Multi-Maniacs Customs LLC
+        </h1>
 
-<div class="page">
-    <h1>Success</h1>
+        <nav
+          class="header-buttons"
+          aria-label="Main website navigation"
+        >
+          <a href="index.html">
+            Home
+          </a>
+
+          <a href="about.html">
+            About
+          </a>
+
+          <a href="services.html">
+            Services
+          </a>
+
+          <a href="gallery.html">
+            Gallery
+          </a>
+
+          <a href="shop.html">
+            Shop
+          </a>
+
+          <a href="cart.html">
+            Cart
+
+            <span
+              id="cart-count"
+              class="cart-count-badge"
+              aria-label="0 items in cart"
+            >
+              0
+            </span>
+          </a>
+
+          <a href="contact.html">
+            Contact
+          </a>
+        </nav>
+      </div>
+    </div>
+  </header>
+
+  <main class="success-page">
+    <section
+      class="success-panel"
+      aria-labelledby="success-heading"
+    >
+      <div
+        class="success-color-bar"
+        aria-hidden="true"
+      ></div>
+
+      <div
+        class="success-icon"
+        aria-hidden="true"
+      >
+        ✓
+      </div>
+
+      <h1
+        id="success-heading"
+        class="success-heading"
+      >
+        Success!
+      </h1>
+
+      <p class="success-description">
+        Thank you! Your request, order, or submission has been
+        received by Multi-Maniacs Customs. We will review the
+        details and follow up with the next steps as soon as
+        possible.
+      </p>
+
+      <div class="success-notice">
+        Please keep any confirmation information you received. If
+        you have questions or need to provide additional project
+        details, contact Multi-Maniacs Customs for assistance.
+      </div>
+
+      <div class="success-actions">
+        <a
+          class="success-action"
+          href="index.html"
+        >
+          Return to Home
+        </a>
+
+        <a
+          class="success-action secondary-success-action"
+          href="shop.html"
+        >
+          Continue Shopping
+        </a>
+
+        <a
+          class="success-action secondary-success-action"
+          href="contact.html"
+        >
+          Contact MMC
+        </a>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    mmc-logo.png
+
     <p>
-        Thank you! Your request, order, or submission has been received. We’ll review the details and
-        follow up with next steps as soon as possible.
+      &copy; 2026 Multi-Maniacs Customs LLC
     </p>
 
-    <a href="index.html" class="btn">Back to Home</a>
-</div>
-
-<footer>
     <p>
-        &copy; 2026 Multi-Maniacs Customs LLC • Essie, KY • Clients accepted anywhere in the U.S. •
-        Phone: (606) 220-0185 • (606) 212-4695 • Email: multimaniacscustoms@gmail.com
+      Essie, Kentucky | Serving clients throughout the United States
     </p>
-</footer>
 
+    <p>
+      <a href="contact.html">
+        Contact Multi-Maniacs Customs
+      </a>
+    </p>
+  </footer>
+
+  <noscript>
+    <p>
+      JavaScript is disabled, but all links on this confirmation
+      page will still work.
+    </p>
+  </noscript>
 </body>
-</html>
+</html>  

@@ -114,10 +114,9 @@ function checkEnvironmentVariables() {
   const missingRecommended =
     RECOMMENDED_ENVIRONMENT_VARIABLES.filter(
       function (variableName) {
-        return[
-Name
- missingRecommended =
-COMMENDED        ];
+        return !process.env[
+          variableName
+        ];
       }
     );
 

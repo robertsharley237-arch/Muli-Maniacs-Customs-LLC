@@ -1,3 +1,9 @@
+// ============================================================
+// MULTI-MANIACS CUSTOMS LLC
+// ADMIN LOGIN
+// VERCEL + NEON + JWT
+// ============================================================
+
 const BACKEND_URL =
     window.MMC_BACKEND_URL ||
     window.location.origin;
@@ -5,32 +11,67 @@ const BACKEND_URL =
 const ADMIN_DASHBOARD_PAGE =
     "admin-dashboard.html";
 
+// ============================================================
+// LOGIN
+// ============================================================
+
 async function adminLogin(event) {
 
-    event.preventDefault();
+    if (event) {
+        event.preventDefault();
+    }
 
-    const username =
-        document
-        .getElementById("adminUsername")
-        .value
-        .trim();
+    const usernameInput =
+        document.getElementById(
+            "adminUsername"
+        );
 
-    const password =
-        document
-        .getElementById("adminPassword")
-        .value;
+    const passwordInput =
+        document.getElementById(
+            "adminPassword"
+        );
 
-    const button =
+    const loginButton =
         document.getElementById(
             "admin-login-button"
         );
 
+    const username =
+        usernameInput.value.trim();
+
+    const password =
+        passwordInput.value;
+
+    if (!username) {
+
+        showLoginMessage(
+            "Please enter your username.",
+            true
+        );
+
+        usernameInput.focus();
+        return;
+    }
+
+    if (!password) {
+
+        showLoginMessage(
+            "Please enter your password.",
+            true
+        );
+
+        passwordInput.focus();
+        return;
+    }
+
     try {
 
-        button.disabled = true;
-        button.textContent = "Logging In...";
+        setLoginButtonLoading(
+            loginButton,
+            true
+        );
 
-        showMessage("", false);
+        clearLoginMessage();
 
         const response = await fetch(
             `${BACKEND_URL}/admin/login`,
@@ -48,7 +89,9 @@ async function adminLogin(event) {
         );
 
         const data =
-            await response.json();
+            await readLoginResponse(
+                response
+            );
 
         if (!response.ok) {
             throw new Error(
@@ -59,7 +102,7 @@ async function adminLogin(event) {
 
         if (!data.token) {
             throw new Error(
-                "No authentication token received."
+                "Authentication token missing."
             );
         }
 
@@ -75,33 +118,95 @@ async function adminLogin(event) {
             )
         );
 
-        showMessage(
-            "Login successful.",
+        localStorage.removeItem(
+            "MMC_ADMIN_TOKEN"
+        );
+
+        showLoginMessage(
+            "Login successful. Redirecting...",
             false
         );
 
-        window.location.href =
-            ADMIN_DASHBOARD_PAGE;
+        setTimeout(() => {
 
-    } catch (error) {
+            window.location.href =
+                ADMIN_DASHBOARD_PAGE;
 
-        console.error(error);
+        }, 500);
 
-        showMessage(
+    }
+    catch (error) {
+
+        console.error(
+            "Admin Login Error:",
+            error
+        );
+
+        clearSavedAdminLogin();
+
+        showLoginMessage(
             error.message ||
             "Login failed.",
             true
         );
+    }
+    finally {
 
-    } finally {
-
-        button.disabled = false;
-        button.textContent = "Log In";
-
+        setLoginButtonLoading(
+            loginButton,
+            false
+        );
     }
 }
 
-function showMessage(
+// ============================================================
+// RESPONSE READER
+// ============================================================
+
+async function readLoginResponse(
+    response
+) {
+
+    try {
+
+        return await response.json();
+
+    }
+    catch {
+
+        return {
+            error:
+            "Unexpected server response."
+        };
+    }
+}
+
+// ============================================================
+// BUTTON LOADING
+// ============================================================
+
+function setLoginButtonLoading(
+    button,
+    loading
+) {
+
+    if (!button) {
+        return;
+    }
+
+    button.disabled = loading;
+
+    button.textContent =
+        loading
+            ? "Logging In..."
+            : "Log In";
+}
+
+// ============================================================
+// MESSAGES
+// ============================================================
+
+function showLoginMessage(
     message,
     isError
 ) {
@@ -111,15 +216,68 @@ function showMessage(
             "admin-login-message"
         );
 
-    element.textContent = message;
+    if (!element) {
+        return;
+    }
 
-    element.className =
+    element.textContent =
+        message;
+
+    element.classList.remove(
+        "login-error",
+        "login-success"
+    );
+
+    element.classList.add(
         isError
             ? "login-error"
-            : "login-success";
+            : "login-success"
+    );
 }
 
-async function checkExistingLogin() {
+function clearLoginMessage() {
+
+    const element =
+        document.getElementById(
+            "admin-login-message"
+        );
+
+    if (!element) {
+        return;
+    }
+
+    element.textContent = "";
+
+    element.classList.remove(
+        "login-error",
+        "login-success"
+    );
+}
+
+// ============================================================
+// TOKEN MANAGEMENT
+// ============================================================
+
+function clearSavedAdminLogin() {
+
+    localStorage.removeItem(
+        "adminToken"
+    );
+
+    localStorage.removeItem(
+        "adminUser"
+    );
+
+    localStorage.removeItem(
+        "MMC_ADMIN_TOKEN"
+    );
+}
+
+// ============================================================
+// SESSION CHECK
+// ============================================================
+
+async function checkExistingAdminLogin() {
 
     const token =
         localStorage.getItem(
@@ -132,54 +290,5 @@ async function checkExistingLogin() {
 
     try {
 
-        const response = await fetch(
-            `${BACKEND_URL}/admin/me`,
-            {
-                headers: {
-                    Authorization:
-                        `Bearer ${token}`
-                }
-            }
-        );
-
-        if (response.ok) {
-
-            window.location.href =
-                ADMIN_DASHBOARD_PAGE;
-
-        } else {
-
-            localStorage.removeItem(
-                "adminToken"
-            );
-
-            localStorage.removeItem(
-                "adminUser"
-            );
-        }
-
-    } catch (error) {
-
-        console.error(
-            "Session check failed:",
-            error
-        );
-    }
-}
-
-document.addEventListener(
-    "DOMContentLoaded",
-    () => {
-
-        document
-            .getElementById(
-                "admin-login-form"
-            )
-            .addEventListener(
-                "submit",
-                adminLogin
-            );
-
-        checkExistingLogin();
-    }
-);
+        const response =
+            await

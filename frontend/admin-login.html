@@ -1,90 +1,114 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Admin Login</title>
-    <style>
-        body {
-            font-family: Arial;
-            background: #111;
-            color: white;
-            padding: 20px;
-        }
-        .container {
-            max-width: 400px;
-            margin: auto;
-            background: #222;
-            padding: 20px;
-            border-radius: 10px;
-        }
-        input {
-            width: 100%;
-            padding: 10px;
-            margin-top: 10px;
-            border: none;
-            border-radius: 6px;
-        }
-        button {
-            width: 100%;
-            padding: 12px;
-            margin-top: 15px;
-            background: #4CAF50;
-            border: none;
-            color: white;
-            font-size: 16px;
-            border-radius: 6px;
-            cursor: pointer;
-        }
-        button:hover {
-            background: #45a049;
-        }
-        #message {
-            margin-top: 15px;
-            text-align: center;
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>MMC Admin Login</title>
+
+<style>
+body{
+    margin:0;
+    padding:0;
+    background:#111;
+    color:#fff;
+    font-family:Arial,sans-serif;
+}
+
+.container{
+    max-width:400px;
+    margin:100px auto;
+    padding:25px;
+    background:#222;
+    border-radius:12px;
+    box-shadow:0 0 15px rgba(0,0,0,.4);
+}
+
+h1{
+    text-align:center;
+    margin-bottom:20px;
+}
+
+input{
+    width:100%;
+    box-sizing:border-box;
+    padding:12px;
+    margin-bottom:12px;
+    border:none;
+    border-radius:6px;
+}
+
+button{
+    width:100%;
+    padding:12px;
+    background:#4CAF50;
+    color:white;
+    border:none;
+    border-radius:6px;
+    cursor:pointer;
+    font-size:16px;
+}
+
+button:hover{
+    background:#43a047;
+}
+
+button:disabled{
+    opacity:.7;
+    cursor:not-allowed;
+}
+
+#admin-login-message{
+    margin-top:15px;
+    text-align:center;
+}
+
+.login-error{
+    color:#ff6b6b;
+}
+
+.login-success{
+    color:#7dff7d;
+}
+</style>
 </head>
-<script src="navigation.js"></script>
+
 <body>
 
-    <div class="container">
-        <h2>Admin Login</h2>
+<div class="container">
 
-        <form id="loginForm">
-            <input type="text" id="username" placeholder="Username" required>
-            <input type="password" id="password" placeholder="Password" required>
-            <button type="submit">Login</button>
-        </form>
+    <h1>Admin Login</h1>
 
-        <p id="message"></p>
-    </div>
+    <form id="admin-login-form">
 
-    <script>
-        document.getElementById("loginForm").addEventListener("submit", async (e) => {
-            e.preventDefault();
+        <input
+            type="text"
+            id="adminUsername"
+            placeholder="Username"
+            required
+        >
 
-            const username = document.getElementById("username").value;
-            const password = document.getElementById("password").value;
+        <input
+            type="password"
+            id="adminPassword"
+            placeholder="Password"
+            required
+        >
 
-            const res = await fetch("https://multi-maniacscustoms.vercel.app/admin/login", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ username, password })
-            });
+        <button
+            type="submit"
+            id="admin-login-button"
+        >
+            Log In
+        </button>
 
-            const data = await res.json();
+    </form>
 
-            if (data.token) {
-                document.getElementById("message").innerText = "Login successful!";
-                localStorage.setItem("MMC_ADMIN_TOKEN", data.token);
+    <div id="admin-login-message"></div>
 
-                setTimeout(() => {
-                    window.location.href = "admin.html";
-                }, 800);
-            } else {
-                document.getElementById("message").innerText = data.error;
-            }
-        });
-    </script>
+</div>
+
+<script src="admin-login.js"></script>
 
 </body>
 </html>

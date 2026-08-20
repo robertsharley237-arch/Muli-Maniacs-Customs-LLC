@@ -1272,17 +1272,11 @@ router.post(
       }
 
       const signature =
-        request[
-Index
- currentStock =
-(
-.stock || 0
- (
-Stock <
+        request.headers[
+          "stripe-signature"
+        ];
 
- {
- new Error(
-nature) {
+      if (!signature) {
         return response
           .status(400)
           .json({

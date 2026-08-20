@@ -38,19 +38,12 @@ function cleanWholeNumber(
   value,
   fallbackValue
 ) {
-  const number =
-    Number(value);
-
+  const number = Number(value);
   if (!Number.isFinite(number)) {
-    return Math.max(
-      0,
-      Math.floor(
-        Number(
-          fallbackValue || 0
-        )
-      )
-    );
+    // Added a comma between 0 and Math.floor
+    return Math.max(0, Math.floor(Number(fallbackValue || 0))); 
   }
+
 
   return Math.max(
     0,

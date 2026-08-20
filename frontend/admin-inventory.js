@@ -1,25 +1,110 @@
 // ============================================================
 // MULTI-MANIACS CUSTOMS LLC
-// ADMIN INVENTORY MANAGEMENT
+// FILE: admin-inventory.js
+// ADMINISTRATOR INVENTORY MANAGEMENT
+//
+// Backend: Express + Neon PostgreSQL
+// Authentication: JWT
+// Products: Base products and product variants
 // ============================================================
 
 (function () {
   "use strict";
 
-  var MMC_INVENTORY_BACKEND_URL =
-    window.MMC_BACKEND_URL ||
-    window.location.origin;
+  // ==========================================================
+  // CONFIGURATION
+  // ==========================================================
 
-  var MMC_ADMIN_PRODUCTS_URL =
-    MMC_INVENTORY_BACKEND_URL +
+  var ADMIN_LOGIN_PAGE =
+    "admin-login.html";
+
+  var ADMIN_DASHBOARD_PAGE =
+    "admin-dashboard.html";
+
+  var ADMIN_TOKEN_KEY =
+    "adminToken";
+
+  var ADMIN_USER_KEY =
+    "adminUser";
+
+  var REQUEST_TIMEOUT_MILLISECONDS =
+    15000;
+
+  var inventoryProducts =
+    [];
+
+  var selectedInventoryProduct =
+    null;
+
+  var inventoryRequestActive =
+    false;
+
+  // ==========================================================
+  // BACKEND URL
+  // ==========================================================
+
+  function removeTrailingSlashes(
+    value
+  ) {
+    return String(value || "")
+      .trim()
+      .replace(
+        /\/+$/,
+        ""
+      );
+  }
+
+  function getBackendUrl() {
+    if (window.MMC_BACKEND_URL) {
+      return removeTrailingSlashes(
+        window.MMC_BACKEND_URL
+      );
+    }
+
+    var savedBackendUrl =
+      localStorage.getItem(
+        "MMC_BACKEND_URL"
+      );
+
+    if (savedBackendUrl) {
+      return removeTrailingSlashes(
+        savedBackendUrl
+      );
+    }
+
+    if (
+      window.location.hostname ===
+        "localhost" ||
+      window.location.hostname ===
+        "127.0.0.1"
+    ) {
+      return (
+        window.location.protocol +
+        "//" +
+        window.location.hostname +
+        ":10000"
+      );
+    }
+
+    return removeTrailingSlashes(
+      window.location.origin
+    );
+  }
+
+  var BACKEND_URL =
+    getBackendUrl();
+
+  var ADMIN_ME_URL =
+    BACKEND_URL +
+    "/admin/me";
+
+  var ADMIN_PRODUCTS_URL =
+    BACKEND_URL +
     "/admin/products";
 
-  var MMC_PRODUCTS_URL =
-    MMC_INVENTORY_BACKEND_URL +
+  var PRODUCTS_URL =
+    BACKEND_URL +
     "/products";
-
-  var inventoryProducts = [];
-  var selectedInventoryProduct = null;
 
   // ==========================================================
   // ELEMENT HELPERS
@@ -31,6 +116,33 @@
     return document.getElementById(
       elementId
     );
+  }
+
+  function getFirstAvailableElement(
+    elementIds
+  ) {
+    var selectedElement =
+      null;
+
+    elementIds.some(
+      function (elementId) {
+        var element =
+          getInventoryElement(
+            elementId
+          );
+
+        if (element) {
+          selectedElement =
+            element;
+
+          return true;
+        }
+
+        return false;
+      }
+    );
+
+    return selectedElement;
   }
 
   function setInventoryText(
@@ -46,35 +158,56 @@
       return;
     }
 
-    if (
+    target.textContent =
       value === undefined ||
       value === null
-    ) {
-      target.textContent = "";
-    } else {
-      target.textContent =
-        String(value);
+        ? ""
+        : String(value);
+  }
+
+  function setElementHidden(
+    elementId,
+    hidden
+  ) {
+    var element =
+      getInventoryElement(
+        elementId
+      );
+
+    if (!element) {
+      return;
     }
+
+    element.hidden =
+      hidden;
   }
 
   // ==========================================================
-  // ADMIN AUTHENTICATION
+  // ADMINISTRATOR AUTHENTICATION
   // ==========================================================
 
   function getAdminToken() {
     return localStorage.getItem(
-      "adminToken"
+      ADMIN_TOKEN_KEY
     );
   }
 
   function getAdminHeaders(
     includeJson
   ) {
+    var token =
+      getAdminToken();
+
     var headers = {
-      Authorization:
-        "Bearer " +
-        getAdminToken()
+      Accept:
+        "application/json"
     };
+
+    if (token) {
+      headers.Authorization =
+        "Bearer " +
+        token;
+    }
 
     if (includeJson) {
       headers["Content-Type"] =
@@ -86,27 +219,81 @@
 
   function clearAdminSession() {
     localStorage.removeItem(
-      "adminToken"
+      ADMIN_TOKEN_KEY
     );
 
     localStorage.removeItem(
-      "adminUser"
+      ADMIN_USER_KEY
     );
 
     localStorage.removeItem(
       "MMC_ADMIN_TOKEN"
+    );
+
+    localStorage.removeItem(
+      "admin_token"
+    );
+
+    localStorage.removeItem(
+      "token"
     );
   }
 
   function redirectToAdminLogin() {
     clearAdminSession();
 
-    window.location.href =
-      "admin-login.html";
+    window.location.replace(
+      ADMIN_LOGIN_PAGE
+    );
   }
 
   function logoutAdmin() {
-    redirectToAdminLogin();
+    clearAdminSession();
+
+    window.location.assign(
+      ADMIN_LOGIN_PAGE
+    );
+  }
+
+  // ==========================================================
+  // FETCH WITH TIMEOUT
+  // ==========================================================
+
+  async function fetchWithTimeout(
+    url,
+    options
+  ) {
+    var controller =
+      new AbortController();
+
+    var timeoutId =
+      window.setTimeout(
+        function () {
+          controller.abort();
+        },
+        REQUEST_TIMEOUT_MILLISECONDS
+      );
+
+    var requestOptions =
+      Object.assign(
+        {},
+        options || {},
+        {
+          signal:
+            controller.signal
+        }
+      );
+
+    try {
+      return await fetch(
+        url,
+        requestOptions
+      );
+    } finally {
+      window.clearTimeout(
+        timeoutId
+      );
+    }
   }
 
   // ==========================================================
@@ -116,25 +303,47 @@
   async function readInventoryResponse(
     response
   ) {
-    var data;
+    var responseText =
+      "";
 
     try {
-      data =
-        await response.json();
+      responseText =
+        await response.text();
     } catch (error) {
-      data = {};
+      responseText =
+        "";
     }
 
-    if (response.status === 401) {
+    var data = {};
+
+    if (responseText) {
+      try {
+        data =
+          JSON.parse(
+            responseText
+          );
+      } catch (error) {
+        data = {
+          error:
+            responseText
+        };
+      }
+    }
+
+    if (
+      response.status === 401
+    ) {
       redirectToAdminLogin();
 
       throw new Error(
         data.error ||
-        "Your administrator session expired."
+        "Your administrator session is invalid. Please log in again."
       );
     }
 
-    if (response.status === 403) {
+    if (
+      response.status === 403
+    ) {
       throw new Error(
         data.error ||
         "You do not have permission to manage inventory."
@@ -142,18 +351,57 @@
     }
 
     if (!response.ok) {
-      throw new Error(
-        data.error ||
-        data.message ||
-        (
-          "The request failed with status " +
-          response.status +
-          "."
-        )
-      );
+      var requestError =
+        new Error(
+          data.error ||
+          data.message ||
+          (
+            "The inventory request failed with status " +
+            response.status +
+            "."
+          )
+        );
+
+      requestError.code =
+        data.code ||
+        "INVENTORY_REQUEST_FAILED";
+
+      throw requestError;
     }
 
     return data;
+  }
+
+  function getInventoryErrorMessage(
+    error
+  ) {
+    if (
+      error &&
+      error.name ===
+        "AbortError"
+    ) {
+      return (
+        "The inventory request took too long. " +
+        "Check the backend connection and try again."
+      );
+    }
+
+    if (
+      error instanceof
+      TypeError
+    ) {
+      return (
+        "The inventory server could not be reached. " +
+        "Make sure the backend is running and the backend URL is correct."
+      );
+    }
+
+    return (
+      error &&
+      error.message
+        ? error.message
+        : "The inventory request could not be completed."
+    );
   }
 
   // ==========================================================
@@ -165,16 +413,33 @@
     messageType
   ) {
     var messageBox =
-      getInventoryElement(
-        "inventory-message"
-      );
+      getFirstAvailableElement([
+        "inventory-message",
+        "inventoryMessage"
+      ]);
+
+    var normalizedMessage =
+      String(message || "");
 
     if (!messageBox) {
+      if (
+        messageType ===
+        "error"
+      ) {
+        console.error(
+          normalizedMessage
+        );
+      } else {
+        console.log(
+          normalizedMessage
+        );
+      }
+
       return;
     }
 
     messageBox.textContent =
-      message || "";
+      normalizedMessage;
 
     messageBox.classList.remove(
       "inventory-error",
@@ -182,37 +447,77 @@
       "inventory-information"
     );
 
-    if (messageType === "error") {
+    if (
+      messageType ===
+      "error"
+    ) {
       messageBox.classList.add(
         "inventory-error"
       );
+
+      messageBox.setAttribute(
+        "role",
+        "alert"
+      );
     } else if (
-      messageType === "success"
+      messageType ===
+      "success"
     ) {
       messageBox.classList.add(
         "inventory-success"
+      );
+
+      messageBox.setAttribute(
+        "role",
+        "status"
       );
     } else {
       messageBox.classList.add(
         "inventory-information"
       );
+
+      messageBox.setAttribute(
+        "role",
+        "status"
+      );
     }
   }
 
   function clearInventoryMessage() {
-    showInventoryMessage(
-      "",
-      "information"
+    var messageBox =
+      getFirstAvailableElement([
+        "inventory-message",
+        "inventoryMessage"
+      ]);
+
+    if (!messageBox) {
+      return;
+    }
+
+    messageBox.textContent =
+      "";
+
+    messageBox.classList.remove(
+      "inventory-error",
+      "inventory-success",
+      "inventory-information"
+    );
+
+    messageBox.removeAttribute(
+      "role"
     );
   }
 
   // ==========================================================
-  // VERIFY ADMIN
+  // ADMINISTRATOR INFORMATION
   // ==========================================================
 
   function formatAdminRole(role) {
     return String(role || "")
-      .replace(/_/g, " ")
+      .replace(
+        /_/g,
+        " "
+      )
       .replace(
         /\b\w/g,
         function (letter) {
@@ -224,19 +529,24 @@
   async function verifyAdminSession() {
     if (!getAdminToken()) {
       redirectToAdminLogin();
+
       return false;
     }
 
     try {
-      var response = await fetch(
-        MMC_INVENTORY_BACKEND_URL +
-        "/admin/me",
-        {
-          method: "GET",
-          headers:
-            getAdminHeaders(false)
-        }
-      );
+      var response =
+        await fetchWithTimeout(
+          ADMIN_ME_URL,
+          {
+            method:
+              "GET",
+
+            headers:
+              getAdminHeaders(
+                false
+              )
+          }
+        );
 
       var data =
         await readInventoryResponse(
@@ -246,14 +556,26 @@
       var admin =
         data.admin || {};
 
+      if (
+        !admin ||
+        !admin.id
+      ) {
+        redirectToAdminLogin();
+
+        return false;
+      }
+
       localStorage.setItem(
-        "adminUser",
-        JSON.stringify(admin)
+        ADMIN_USER_KEY,
+        JSON.stringify(
+          admin
+        )
       );
 
       setInventoryText(
         "admin-username",
-        admin.username || ""
+        admin.username ||
+        "Administrator"
       );
 
       setInventoryText(
@@ -271,8 +593,9 @@
       );
 
       showInventoryMessage(
-        error.message ||
-        "The administrator session could not be verified.",
+        getInventoryErrorMessage(
+          error
+        ),
         "error"
       );
 
@@ -281,65 +604,97 @@
   }
 
   // ==========================================================
-  // NORMALIZE PRODUCT DATA
+  // PRODUCT DATA NORMALIZATION
   // ==========================================================
+
+  function normalizeWholeNumber(
+    value,
+    fallbackValue
+  ) {
+    var number =
+      Number(value);
+
+    if (
+      !Number.isFinite(number)
+    ) {
+      number =
+        Number(
+          fallbackValue || 0
+        );
+    }
+
+    return Math.max(
+      0,
+      Math.floor(number)
+    );
+  }
 
   function normalizeInventoryProduct(
     product
   ) {
+    var sourceProduct =
+      product || {};
+
     var warningLevel =
-      product.lowStockWarning;
+      sourceProduct
+        .lowStockWarning;
 
     if (
       warningLevel === undefined
     ) {
       warningLevel =
-        product.low_stock_warning;
+        sourceProduct
+          .low_stock_warning;
     }
 
     var rawVariants =
       Array.isArray(
-        product.variants
+        sourceProduct.variants
       )
-        ? product.variants
+        ? sourceProduct.variants
         : [];
 
     return {
-      id: String(
-        product.id ||
-        product._id ||
-        ""
-      ),
+      id:
+        String(
+          sourceProduct.id ||
+          sourceProduct._id ||
+          ""
+        ),
 
-      name: String(
-        product.name ||
-        "Unnamed Product"
-      ),
+      name:
+        String(
+          sourceProduct.name ||
+          "Unnamed Product"
+        ),
 
-      sku: String(
-        product.sku || ""
-      ),
+      sku:
+        String(
+          sourceProduct.sku ||
+          ""
+        ),
 
-      category: String(
-        product.category ||
-        "General"
-      ),
+      category:
+        String(
+          sourceProduct.category ||
+          "General"
+        ),
 
-      stock: Math.max(
-        0,
-        Number(
-          product.stock || 0
-        )
-      ),
+      stock:
+        normalizeWholeNumber(
+          sourceProduct.stock,
+          0
+        ),
 
-      lowStockWarning: Math.max(
-        0,
-        Number(
-          warningLevel === undefined
-            ? 5
-            : warningLevel
-        )
-      ),
+      lowStockWarning:
+        normalizeWholeNumber(
+          warningLevel,
+          5
+        ),
+
+      active:
+        sourceProduct.active !==
+        false,
 
       variants:
         rawVariants.map(
@@ -347,37 +702,43 @@
             variant,
             variantIndex
           ) {
+            var sourceVariant =
+              variant || {};
+
             return {
               index:
                 variantIndex,
 
-              id: String(
-                variant.id ||
-                variant._id ||
-                ""
-              ),
+              id:
+                String(
+                  sourceVariant.id ||
+                  sourceVariant._id ||
+                  ""
+                ),
 
-              name: String(
-                variant.name ||
-                (
-                  "Variant " +
+              name:
+                String(
+                  sourceVariant.name ||
                   (
-                    variantIndex +
-                    1
+                    "Variant " +
+                    (
+                      variantIndex +
+                      1
+                    )
                   )
-                )
-              ),
+                ),
 
-              sku: String(
-                variant.sku || ""
-              ),
+              sku:
+                String(
+                  sourceVariant.sku ||
+                  ""
+                ),
 
-              stock: Math.max(
-                0,
-                Number(
-                  variant.stock || 0
+              stock:
+                normalizeWholeNumber(
+                  sourceVariant.stock,
+                  0
                 )
-              )
             };
           }
         )
@@ -385,51 +746,104 @@
   }
 
   // ==========================================================
+  // PRODUCT SELECT
+  // ==========================================================
+
+  function getProductSelect() {
+    return getFirstAvailableElement([
+      "productSelect",
+      "product-select"
+    ]);
+  }
+
+  function getVariantSelect() {
+    return getFirstAvailableElement([
+      "variantSelect",
+      "variant-select"
+    ]);
+  }
+
+  function createSelectOption(
+    value,
+    text
+  ) {
+    var option =
+      document.createElement(
+        "option"
+      );
+
+    option.value =
+      String(value);
+
+    option.textContent =
+      String(text);
+
+    return option;
+  }
+
+  // ==========================================================
   // LOAD PRODUCTS
   // ==========================================================
 
-  async function loadInventoryProducts() {
+  async function loadInventoryProducts(
+    productIdToRestore,
+    variantIndexToRestore
+  ) {
     var productSelect =
-      getInventoryElement(
-        "productSelect"
-      );
+      getProductSelect();
 
     if (!productSelect) {
+      showInventoryMessage(
+        "The product selector could not be found.",
+        "error"
+      );
+
       return;
     }
 
-    productSelect.disabled = true;
+    productSelect.disabled =
+      true;
 
-    productSelect.innerHTML =
-      '<option value="">Loading products...</option>';
+    productSelect.replaceChildren(
+      createSelectOption(
+        "",
+        "Loading products..."
+      )
+    );
 
     try {
-      var response = await fetch(
-        MMC_ADMIN_PRODUCTS_URL,
-        {
-          method: "GET",
-          headers:
-            getAdminHeaders(false)
-        }
-      );
+      var response =
+        await fetchWithTimeout(
+          ADMIN_PRODUCTS_URL,
+          {
+            method:
+              "GET",
+
+            headers:
+              getAdminHeaders(
+                false
+              )
+          }
+        );
 
       var data =
         await readInventoryResponse(
           response
         );
 
-      var productList;
+      var productList = [];
 
       if (Array.isArray(data)) {
-        productList = data;
+        productList =
+          data;
       } else if (
         data &&
-        Array.isArray(data.products)
+        Array.isArray(
+          data.products
+        )
       ) {
         productList =
           data.products;
-      } else {
-        productList = [];
       }
 
       inventoryProducts =
@@ -439,7 +853,9 @@
           )
           .filter(
             function (product) {
-              return product.id !== "";
+              return Boolean(
+                product.id
+              );
             }
           )
           .sort(
@@ -447,741 +863,121 @@
               firstProduct,
               secondProduct
             ) {
-              return firstProduct.name.localeCompare(
-                secondProduct.name
-              );
+              return firstProduct
+                .name
+                .localeCompare(
+                  secondProduct.name
+                );
             }
           );
 
-      productSelect.innerHTML = "";
-
-      var defaultOption =
-        document.createElement(
-          "option"
-        );
-
-      defaultOption.value = "";
-
-      defaultOption.textContent =
-        inventoryProducts.length
-          ? "Select a product..."
-          : "No products available";
+      productSelect.replaceChildren();
 
       productSelect.appendChild(
-        defaultOption
+        createSelectOption(
+          "",
+          inventoryProducts.length
+            ? "Select a product..."
+            : "No products available"
+        )
       );
 
       inventoryProducts.forEach(
         function (product) {
-          var option =
-            document.createElement(
-              "option"
-            );
-
-          option.value =
-            product.id;
-
-          option.textContent =
-            product.name +
-            " | " +
-            (
-              product.sku ||
-              "No SKU"
-            );
+          var statusText =
+            product.active
+              ? ""
+              : " | Inactive";
 
           productSelect.appendChild(
-            option
+            createSelectOption(
+              product.id,
+              product.name +
+              " | " +
+              (
+                product.sku ||
+                "No SKU"
+              ) +
+              statusText
+            )
           );
         }
       );
 
       productSelect.disabled =
-        inventoryProducts.length === 0;
+        inventoryProducts.length ===
+        0;
 
       resetInventorySelection();
-    } catch (error) {
-      console.error(
-        "Product loading failed:",
-        error
-      );
 
-      productSelect.innerHTML =
-        '<option value="">Products unavailable</option>';
-
-      productSelect.disabled = true;
-
-      showInventoryMessage(
-        error.message ||
-        "Products could not be loaded.",
-        "error"
-      );
-    }
-  }
-
-  // ==========================================================
-  // PRODUCT SELECTION
-  // ==========================================================
-
-  function findSelectedProduct() {
-    var productSelect =
-      getInventoryElement(
-        "productSelect"
-      );
-
-    var selectedId =
-      productSelect
-        ? productSelect.value
-        : "";
-
-    return (
-      inventoryProducts.find(
-        function (product) {
-          return (
-            product.id ===
-            selectedId
-          );
-        }
-      ) ||
-      null
-    );
-  }
-
-  function resetInventorySelection() {
-    selectedInventoryProduct =
-      null;
-
-    var variantField =
-      getInventoryElement(
-        "variant-field"
-      );
-
-    var detailsSection =
-      getInventoryElement(
-        "selected-inventory-details"
-      );
-
-    var stockDisplay =
-      getInventoryElement(
-        "stock-display"
-      );
-
-    if (variantField) {
-      variantField.hidden = true;
-    }
-
-    if (detailsSection) {
-      detailsSection.hidden = true;
-    }
-
-    if (stockDisplay) {
-      stockDisplay.hidden = true;
-    }
-
-    setActionButtonsDisabled(
-      true
-    );
-  }
-
-  function handleProductChange() {
-    selectedInventoryProduct =
-      findSelectedProduct();
-
-    if (!selectedInventoryProduct) {
-      resetInventorySelection();
-      return;
-    }
-
-    buildVariantOptions();
-    displayInventoryItem();
-    clearInventoryMessage();
-  }
-
-  // ==========================================================
-  // VARIANT SELECTION
-  // ==========================================================
-
-  function buildVariantOptions() {
-    var variantField =
-      getInventoryElement(
-        "variant-field"
-      );
-
-    var variantSelect =
-      getInventoryElement(
-        "variantSelect"
-      );
-
-    if (
-      !variantField ||
-      !variantSelect
-    ) {
-      return;
-    }
-
-    variantSelect.innerHTML = "";
-
-    var baseOption =
-      document.createElement(
-        "option"
-      );
-
-    baseOption.value = "";
-
-    baseOption.textContent =
-      "Use Base Product Stock";
-
-    variantSelect.appendChild(
-      baseOption
-    );
-
-    if (
-      !selectedInventoryProduct ||
-      selectedInventoryProduct
-        .variants.length === 0
-    ) {
-      variantField.hidden = true;
-      variantSelect.disabled = true;
-
-      return;
-    }
-
-    selectedInventoryProduct
-      .variants
-      .forEach(
-        function (variant) {
-          var option =
-            document.createElement(
-              "option"
-            );
-
-          option.value =
-            String(
-              variant.index
-            );
-
-          option.textContent =
-            variant.name +
-            " | " +
-            (
-              variant.sku ||
-              "No SKU"
-            );
-
-          variantSelect.appendChild(
-            option
-          );
-        }
-      );
-
-    variantSelect.value = "";
-    variantSelect.disabled = false;
-    variantField.hidden = false;
-  }
-
-  function getSelectedVariant() {
-    var variantSelect =
-      getInventoryElement(
-        "variantSelect"
-      );
-
-    if (
-      !selectedInventoryProduct ||
-      !variantSelect ||
-      variantSelect.value === ""
-    ) {
-      return null;
-    }
-
-    var selectedIndex =
-      Number(
-        variantSelect.value
-      );
-
-    return (
-      selectedInventoryProduct
-        .variants
-        .find(
-          function (variant) {
+      if (
+        productIdToRestore &&
+        inventoryProducts.some(
+          function (product) {
             return (
-              variant.index ===
-              selectedIndex
+              product.id ===
+              String(
+                productIdToRestore
+              )
             );
           }
-        ) ||
-      null
-    );
-  }
-
-  function getCurrentInventoryItem() {
-    if (!selectedInventoryProduct) {
-      return null;
-    }
-
-    var selectedVariant =
-      getSelectedVariant();
-
-    return {
-      product:
-        selectedInventoryProduct,
-
-      variant:
-        selectedVariant,
-
-      stock:
-        selectedVariant
-          ? selectedVariant.stock
-          : selectedInventoryProduct.stock,
-
-      sku:
-        selectedVariant
-          ? selectedVariant.sku
-          : selectedInventoryProduct.sku,
-
-      type:
-        selectedVariant
-          ? (
-              "Variant: " +
-              selectedVariant.name
-            )
-          : "Base product"
-    };
-  }
-
-  // ==========================================================
-  // INVENTORY DISPLAY
-  // ==========================================================
-
-  function displayInventoryItem() {
-    var inventoryItem =
-      getCurrentInventoryItem();
-
-    if (!inventoryItem) {
-      resetInventorySelection();
-      return;
-    }
-
-    setInventoryText(
-      "inventory-product-name",
-      inventoryItem.product.name
-    );
-
-    setInventoryText(
-      "inventory-product-sku",
-      inventoryItem.sku ||
-      "Not available"
-    );
-
-    setInventoryText(
-      "inventory-product-category",
-      inventoryItem.product.category
-    );
-
-    setInventoryText(
-      "inventory-type",
-      inventoryItem.type
-    );
-
-    setInventoryText(
-      "current-stock-number",
-      inventoryItem.stock
-    );
-
-    displayStockWarning(
-      inventoryItem.stock,
-      inventoryItem.product
-        .lowStockWarning
-    );
-
-    var detailsSection =
-      getInventoryElement(
-        "selected-inventory-details"
-      );
-
-    var stockDisplay =
-      getInventoryElement(
-        "stock-display"
-      );
-
-    if (detailsSection) {
-      detailsSection.hidden = false;
-    }
-
-    if (stockDisplay) {
-      stockDisplay.hidden = false;
-    }
-
-    setActionButtonsDisabled(
-      false
-    );
-  }
-
-  function displayStockWarning(
-    stock,
-    warningLevel
-  ) {
-    var stockNumber =
-      getInventoryElement(
-        "current-stock-number"
-      );
-
-    var warningDisplay =
-      getInventoryElement(
-        "stock-warning-display"
-      );
-
-    if (
-      !stockNumber ||
-      !warningDisplay
-    ) {
-      return;
-    }
-
-    stockNumber.classList.remove(
-      "stock-normal",
-      "stock-low",
-      "stock-empty"
-    );
-
-    if (stock === 0) {
-      stockNumber.classList.add(
-        "stock-empty"
-      );
-
-      warningDisplay.textContent =
-        "Out of stock";
-    } else if (
-      stock <= warningLevel
-    ) {
-      stockNumber.classList.add(
-        "stock-low"
-      );
-
-      warningDisplay.textContent =
-        "Low stock. Warning level: " +
-        warningLevel;
-    } else {
-      stockNumber.classList.add(
-        "stock-normal"
-      );
-
-      warningDisplay.textContent =
-        "Stock level is above the warning limit.";
-    }
-  }
-
-  // ==========================================================
-  // BUTTON STATUS
-  // ==========================================================
-
-  function setActionButtonsDisabled(
-    disabled
-  ) {
-    var increaseButton =
-      getInventoryElement(
-        "increase-stock-button"
-      );
-
-    var decreaseButton =
-      getInventoryElement(
-        "decrease-stock-button"
-      );
-
-    var setButton =
-      getInventoryElement(
-        "set-stock-button"
-      );
-
-    if (increaseButton) {
-      increaseButton.disabled =
-        disabled;
-    }
-
-    if (decreaseButton) {
-      decreaseButton.disabled =
-        disabled;
-    }
-
-    if (setButton) {
-      setButton.disabled =
-        disabled;
-    }
-  }
-
-  // ==========================================================
-  // STOCK AMOUNTS
-  // ==========================================================
-
-  function getAdjustmentAmount() {
-    var adjustmentInput =
-      getInventoryElement(
-        "stock-adjustment-amount"
-      );
-
-    var adjustmentAmount =
-      Number(
-        adjustmentInput
-          ? adjustmentInput.value
-          : 0
-      );
-
-    if (
-      !Number.isInteger(
-        adjustmentAmount
-      ) ||
-      adjustmentAmount < 1
-    ) {
-      showInventoryMessage(
-        "Adjustment amount must be a whole number of 1 or higher.",
-        "error"
-      );
-
-      return null;
-    }
-
-    return adjustmentAmount;
-  }
-
-  function increaseStock() {
-    var inventoryItem =
-      getCurrentInventoryItem();
-
-    var adjustmentAmount =
-      getAdjustmentAmount();
-
-    if (
-      !inventoryItem ||
-      adjustmentAmount === null
-    ) {
-      return;
-    }
-
-    saveStock(
-      inventoryItem.stock +
-      adjustmentAmount
-    );
-  }
-
-  function decreaseStock() {
-    var inventoryItem =
-      getCurrentInventoryItem();
-
-    var adjustmentAmount =
-      getAdjustmentAmount();
-
-    if (
-      !inventoryItem ||
-      adjustmentAmount === null
-    ) {
-      return;
-    }
-
-    var newStock =
-      inventoryItem.stock -
-      adjustmentAmount;
-
-    if (newStock < 0) {
-      newStock = 0;
-    }
-
-    saveStock(newStock);
-  }
-
-  function setExactStock() {
-    var exactInput =
-      getInventoryElement(
-        "exact-stock-amount"
-      );
-
-    var exactStock =
-      Number(
-        exactInput
-          ? exactInput.value
-          : -1
-      );
-
-    if (
-      !Number.isInteger(
-        exactStock
-      ) ||
-      exactStock < 0
-    ) {
-      showInventoryMessage(
-        "Exact stock must be a whole number of 0 or higher.",
-        "error"
-      );
-
-      return;
-    }
-
-    saveStock(exactStock);
-  }
-
-  // ==========================================================
-  // INVENTORY ENDPOINT
-  // ==========================================================
-
-  function getStockEndpoint(
-    inventoryItem
-  ) {
-    if (inventoryItem.variant) {
-      return (
-        MMC_PRODUCTS_URL +
-        "/" +
-        encodeURIComponent(
-          inventoryItem.product.id
-        ) +
-        "/variants/" +
-        encodeURIComponent(
-          inventoryItem.variant.index
-        ) +
-        "/stock"
-      );
-    }
-
-    return (
-      MMC_PRODUCTS_URL +
-      "/" +
-      encodeURIComponent(
-        inventoryItem.product.id
-      ) +
-      "/stock"
-    );
-  }
-
-  // ==========================================================
-  // SAVE STOCK
-  // ==========================================================
-
-  async function saveStock(
-    newStock
-  ) {
-    var inventoryItem =
-      getCurrentInventoryItem();
-
-    if (!inventoryItem) {
-      showInventoryMessage(
-        "Select a product or variant first.",
-        "error"
-      );
-
-      return;
-    }
-
-    if (
-      !Number.isInteger(newStock) ||
-      newStock < 0
-    ) {
-      showInventoryMessage(
-        "Stock must be a whole number of 0 or higher.",
-        "error"
-      );
-
-      return;
-    }
-
-    try {
-      setActionButtonsDisabled(
-        true
-      );
-
-      showInventoryMessage(
-        "Updating inventory...",
-        "information"
-      );
-
-      var response = await fetch(
-        getStockEndpoint(
-          inventoryItem
-        ),
-        {
-          method: "PATCH",
-
-          headers:
-            getAdminHeaders(true),
-
-          body: JSON.stringify({
-            stock: newStock
-          })
+        )
+      ) {
+        productSelect.value =
+          String(
+            productIdToRestore
+          );
+
+        selectedInventoryProduct =
+          findSelectedProduct();
+
+        buildVariantOptions();
+
+        var variantSelect =
+          getVariantSelect();
+
+        if (
+          variantSelect &&
+          variantIndexToRestore !==
+            null &&
+          variantIndexToRestore !==
+            undefined &&
+          variantSelect.querySelector(
+            "option[value='" +
+              String(
+                variantIndexToRestore
+              ) +
+              "']"
+          )
+        ) {
+          variantSelect.value =
+            String(
+              variantIndexToRestore
+            );
         }
-      );
-
-      var data =
-        await readInventoryResponse(
-          response
-        );
-
-      if (inventoryItem.variant) {
-        inventoryItem.variant.stock =
-          newStock;
-      } else {
-        inventoryItem.product.stock =
-          newStock;
       }
-
-      var exactInput =
-        getInventoryElement(
-          "exact-stock-amount"
-        );
-
-      if (exactInput) {
-        exactInput.value = "";
-      }
-
-      displayInventoryItem();
-
-      showInventoryMessage(
-        data.message ||
-        "Inventory updated successfully.",
-        "success"
-      );
     } catch (error) {
       console.error(
-        "Inventory update failed:",
+        "Failed to load inventory products:",
         error
       );
 
       showInventoryMessage(
-        error.message ||
-        "Inventory could not be updated.",
+        getInventoryErrorMessage(
+          error
+        ),
         "error"
       );
 
-      displayInventoryItem();
+      productSelect.replaceChildren(
+        createSelectOption(
+          "",
+          "Failed to load products"
+        )
+      );
+
+      productSelect.disabled =
+        true;
     }
   }
-
-  // ==========================================================
-  // PAGE STARTUP
-  // ==========================================================
-
-  document.addEventListener(
-    "DOMContentLoaded",
-    async function () {
-      var validAdmin =
-        await verifyAdminSession();
-
-      if (!validAdmin) {
-        return;
-      }
-
-      var productSelect =
-        getInventoryElement(
-          "productSelect"
-        );
-
-      var variantSelect =
-        getInventoryElement(
-          "variantSelect"
-        );
-
-      var increaseButton =
-        getInventoryElement(
-          "increase-stock-button"
-        );
-
-      var decreaseButton =
-        getInventoryElement(
-          "decrease-stock-button"
-        );
-    }
-  );
+})

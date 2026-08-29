@@ -27,6 +27,16 @@
     href="style.css"
   >
 
+  <!--
+    config.js must load before scripts that communicate with
+    the Vercel backend.
+  -->
+
+  <script
+    src="config.js"
+    defer
+  ></script>
+
   <script
     src="navigation.js"
     defer
@@ -57,7 +67,7 @@
       <a
         class="site-logo-link"
         href="index.html"
-        aria-label="Go to the Multi-Maniacs Customs home page"
+        aria-label="Go to the Multi-Maniacs Customs homepage"
       >
         images/mmc-logo.png
       </a>
@@ -107,6 +117,7 @@
             <span
               id="cart-count"
               class="cart-count-badge"
+              data-cart-count
               aria-label="0 items in cart"
             >
               0
@@ -121,61 +132,18 @@
             Client Intake
           </a>
 
-          <button
+          <a
             id="admin-navigation-button"
             class="admin-navigation-button"
-            type="button"
+            href="admin-login.html"
+            data-admin-navigation
           >
             Admin
-          </button>
+          </a>
         </nav>
       </div>
     </div>
   </header>
-
-  <!-- ========================================================
-       HOMEPAGE MINI CART
-       ======================================================== -->
-
-  <aside
-    class="mini-cart-section"
-    aria-labelledby="mini-cart-heading"
-  >
-    <div
-      class="tie-dye-color-bar"
-      aria-hidden="true"
-    ></div>
-
-    <div class="mini-cart-heading-row">
-      <div>
-        <p class="mini-cart-eyebrow">
-          Quick Cart Preview
-        </p>
-
-        <h2 id="mini-cart-heading">
-          Your Cart
-        </h2>
-      </div>
-
-      <a
-        class="mini-cart-header-link"
-        href="cart.html"
-      >
-        Open Full Cart
-      </a>
-    </div>
-
-    <div
-      id="miniCartItems"
-      class="mini-cart-items"
-      aria-live="polite"
-      aria-atomic="false"
-    >
-      <p class="mini-cart-loading">
-        Loading your cart...
-      </p>
-    </div>
-  </aside>
 
   <!-- ========================================================
        MAIN HOMEPAGE
@@ -212,7 +180,7 @@
       <p class="hero-description">
         Multi-Maniacs Customs LLC is a multi-industry
         customization shop serving clients from all walks of
-        life. We create personalized products, custom builds,
+        life. MMC creates personalized products, custom builds,
         creative designs, and unique projects based on each
         client’s individual vision.
       </p>
@@ -240,6 +208,50 @@
         </a>
       </div>
     </section>
+
+    <!-- ======================================================
+         HOMEPAGE MINI CART
+         ====================================================== -->
+
+    <aside
+      class="mini-cart-section"
+      aria-labelledby="mini-cart-heading"
+    >
+      <div
+        class="tie-dye-color-bar"
+        aria-hidden="true"
+      ></div>
+
+      <div class="mini-cart-heading-row">
+        <div>
+          <p class="mini-cart-eyebrow">
+            Quick Cart Preview
+          </p>
+
+          <h2 id="mini-cart-heading">
+            Your Cart
+          </h2>
+        </div>
+
+        <a
+          class="mini-cart-header-link"
+          href="cart.html"
+        >
+          Open Full Cart
+        </a>
+      </div>
+
+      <div
+        id="miniCartItems"
+        class="mini-cart-items"
+        aria-live="polite"
+        aria-atomic="false"
+      >
+        <p class="mini-cart-loading">
+          Loading your cart...
+        </p>
+      </div>
+    </aside>
 
     <!-- ======================================================
          ABOUT THE CUSTOM SHOP
@@ -531,6 +543,13 @@
 
       <div class="client-process">
         <article class="client-process-step">
+          <span
+            class="process-number"
+            aria-hidden="true"
+          >
+            1
+          </span>
+
           <h3>
             Submit the Request
           </h3>
@@ -543,17 +562,32 @@
         </article>
 
         <article class="client-process-step">
+          <span
+            class="process-number"
+            aria-hidden="true"
+          >
+            2
+          </span>
+
           <h3>
             Project Review
           </h3>
 
           <p>
             Multi-Maniacs Customs reviews the request, materials,
-            design requirements, and project feasibility.
+            design requirements, quantity, and project
+            feasibility.
           </p>
         </article>
 
         <article class="client-process-step">
+          <span
+            class="process-number"
+            aria-hidden="true"
+          >
+            3
+          </span>
+
           <h3>
             Options and Pricing
           </h3>
@@ -565,6 +599,13 @@
         </article>
 
         <article class="client-process-step">
+          <span
+            class="process-number"
+            aria-hidden="true"
+          >
+            4
+          </span>
+
           <h3>
             Custom Creation
           </h3>
@@ -597,6 +638,12 @@
       <h2 id="why-mmc-heading">
         Why Choose Multi-Maniacs Customs?
       </h2>
+
+      <p class="home-section-description">
+        Each project is approached with creativity, organization,
+        and attention to the client’s requested purpose,
+        preferences, and intended use.
+      </p>
 
       <div class="feature-grid">
         <article class="feature-card">
@@ -824,6 +871,10 @@
       class="footer-navigation"
       aria-label="Footer navigation"
     >
+      <a href="index.html">
+        Home
+      </a>
+
       <a href="about.html">
         About
       </a>
@@ -832,12 +883,16 @@
         Services
       </a>
 
+      <a href="gallery.html">
+        Gallery
+      </a>
+
       <a href="shop.html">
         Shop
       </a>
 
-      <a href="gallery.html">
-        Gallery
+      <a href="cart.html">
+        Cart
       </a>
 
       <a href="contact.html">
@@ -846,6 +901,13 @@
 
       <a href="client-intake.html">
         Client Intake
+      </a>
+
+      <a
+        href="admin-login.html"
+        data-admin-navigation
+      >
+        Admin
       </a>
     </nav>
 

@@ -1,1433 +1,1614 @@
 // ============================================================
 // MULTI-MANIACS CUSTOMS LLC
-// FILE: models/Product.js
-// PRODUCT MODEL FOR NEON POSTGRESQL
+// FILE: Product.js
+// PUBLIC PRODUCT DETAILS PAGE
+//
+// Hosting: Vercel
+// Database: Neon PostgreSQL through the Express backend
+// Cart: Browser localStorage
 // ============================================================
 
-"use strict";
+(function () {
+  "use strict";
 
-const db = require("../db");
+  // ==========================================================
+  // CONFIGURATION
+  // ==========================================================
 
-// ============================================================
-// TEXT HELPERS
-// ============================================================
+  var CART_STORAGE_KEY =
+    "cart";
 
-function cleanText(
-  value,
-  maximumLength
-) {
-  return String(value || "")
-    .trim()
-    .replace(/\s+/g, " ")
-    .slice(0, maximumLength);
-}
+  var BACKEND_URL_STORAGE_KEY =
+    "MMC_BACKEND_URL";
 
-function cleanLongText(
-  value,
-  maximumLength
-) {
-  return String(value || "")
-    .trim()
-    .slice(0, maximumLength);
-}
+  var REQUEST_TIMEOUT_MILLISECONDS =
+    15000;
 
-// ============================================================
-// NUMBER HELPERS
-// ============================================================
+  var currentProduct =
+    null;
 
-function cleanNumber(
-  value,
-  fallbackValue,
-  minimumValue
-) {
-  const number =
-    Number(value);
+  var selectedVariant =
+    null;
 
-  if (!Number.isFinite(number)) {
-    return fallbackValue;
+  // ==========================================================
+  // BACKEND URL
+  // ==========================================================
+
+  function removeTrailingSlashes(
+    value
+  ) {
+    return String(value || "")
+      .trim()
+      .replace(
+        /\/+$/,
+        ""
+      );
   }
 
-  return Math.max(
-    minimumValue,
-    number
-  );
-}
+  function getBackendUrl() {
+    /*
+     * The production backend URL should normally be assigned by
+     * config.js before this file loads.
+     */
 
-function cleanWholeNumber(
-  value,
-  fallbackValue
-) {
-  const number =
-    cleanNumber(
-      value,
-      fallbackValue,
-      0
+    if (
+      typeof window.MMC_BACKEND_URL ===
+        "string" &&
+      window.MMC_BACKEND_URL.trim()
+    ) {
+      return removeTrailingSlashes(
+        window.MMC_BACKEND_URL
+      );
+    }
+
+    /*
+     * Allow a manually saved Codespaces or development URL.
+     */
+
+    var savedBackendUrl =
+      localStorage.getItem(
+        BACKEND_URL_STORAGE_KEY
+      );
+
+    if (
+      typeof savedBackendUrl ===
+        "string" &&
+      savedBackendUrl.trim()
+    ) {
+      return removeTrailingSlashes(
+        savedBackendUrl
+      );
+    }
+
+    /*
+     * Local frontend development normally uses port 3000 while
+     * the Express backend uses port 10000.
+     */
+
+    if (
+      window.location.hostname ===
+        "localhost" ||
+      window.location.hostname ===
+        "127.0.0.1"
+    ) {
+      return (
+        window.location.protocol +
+        "//" +
+        window.location.hostname +
+        ":10000"
+      );
+    }
+
+    /*
+     * Same-domain fallback.
+     */
+
+    return removeTrailingSlashes(
+      window.location.origin
+    );
+  }
+
+  var BACKEND_URL =
+    getBackendUrl();
+
+  // ==========================================================
+  // ELEMENT HELPERS
+  // ==========================================================
+
+  function getElement(
+    elementId
+  ) {
+    return document.getElementById(
+      elementId
+    );
+  }
+
+  function getFirstAvailableElement(
+    elementIds
+  ) {
+    var selectedElement =
+      null;
+
+    elementIds.some(
+      function (elementId) {
+        var element =
+          getElement(
+            elementId
+          );
+
+        if (element) {
+          selectedElement =
+            element;
+
+          return true;
+        }
+
+        return false;
+      }
     );
 
-  return Math.floor(number);
-}
+    return selectedElement;
+  }
 
-// ============================================================
-// BOOLEAN HELPER
-// ============================================================
-
-function cleanBoolean(
-  value,
-  fallbackValue
-) {
-  if (
-    value === undefined ||
-    value === null
+  function setElementText(
+    elementIds,
+    value
   ) {
-    return fallbackValue;
+    var element =
+      getFirstAvailableElement(
+        elementIds
+      );
+
+    if (!element) {
+      return;
+    }
+
+    element.textContent =
+      value === undefined ||
+      value === null
+        ? ""
+        : String(value);
   }
 
-  if (typeof value === "boolean") {
-    return value;
+  function getProductNameElement() {
+    return getFirstAvailableElement([
+      "productName",
+      "product-name"
+    ]);
   }
 
-  if (value === "true") {
-    return true;
+  function getProductDescriptionElement() {
+    return getFirstAvailableElement([
+      "productDescription",
+      "product-description"
+    ]);
   }
 
-  if (value === "false") {
-    return false;
+  function getProductImageElement() {
+    return getFirstAvailableElement([
+      "productImage",
+      "product-image"
+    ]);
   }
 
-  return fallbackValue;
-}
-
-// ============================================================
-// SLUG HELPER
-// ============================================================
-
-function createSlug(value) {
-  return String(value || "")
-    .trim()
-    .toLowerCase()
-    .replace(/['’]/g, "")
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "")
-    .slice(0, 180);
-}
-
-// ============================================================
-// VARIANT NORMALIZATION
-// ============================================================
-
-function normalizeVariant(
-  variant,
-  variantIndex
-) {
-  const input =
-    variant || {};
-
-  return {
-    id: String(
-      input.id ||
-      input._id ||
-      (
-        "variant-" +
-        Date.now() +
-        "-" +
-        variantIndex
-      )
-    ),
-
-    name:
-      cleanText(
-        input.name,
-        150
-      ),
-
-    sku:
-      cleanText(
-        input.sku,
-        100
-      ),
-
-    price:
-      cleanNumber(
-        input.price,
-        0,
-        0
-      ),
-
-    stock:
-      cleanWholeNumber(
-        input.stock,
-        0
-      ),
-
-    image:
-      cleanText(
-        input.image,
-        2000
-      ),
-
-    imagePublicId:
-      cleanText(
-        input.imagePublicId ||
-        input.image_public_id,
-        500
-      )
-  };
-}
-
-function normalizeVariants(variants) {
-  if (!Array.isArray(variants)) {
-    return [];
+  function getProductPriceElement() {
+    return getFirstAvailableElement([
+      "productPrice",
+      "product-price"
+    ]);
   }
 
-  return variants.map(
-    normalizeVariant
-  );
-}
-
-// ============================================================
-// DATABASE VARIANT PARSING
-// ============================================================
-
-function parseVariants(value) {
-  if (Array.isArray(value)) {
-    return normalizeVariants(value);
+  function getProductSkuElement() {
+    return getFirstAvailableElement([
+      "productSku",
+      "product-sku"
+    ]);
   }
 
-  if (typeof value === "string") {
-    try {
-      const parsedValue =
-        JSON.parse(value);
+  function getStockDisplayElement() {
+    return getFirstAvailableElement([
+      "stockDisplay",
+      "stock-display"
+    ]);
+  }
 
-      if (Array.isArray(parsedValue)) {
-        return normalizeVariants(
-          parsedValue
+  function getVariantSelect() {
+    return getFirstAvailableElement([
+      "variantSelect",
+      "variant-select"
+    ]);
+  }
+
+  function getVariantField() {
+    return getFirstAvailableElement([
+      "variantField",
+      "variant-field"
+    ]);
+  }
+
+  function getQuantityInput() {
+    return getFirstAvailableElement([
+      "productQuantity",
+      "product-quantity",
+      "quantity"
+    ]);
+  }
+
+  function getAddToCartButton() {
+    return getFirstAvailableElement([
+      "addToCartButton",
+      "add-to-cart-button"
+    ]);
+  }
+
+  function getProductMessageElement() {
+    return getFirstAvailableElement([
+      "productMessage",
+      "product-message"
+    ]);
+  }
+
+  // ==========================================================
+  // CURRENCY FORMATTING
+  // ==========================================================
+
+  function formatCurrency(
+    value
+  ) {
+    var amount =
+      Number(value);
+
+    if (
+      !Number.isFinite(amount)
+    ) {
+      amount = 0;
+    }
+
+    return new Intl.NumberFormat(
+      "en-US",
+      {
+        style:
+          "currency",
+
+        currency:
+          "USD"
+      }
+    ).format(amount);
+  }
+
+  // ==========================================================
+  // NUMBER HELPERS
+  // ==========================================================
+
+  function normalizeMoney(
+    value
+  ) {
+    var amount =
+      Number(value);
+
+    if (
+      !Number.isFinite(amount)
+    ) {
+      return 0;
+    }
+
+    return Math.max(
+      0,
+      Math.round(
+        amount * 100
+      ) / 100
+    );
+  }
+
+  function normalizeWholeNumber(
+    value
+  ) {
+    var number =
+      Number(value);
+
+    if (
+      !Number.isFinite(number)
+    ) {
+      return 0;
+    }
+
+    return Math.max(
+      0,
+      Math.floor(number)
+    );
+  }
+
+  // ==========================================================
+  // PRODUCT MESSAGE
+  // ==========================================================
+
+  function clearProductMessage() {
+    var messageElement =
+      getProductMessageElement();
+
+    if (!messageElement) {
+      return;
+    }
+
+    messageElement.textContent =
+      "";
+
+    messageElement.classList.remove(
+      "product-error",
+      "product-success",
+      "product-information"
+    );
+
+    messageElement.removeAttribute(
+      "role"
+    );
+  }
+
+  function showProductMessage(
+    message,
+    messageType
+  ) {
+    var normalizedMessage =
+      String(message || "");
+
+    var messageElement =
+      getProductMessageElement();
+
+    if (!messageElement) {
+      if (
+        messageType ===
+        "error"
+      ) {
+        console.error(
+          normalizedMessage
+        );
+      } else {
+        console.log(
+          normalizedMessage
         );
       }
+
+      return;
+    }
+
+    messageElement.textContent =
+      normalizedMessage;
+
+    messageElement.classList.remove(
+      "product-error",
+      "product-success",
+      "product-information"
+    );
+
+    if (!normalizedMessage) {
+      messageElement.removeAttribute(
+        "role"
+      );
+
+      return;
+    }
+
+    if (
+      messageType ===
+      "success"
+    ) {
+      messageElement.classList.add(
+        "product-success"
+      );
+
+      messageElement.setAttribute(
+        "role",
+        "status"
+      );
+    } else if (
+      messageType ===
+      "information"
+    ) {
+      messageElement.classList.add(
+        "product-information"
+      );
+
+      messageElement.setAttribute(
+        "role",
+        "status"
+      );
+    } else {
+      messageElement.classList.add(
+        "product-error"
+      );
+
+      messageElement.setAttribute(
+        "role",
+        "alert"
+      );
+    }
+  }
+
+  // ==========================================================
+  // REQUEST WITH TIMEOUT
+  // ==========================================================
+
+  async function fetchWithTimeout(
+    url,
+    options
+  ) {
+    var controller =
+      new AbortController();
+
+    var timeoutIdentifier =
+      window.setTimeout(
+        function () {
+          controller.abort();
+        },
+        REQUEST_TIMEOUT_MILLISECONDS
+      );
+
+    try {
+      return await fetch(
+        url,
+        Object.assign(
+          {},
+          options || {},
+          {
+            signal:
+              controller.signal
+          }
+        )
+      );
+    } finally {
+      window.clearTimeout(
+        timeoutIdentifier
+      );
+    }
+  }
+
+  // ==========================================================
+  // SERVER RESPONSE
+  // ==========================================================
+
+  async function readResponse(
+    response
+  ) {
+    var responseText =
+      "";
+
+    try {
+      responseText =
+        await response.text();
+    } catch (error) {
+      return {
+        error:
+          "The server response could not be read."
+      };
+    }
+
+    if (!responseText) {
+      return {};
+    }
+
+    try {
+      return JSON.parse(
+        responseText
+      );
+    } catch (error) {
+      return {
+        error:
+          responseText
+      };
+    }
+  }
+
+  function getResponseErrorMessage(
+    responseData,
+    fallbackMessage
+  ) {
+    if (
+      responseData &&
+      typeof responseData.error ===
+        "string" &&
+      responseData.error.trim()
+    ) {
+      return responseData.error;
+    }
+
+    if (
+      responseData &&
+      responseData.error &&
+      typeof responseData.error.message ===
+        "string"
+    ) {
+      return responseData.error.message;
+    }
+
+    if (
+      responseData &&
+      typeof responseData.message ===
+        "string" &&
+      responseData.message.trim()
+    ) {
+      return responseData.message;
+    }
+
+    return fallbackMessage;
+  }
+
+  // ==========================================================
+  // PRODUCT ID
+  // ==========================================================
+
+  function getProductIdFromUrl() {
+    var searchParameters =
+      new URLSearchParams(
+        window.location.search
+      );
+
+    return String(
+      searchParameters.get(
+        "id"
+      ) ||
+      searchParameters.get(
+        "productId"
+      ) ||
+      ""
+    ).trim();
+  }
+
+  // ==========================================================
+  // PRODUCT NORMALIZATION
+  // ==========================================================
+
+  function normalizeVariant(
+    variant,
+    variantIndex
+  ) {
+    var sourceVariant =
+      variant &&
+      typeof variant ===
+        "object"
+        ? variant
+        : {};
+
+    var variantIdentifier =
+      String(
+        sourceVariant.id ||
+        sourceVariant._id ||
+        (
+          "variant-" +
+          variantIndex
+        )
+      );
+
+    return {
+      id:
+        variantIdentifier,
+
+      _id:
+        variantIdentifier,
+
+      index:
+        variantIndex,
+
+      name:
+        String(
+          sourceVariant.name ||
+          (
+            "Variant " +
+            (
+              variantIndex +
+              1
+            )
+          )
+        ),
+
+      sku:
+        String(
+          sourceVariant.sku ||
+          ""
+        ),
+
+      price:
+        normalizeMoney(
+          sourceVariant.price
+        ),
+
+      stock:
+        normalizeWholeNumber(
+          sourceVariant.stock
+        ),
+
+      image:
+        String(
+          sourceVariant.image ||
+          ""
+        )
+    };
+  }
+
+  function normalizeProduct(
+    productData
+  ) {
+    var sourceProduct =
+      productData &&
+      typeof productData ===
+        "object"
+        ? productData
+        : {};
+
+    var productIdentifier =
+      String(
+        sourceProduct.id ||
+        sourceProduct._id ||
+        ""
+      );
+
+    var rawVariants =
+      Array.isArray(
+        sourceProduct.variants
+      )
+        ? sourceProduct.variants
+        : [];
+
+    return {
+      id:
+        productIdentifier,
+
+      _id:
+        productIdentifier,
+
+      name:
+        String(
+          sourceProduct.name ||
+          "Custom Product"
+        ),
+
+      description:
+        String(
+          sourceProduct.description ||
+          ""
+        ),
+
+      image:
+        String(
+          sourceProduct.image ||
+          ""
+        ),
+
+      price:
+        normalizeMoney(
+          sourceProduct.price
+        ),
+
+      sku:
+        String(
+          sourceProduct.sku ||
+          ""
+        ),
+
+      stock:
+        normalizeWholeNumber(
+          sourceProduct.stock
+        ),
+
+      active:
+        sourceProduct.active !==
+        false,
+
+      variants:
+        rawVariants.map(
+          normalizeVariant
+        )
+    };
+  }
+
+  // ==========================================================
+  // LOAD PRODUCT
+  // ==========================================================
+
+  async function loadProduct(
+    productId
+  ) {
+    var normalizedProductId =
+      String(productId || "")
+        .trim();
+
+    if (!normalizedProductId) {
+      showProductMessage(
+        "A product ID was not included in the page address.",
+        "error"
+      );
+
+      setAddToCartButtonState();
+
+      return;
+    }
+
+    try {
+      showProductMessage(
+        "Loading product information...",
+        "information"
+      );
+
+      var response =
+        await fetchWithTimeout(
+          BACKEND_URL +
+          "/products/" +
+          encodeURIComponent(
+            normalizedProductId
+          ),
+          {
+            method:
+              "GET",
+
+            headers: {
+              Accept:
+                "application/json"
+            }
+          }
+        );
+
+      var responseData =
+        await readResponse(
+          response
+        );
+
+      if (!response.ok) {
+        throw new Error(
+          getResponseErrorMessage(
+            responseData,
+            "The product could not be loaded."
+          )
+        );
+      }
+
+      /*
+       * The current ProductRoutes.js returns:
+       *
+       * {
+       *   "product": { ... }
+       * }
+       *
+       * The fallback supports an older direct-product response.
+       */
+
+      currentProduct =
+        normalizeProduct(
+          responseData.product ||
+          responseData
+        );
+
+      if (!currentProduct.id) {
+        throw new Error(
+          "The backend returned incomplete product information."
+        );
+      }
+
+      selectedVariant =
+        null;
+
+      renderProduct();
+      renderVariants();
+      setAddToCartButtonState();
+      clearProductMessage();
     } catch (error) {
       console.error(
-        "Product variants could not be parsed:",
+        "Product loading failed:",
         error
       );
+
+      currentProduct =
+        null;
+
+      selectedVariant =
+        null;
+
+      var errorMessage =
+        error &&
+        error.name ===
+          "AbortError"
+          ? "The product request took too long. Please try again."
+          : (
+              error &&
+              error.message
+                ? error.message
+                : "The product could not be loaded."
+            );
+
+      showProductMessage(
+        errorMessage,
+        "error"
+      );
+
+      setAddToCartButtonState();
     }
   }
 
-  return [];
-}
+  // ==========================================================
+  // RENDER PRODUCT
+  // ==========================================================
 
-// ============================================================
-// PRODUCT ROW FORMATTING
-// ============================================================
+  function renderProduct() {
+    if (!currentProduct) {
+      return;
+    }
 
-function formatProduct(row) {
-  if (!row) {
-    return null;
-  }
+    var nameElement =
+      getProductNameElement();
 
-  return {
-    id:
-      String(row.id),
+    var descriptionElement =
+      getProductDescriptionElement();
 
-    name:
-      String(row.name || ""),
+    var imageElement =
+      getProductImageElement();
 
-    slug:
-      String(row.slug || ""),
+    var priceElement =
+      getProductPriceElement();
 
-    sku:
-      String(row.sku || ""),
+    var skuElement =
+      getProductSkuElement();
 
-    price:
-      Number(row.price || 0),
+    if (nameElement) {
+      nameElement.textContent =
+        currentProduct.name;
+    }
 
-    stock:
-      Number(row.stock || 0),
+    if (descriptionElement) {
+      descriptionElement.textContent =
+        currentProduct.description;
+    }
 
-    lowStockWarning:
-      Number(
-        row.low_stock_warning ===
-          null ||
-        row.low_stock_warning ===
-          undefined
-          ? 5
-          : row.low_stock_warning
-      ),
+    if (imageElement) {
+      imageElement.src =
+        currentProduct.image;
 
-    category:
-      String(
-        row.category_name ||
-        row.category ||
-        "General"
-      ),
+      imageElement.alt =
+        currentProduct.name;
+    }
 
-    categoryId:
-      row.category_id ===
-        null ||
-      row.category_id ===
-        undefined
-        ? null
-        : String(
-            row.category_id
-          ),
-
-    categorySlug:
-      String(
-        row.category_slug || ""
-      ),
-
-    description:
-      String(
-        row.description || ""
-      ),
-
-    image:
-      String(row.image || ""),
-
-    imagePublicId:
-      String(
-        row.image_public_id || ""
-      ),
-
-    variants:
-      parseVariants(
-        row.variants
-      ),
-
-    active:
-      row.active !== false,
-
-    createdAt:
-      row.created_at || null,
-
-    updatedAt:
-      row.updated_at || null
-  };
-}
-
-// ============================================================
-// PRODUCT INPUT NORMALIZATION
-// ============================================================
-
-function normalizeProductInput(
-  productData,
-  existingProduct
-) {
-  const input =
-    productData || {};
-
-  const current =
-    existingProduct || {};
-
-  const name =
-    input.name === undefined
-      ? cleanText(
-          current.name,
-          200
-        )
-      : cleanText(
-          input.name,
-          200
+    if (priceElement) {
+      priceElement.textContent =
+        formatCurrency(
+          currentProduct.price
         );
+    }
 
-  const suppliedSlug =
-    input.slug === undefined
-      ? current.slug
-      : input.slug;
+    if (skuElement) {
+      skuElement.textContent =
+        currentProduct.sku ||
+        "Not available";
+    }
 
-  const categoryIdValue =
-    input.categoryId !== undefined
-      ? input.categoryId
-      : (
-          input.category_id !==
-            undefined
-            ? input.category_id
-            : current.categoryId
-        );
+    updateStockDisplay(
+      currentProduct.stock
+    );
+  }
 
-  return {
-    name:
-      name,
+  // ==========================================================
+  // VARIANT SELECTOR
+  // ==========================================================
 
-    slug:
-      createSlug(
-        suppliedSlug ||
-        name
-      ),
-
-    sku:
-      input.sku === undefined
-        ? cleanText(
-            current.sku,
-            100
-          )
-        : cleanText(
-            input.sku,
-            100
-          ),
-
-    price:
-      input.price === undefined
-        ? cleanNumber(
-            current.price,
-            0,
-            0
-          )
-        : cleanNumber(
-            input.price,
-            0,
-            0
-          ),
-
-    stock:
-      input.stock === undefined
-        ? cleanWholeNumber(
-            current.stock,
-            0
-          )
-        : cleanWholeNumber(
-            input.stock,
-            0
-          ),
-
-    lowStockWarning:
-      input.lowStockWarning ===
-        undefined &&
-      input.low_stock_warning ===
-        undefined
-        ? cleanWholeNumber(
-            current.lowStockWarning,
-            5
-          )
-        : cleanWholeNumber(
-            input.lowStockWarning !==
-              undefined
-              ? input.lowStockWarning
-              : input.low_stock_warning,
-            5
-          ),
-
-    category:
-      input.category === undefined
-        ? cleanText(
-            current.category ||
-            "General",
-            150
-          )
-        : cleanText(
-            input.category ||
-            "General",
-            150
-          ),
-
-    categoryId:
-      categoryIdValue === null ||
-      categoryIdValue === undefined ||
-      categoryIdValue === ""
-        ? null
-        : String(
-            categoryIdValue
-          ),
-
-    categorySlug:
-      input.categorySlug ===
-        undefined &&
-      input.category_slug ===
-        undefined
-        ? cleanText(
-            current.categorySlug,
-            180
-          )
-        : cleanText(
-            input.categorySlug ||
-            input.category_slug,
-            180
-          ),
-
-    description:
-      input.description === undefined
-        ? cleanLongText(
-            current.description,
-            10000
-          )
-        : cleanLongText(
-            input.description,
-            10000
-          ),
-
-    image:
-      input.image === undefined
-        ? cleanText(
-            current.image,
-            2000
-          )
-        : cleanText(
-            input.image,
-            2000
-          ),
-
-    imagePublicId:
-      input.imagePublicId ===
-        undefined &&
-      input.image_public_id ===
-        undefined
-        ? cleanText(
-            current.imagePublicId,
-            500
-          )
-        : cleanText(
-            input.imagePublicId ||
-            input.image_public_id,
-            500
-          ),
-
-    variants:
-      input.variants === undefined
-        ? normalizeVariants(
-            current.variants
-          )
-        : normalizeVariants(
-            input.variants
-          ),
-
-    active:
-      cleanBoolean(
-        input.active,
-        current.active !== false
-      )
-  };
-}
-
-// ============================================================
-// PRODUCT VALIDATION
-// ============================================================
-
-function validateProduct(product) {
-  const validationErrors = [];
-
-  if (
-    !product.name ||
-    product.name.length < 2
+  function createVariantOption(
+    value,
+    text
   ) {
-    validationErrors.push(
-      "Product name must contain at least 2 characters."
-    );
+    var option =
+      document.createElement(
+        "option"
+      );
+
+    option.value =
+      String(value);
+
+    option.textContent =
+      String(text);
+
+    return option;
   }
 
-  if (
-    !product.slug ||
-    product.slug.length < 2
-  ) {
-    validationErrors.push(
-      "A valid product slug is required."
-    );
-  }
+  function renderVariants() {
+    var variantSelect =
+      getVariantSelect();
 
-  if (
-    !product.sku ||
-    product.sku.length < 2
-  ) {
-    validationErrors.push(
-      "Product SKU must contain at least 2 characters."
-    );
-  }
+    var variantField =
+      getVariantField();
 
-  if (
-    !Number.isFinite(
-      product.price
-    ) ||
-    product.price < 0
-  ) {
-    validationErrors.push(
-      "Product price must be 0 or higher."
-    );
-  }
+    if (!variantSelect) {
+      return;
+    }
 
-  if (
-    !Number.isInteger(
-      product.stock
-    ) ||
-    product.stock < 0
-  ) {
-    validationErrors.push(
-      "Product stock must be a whole number of 0 or higher."
-    );
-  }
+    variantSelect.replaceChildren();
 
-  if (
-    !Number.isInteger(
-      product.lowStockWarning
-    ) ||
-    product.lowStockWarning < 0
-  ) {
-    validationErrors.push(
-      "Low-stock warning must be a whole number of 0 or higher."
-    );
-  }
-
-  if (!product.category) {
-    validationErrors.push(
-      "A product category is required."
-    );
-  }
-
-  const savedVariantSkus = [];
-
-  product.variants.forEach(
-    function (
-      variant,
-      variantIndex
+    if (
+      !currentProduct ||
+      currentProduct.variants.length ===
+        0
     ) {
-      const variantNumber =
-        variantIndex + 1;
-
-      if (
-        !variant.name ||
-        variant.name.length < 1
-      ) {
-        validationErrors.push(
-          "Variant " +
-          variantNumber +
-          " requires a name."
-        );
-      }
-
-      if (
-        !variant.sku ||
-        variant.sku.length < 1
-      ) {
-        validationErrors.push(
-          "Variant " +
-          variantNumber +
-          " requires a SKU."
-        );
-      }
-
-      if (
-        !Number.isFinite(
-          variant.price
-        ) ||
-        variant.price < 0
-      ) {
-        validationErrors.push(
-          "Variant " +
-          variantNumber +
-          " price must be 0 or higher."
-        );
-      }
-
-      if (
-        !Number.isInteger(
-          variant.stock
-        ) ||
-        variant.stock < 0
-      ) {
-        validationErrors.push(
-          "Variant " +
-          variantNumber +
-          " stock must be a whole number of 0 or higher."
-        );
-      }
-
-      const normalizedSku =
-        variant.sku
-          .trim()
-          .toLowerCase();
-
-      if (
-        normalizedSku &&
-        savedVariantSkus.includes(
-          normalizedSku
+      variantSelect.appendChild(
+        createVariantOption(
+          "",
+          "No variants available"
         )
-      ) {
-        validationErrors.push(
-          "Variant SKUs must be unique within the product."
-        );
+      );
+
+      variantSelect.disabled =
+        true;
+
+      if (variantField) {
+        variantField.hidden =
+          true;
       }
 
-      savedVariantSkus.push(
-        normalizedSku
+      return;
+    }
+
+    variantSelect.appendChild(
+      createVariantOption(
+        "",
+        "Select a variant..."
+      )
+    );
+
+    currentProduct.variants.forEach(
+      function (variant) {
+        var optionText =
+          variant.name +
+          " | " +
+          formatCurrency(
+            variant.price
+          );
+
+        if (variant.sku) {
+          optionText +=
+            " | " +
+            variant.sku;
+        }
+
+        if (variant.stock === 0) {
+          optionText +=
+            " | Out of stock";
+        } else {
+          optionText +=
+            " | Stock: " +
+            variant.stock;
+        }
+
+        var option =
+          createVariantOption(
+            variant.index,
+            optionText
+          );
+
+        option.disabled =
+          variant.stock === 0;
+
+        variantSelect.appendChild(
+          option
+        );
+      }
+    );
+
+    variantSelect.disabled =
+      false;
+
+    if (variantField) {
+      variantField.hidden =
+        false;
+    }
+  }
+
+  function findVariantByIndex(
+    variantIndex
+  ) {
+    if (!currentProduct) {
+      return null;
+    }
+
+    return (
+      currentProduct.variants.find(
+        function (variant) {
+          return (
+            variant.index ===
+            variantIndex
+          );
+        }
+      ) ||
+      null
+    );
+  }
+
+  function handleVariantChange() {
+    var variantSelect =
+      getVariantSelect();
+
+    if (
+      !variantSelect ||
+      !currentProduct
+    ) {
+      return;
+    }
+
+    clearProductMessage();
+
+    if (
+      variantSelect.value ===
+      ""
+    ) {
+      selectedVariant =
+        null;
+
+      renderProduct();
+      setAddToCartButtonState();
+
+      return;
+    }
+
+    var selectedIndex =
+      Number(
+        variantSelect.value
+      );
+
+    selectedVariant =
+      findVariantByIndex(
+        selectedIndex
+      );
+
+    if (!selectedVariant) {
+      showProductMessage(
+        "The selected product variant could not be found.",
+        "error"
+      );
+
+      renderProduct();
+      setAddToCartButtonState();
+
+      return;
+    }
+
+    var imageElement =
+      getProductImageElement();
+
+    var priceElement =
+      getProductPriceElement();
+
+    var skuElement =
+      getProductSkuElement();
+
+    if (priceElement) {
+      priceElement.textContent =
+        formatCurrency(
+          selectedVariant.price
+        );
+    }
+
+    if (skuElement) {
+      skuElement.textContent =
+        selectedVariant.sku ||
+        currentProduct.sku ||
+        "Not available";
+    }
+
+    if (imageElement) {
+      imageElement.src =
+        selectedVariant.image ||
+        currentProduct.image;
+
+      imageElement.alt =
+        currentProduct.name +
+        " - " +
+        selectedVariant.name;
+    }
+
+    updateStockDisplay(
+      selectedVariant.stock
+    );
+
+    setAddToCartButtonState();
+  }
+
+  // ==========================================================
+  // STOCK DISPLAY
+  // ==========================================================
+
+  function updateStockDisplay(
+    stock
+  ) {
+    var stockDisplay =
+      getStockDisplayElement();
+
+    if (!stockDisplay) {
+      return;
+    }
+
+    var normalizedStock =
+      normalizeWholeNumber(
+        stock
+      );
+
+    stockDisplay.classList.remove(
+      "stock-normal",
+      "stock-low",
+      "stock-empty"
+    );
+
+    if (normalizedStock === 0) {
+      stockDisplay.textContent =
+        "Out of stock";
+
+      stockDisplay.classList.add(
+        "stock-empty"
+      );
+
+      return;
+    }
+
+    stockDisplay.textContent =
+      "In stock: " +
+      normalizedStock;
+
+    if (normalizedStock <= 5) {
+      stockDisplay.classList.add(
+        "stock-low"
+      );
+    } else {
+      stockDisplay.classList.add(
+        "stock-normal"
       );
     }
-  );
-
-  return validationErrors;
-}
-
-function createValidationError(
-  validationErrors
-) {
-  const error =
-    new Error(
-      validationErrors.join(" ")
-    );
-
-  error.statusCode = 400;
-
-  error.validationErrors =
-    validationErrors;
-
-  return error;
-}
-
-// ============================================================
-// COMMON PRODUCT SELECT
-// ============================================================
-
-const PRODUCT_SELECT = `
-  SELECT
-    products.id,
-    products.name,
-    products.slug,
-    products.sku,
-    products.price,
-    products.stock,
-    products.low_stock_warning,
-    products.category,
-    products.category_id,
-    products.category_slug,
-    products.description,
-    products.image,
-    products.image_public_id,
-    products.variants,
-    products.active,
-    products.created_at,
-    products.updated_at,
-    COALESCE(
-      categories.name,
-      products.category,
-      'General'
-    ) AS category_name
-  FROM products
-  LEFT JOIN categories
-    ON categories.id =
-      products.category_id
-`;
-
-// ============================================================
-// GET PUBLIC PRODUCTS
-// ============================================================
-
-async function getPublicProducts() {
-  const result =
-    await db.query(
-      PRODUCT_SELECT +
-      `
-        WHERE products.active = TRUE
-        ORDER BY
-          products.name ASC
-      `
-    );
-
-  return result.rows.map(
-    formatProduct
-  );
-}
-
-// ============================================================
-// GET ALL PRODUCTS FOR ADMIN
-// ============================================================
-
-async function getAllProducts() {
-  const result =
-    await db.query(
-      PRODUCT_SELECT +
-      `
-        ORDER BY
-          products.name ASC
-      `
-    );
-
-  return result.rows.map(
-    formatProduct
-  );
-}
-
-// ============================================================
-// GET PRODUCT BY ID
-// ============================================================
-
-async function getProductById(
-  productId,
-  includeHidden
-) {
-  const showHidden =
-    includeHidden === true;
-
-  const result =
-    await db.query(
-      PRODUCT_SELECT +
-      `
-        WHERE
-          products.id = $1
-          AND (
-            $2::BOOLEAN = TRUE
-            OR products.active = TRUE
-          )
-        LIMIT 1
-      `,
-      [
-        productId,
-        showHidden
-      ]
-    );
-
-  if (
-    result.rows.length === 0
-  ) {
-    return null;
   }
 
-  return formatProduct(
-    result.rows[0]
-  );
-}
+  // ==========================================================
+  // QUANTITY
+  // ==========================================================
 
-// ============================================================
-// GET PRODUCT BY SKU
-// ============================================================
+  function getRequestedQuantity() {
+    var quantityInput =
+      getQuantityInput();
 
-async function getProductBySku(
-  productSku,
-  includeHidden
-) {
-  const cleanedSku =
-    cleanText(
-      productSku,
-      100
-    );
+    if (!quantityInput) {
+      return 1;
+    }
 
-  const showHidden =
-    includeHidden === true;
-
-  const result =
-    await db.query(
-      PRODUCT_SELECT +
-      `
-        WHERE
-          LOWER(products.sku) =
-            LOWER($1)
-          AND (
-            $2::BOOLEAN = TRUE
-            OR products.active = TRUE
-          )
-        LIMIT 1
-      `,
-      [
-        cleanedSku,
-        showHidden
-      ]
-    );
-
-  if (
-    result.rows.length === 0
-  ) {
-    return null;
-  }
-
-  return formatProduct(
-    result.rows[0]
-  );
-}
-
-// ============================================================
-// GET PRODUCT BY SLUG
-// ============================================================
-
-async function getProductBySlug(
-  productSlug,
-  includeHidden
-) {
-  const cleanedSlug =
-    createSlug(productSlug);
-
-  const showHidden =
-    includeHidden === true;
-
-  const result =
-    await db.query(
-      PRODUCT_SELECT +
-      `
-        WHERE
-          products.slug = $1
-          AND (
-            $2::BOOLEAN = TRUE
-            OR products.active = TRUE
-          )
-        LIMIT 1
-      `,
-      [
-        cleanedSlug,
-        showHidden
-      ]
-    );
-
-  if (
-    result.rows.length === 0
-  ) {
-    return null;
-  }
-
-  return formatProduct(
-    result.rows[0]
-  );
-}
-
-// ============================================================
-// CREATE PRODUCT
-// ============================================================
-
-async function createProduct(
-  productData
-) {
-  const product =
-    normalizeProductInput(
-      productData,
-      {
-        active: true,
-        lowStockWarning: 5,
-        category: "General",
-        variants: []
-      }
-    );
-
-  const validationErrors =
-    validateProduct(product);
-
-  if (
-    validationErrors.length > 0
-  ) {
-    throw createValidationError(
-      validationErrors
-    );
-  }
-
-  const result =
-    await db.query(
-      `
-        INSERT INTO products (
-          name,
-          slug,
-          sku,
-          price,
-          stock,
-          low_stock_warning,
-          category,
-          category_id,
-          category_slug,
-          description,
-          image,
-          image_public_id,
-          variants,
-          active,
-          created_at,
-          updated_at
-        )
-        VALUES (
-          $1,
-          $2,
-          $3,
-          $4,
-          $5,
-          $6,
-          $7,
-          $8,
-          $9,
-          $10,
-          $11,
-          $12,
-          $13::JSONB,
-          $14,
-          NOW(),
-          NOW()
-        )
-        RETURNING
-          id
-      `,
-      [
-        product.name,
-        product.slug,
-        product.sku,
-        product.price,
-        product.stock,
-        product.lowStockWarning,
-        product.category,
-        product.categoryId,
-        product.categorySlug,
-        product.description,
-        product.image,
-        product.imagePublicId,
-        JSON.stringify(
-          product.variants
-        ),
-        product.active
-      ]
-    );
-
-  return getProductById(
-    result.rows[0].id,
-    true
-  );
-}
-
-// ============================================================
-// UPDATE PRODUCT
-// ============================================================
-
-async function updateProduct(
-  productId,
-  productData
-) {
-  const currentProduct =
-    await getProductById(
-      productId,
-      true
-    );
-
-  if (!currentProduct) {
-    return null;
-  }
-
-  const product =
-    normalizeProductInput(
-      productData,
-      currentProduct
-    );
-
-  const validationErrors =
-    validateProduct(product);
-
-  if (
-    validationErrors.length > 0
-  ) {
-    throw createValidationError(
-      validationErrors
-    );
-  }
-
-  const result =
-    await db.query(
-      `
-        UPDATE products
-        SET
-          name = $1,
-          slug = $2,
-          sku = $3,
-          price = $4,
-          stock = $5,
-          low_stock_warning = $6,
-          category = $7,
-          category_id = $8,
-          category_slug = $9,
-          description = $10,
-          image = $11,
-          image_public_id = $12,
-          variants = $13::JSONB,
-          active = $14,
-          updated_at = NOW()
-        WHERE id = $15
-        RETURNING
-          id
-      `,
-      [
-        product.name,
-        product.slug,
-        product.sku,
-        product.price,
-        product.stock,
-        product.lowStockWarning,
-        product.category,
-        product.categoryId,
-        product.categorySlug,
-        product.description,
-        product.image,
-        product.imagePublicId,
-        JSON.stringify(
-          product.variants
-        ),
-        product.active,
-        productId
-      ]
-    );
-
-  if (
-    result.rows.length === 0
-  ) {
-    return null;
-  }
-
-  return getProductById(
-    result.rows[0].id,
-    true
-  );
-}
-
-// ============================================================
-// DELETE PRODUCT
-// ============================================================
-
-async function deleteProduct(
-  productId
-) {
-  const existingProduct =
-    await getProductById(
-      productId,
-      true
-    );
-
-  if (!existingProduct) {
-    return null;
-  }
-
-  const result =
-    await db.query(
-      `
-        DELETE FROM products
-        WHERE id = $1
-        RETURNING
-          id
-      `,
-      [
-        productId
-      ]
-    );
-
-  if (
-    result.rows.length === 0
-  ) {
-    return null;
-  }
-
-  return existingProduct;
-}
-
-// ============================================================
-// UPDATE PRODUCT STOCK
-// ============================================================
-
-async function updateProductStock(
-  productId,
-  stock
-) {
-  const cleanedStock =
-    cleanWholeNumber(
-      stock,
-      0
-    );
-
-  const result =
-    await db.query(
-      `
-        UPDATE products
-        SET
-          stock = $1,
-          updated_at = NOW()
-        WHERE id = $2
-        RETURNING
-          id
-      `,
-      [
-        cleanedStock,
-        productId
-      ]
-    );
-
-  if (
-    result.rows.length === 0
-  ) {
-    return null;
-  }
-
-  return getProductById(
-    result.rows[0].id,
-    true
-  );
-}
-
-// ============================================================
-// UPDATE VARIANT STOCK
-// ============================================================
-
-async function updateVariantStock(
-  productId,
-  variantIndex,
-  stock
-) {
-  const product =
-    await getProductById(
-      productId,
-      true
-    );
-
-  if (!product) {
-    return null;
-  }
-
-  const cleanedVariantIndex =
-    Number(variantIndex);
-
-  if (
-    !Number.isInteger(
-      cleanedVariantIndex
-    ) ||
-    cleanedVariantIndex < 0 ||
-    cleanedVariantIndex >=
-      product.variants.length
-  ) {
-    const error =
-      new Error(
-        "The selected product variant was not found."
+    var quantity =
+      Number(
+        quantityInput.value
       );
 
-    error.statusCode = 404;
+    if (
+      !Number.isInteger(quantity) ||
+      quantity < 1
+    ) {
+      showProductMessage(
+        "Quantity must be a whole number of 1 or higher.",
+        "error"
+      );
 
-    throw error;
+      quantityInput.focus();
+
+      return null;
+    }
+
+    return quantity;
   }
 
-  product.variants[
-    cleanedVariantIndex
-  ].stock =
-    cleanWholeNumber(
-      stock,
-      0
+  // ==========================================================
+  // CART STORAGE
+  // ==========================================================
+
+  function loadCart() {
+    try {
+      var savedCart =
+        localStorage.getItem(
+          CART_STORAGE_KEY
+        );
+
+      if (!savedCart) {
+        return [];
+      }
+
+      var parsedCart =
+        JSON.parse(
+          savedCart
+        );
+
+      return Array.isArray(
+        parsedCart
+      )
+        ? parsedCart
+        : [];
+    } catch (error) {
+      console.error(
+        "The shopping cart could not be loaded:",
+        error
+      );
+
+      return [];
+    }
+  }
+
+  function saveCart(
+    cart
+  ) {
+    localStorage.setItem(
+      CART_STORAGE_KEY,
+      JSON.stringify(
+        cart
+      )
     );
 
-  const result =
-    await db.query(
-      `
-        UPDATE products
-        SET
-          variants = $1::JSONB,
-          updated_at = NOW()
-        WHERE id = $2
-        RETURNING
-          id
-      `,
-      [
-        JSON.stringify(
-          product.variants
-        ),
-        productId
-      ]
+    document.dispatchEvent(
+      new CustomEvent(
+        "cartUpdated",
+        {
+          detail: {
+            cart:
+              cart
+          }
+        }
+      )
     );
+
+    window.dispatchEvent(
+      new CustomEvent(
+        "mmc-cart-updated",
+        {
+          detail: {
+            cart:
+              cart
+          }
+        }
+      )
+    );
+
+    if (
+      typeof window.renderCart ===
+      "function"
+    ) {
+      window.renderCart();
+    }
+  }
+
+  // ==========================================================
+  // CART ITEM MATCHING
+  // ==========================================================
+
+  function cartItemMatches(
+    cartItem,
+    productId,
+    variantIndex
+  ) {
+    var cartProductId =
+      String(
+        cartItem.productId ||
+        cartItem.id ||
+        ""
+      );
+
+    var cartVariantIndex =
+      cartItem.variantIndex;
+
+    if (
+      cartVariantIndex ===
+        undefined ||
+      cartVariantIndex ===
+        null ||
+      cartVariantIndex ===
+        ""
+    ) {
+      cartVariantIndex =
+        null;
+    } else {
+      cartVariantIndex =
+        Number(
+          cartVariantIndex
+        );
+    }
+
+    return (
+      cartProductId ===
+        String(productId) &&
+      cartVariantIndex ===
+        variantIndex
+    );
+  }
+
+  // ==========================================================
+  // ADD TO CART
+  // ==========================================================
+
+  function addToCart() {
+    if (!currentProduct) {
+      showProductMessage(
+        "The product is not available yet.",
+        "error"
+      );
+
+      return;
+    }
+
+    if (
+      currentProduct.variants.length >
+        0 &&
+      !selectedVariant
+    ) {
+      showProductMessage(
+        "Select a product variant before adding this item to your cart.",
+        "error"
+      );
+
+      var variantSelect =
+        getVariantSelect();
+
+      if (variantSelect) {
+        variantSelect.focus();
+      }
+
+      return;
+    }
+
+    var quantity =
+      getRequestedQuantity();
+
+    if (quantity === null) {
+      return;
+    }
+
+    var availableStock =
+      selectedVariant
+        ? selectedVariant.stock
+        : currentProduct.stock;
+
+    if (availableStock <= 0) {
+      showProductMessage(
+        "This product selection is currently out of stock.",
+        "error"
+      );
+
+      return;
+    }
+
+    if (quantity > availableStock) {
+      showProductMessage(
+        "Only " +
+        availableStock +
+        " item(s) are currently available.",
+        "error"
+      );
+
+      return;
+    }
+
+    var variantIndex =
+      selectedVariant
+        ? selectedVariant.index
+        : null;
+
+    var cart =
+      loadCart();
+
+    var existingCartItem =
+      cart.find(
+        function (cartItem) {
+          return cartItemMatches(
+            cartItem,
+            currentProduct.id,
+            variantIndex
+          );
+        }
+      );
+
+    if (existingCartItem) {
+      var existingQuantity =
+        normalizeWholeNumber(
+          existingCartItem.quantity ||
+          1
+        );
+
+      var combinedQuantity =
+        existingQuantity +
+        quantity;
+
+      if (
+        combinedQuantity >
+        availableStock
+      ) {
+        showProductMessage(
+          "Your cart already contains this selection. Adding that quantity would exceed the available stock.",
+          "error"
+        );
+
+        return;
+      }
+
+      existingCartItem.quantity =
+        combinedQuantity;
+    } else {
+      cart.push({
+        id:
+          currentProduct.id,
+
+        productId:
+          currentProduct.id,
+
+        name:
+          currentProduct.name,
+
+        price:
+          selectedVariant
+            ? selectedVariant.price
+            : currentProduct.price,
+
+        sku:
+          selectedVariant
+            ? selectedVariant.sku
+            : currentProduct.sku,
+
+        image:
+          selectedVariant &&
+          selectedVariant.image
+            ? selectedVariant.image
+            : currentProduct.image,
+
+        quantity:
+          quantity,
+
+        variantIndex:
+          variantIndex,
+
+        variantId:
+          selectedVariant
+            ? selectedVariant.id
+            : "",
+
+        variantName:
+          selectedVariant
+            ? selectedVariant.name
+            : ""
+      });
+    }
+
+    saveCart(
+      cart
+    );
+
+    showProductMessage(
+      currentProduct.name +
+      (
+        selectedVariant
+          ? " - " +
+            selectedVariant.name
+          : ""
+      ) +
+      " was added to your cart.",
+      "success"
+    );
+
+    setAddToCartButtonState();
+  }
+
+  // ==========================================================
+  // ADD-TO-CART BUTTON STATE
+  // ==========================================================
+
+  function setAddToCartButtonState() {
+    var addToCartButton =
+      getAddToCartButton();
+
+    if (!addToCartButton) {
+      return;
+    }
+
+    if (!currentProduct) {
+      addToCartButton.disabled =
+        true;
+
+      addToCartButton.textContent =
+        "Product Unavailable";
+
+      return;
+    }
+
+    if (
+      currentProduct.variants.length >
+        0 &&
+      !selectedVariant
+    ) {
+      addToCartButton.disabled =
+        false;
+
+      addToCartButton.textContent =
+        "Select a Variant";
+      
+      return;
+    }
+
+    var availableStock =
+      selectedVariant
+        ? selectedVariant.stock
+        : currentProduct.stock;
+
+    if (availableStock <= 0) {
+      addToCartButton.disabled =
+        true;
+
+      addToCartButton.textContent =
+        "Out of Stock";
+
+      return;
+    }
+
+    addToCartButton.disabled =
+      false;
+
+    addToCartButton.textContent =
+      "Add to Cart";
+  }
+
+  // ==========================================================
+  // PAGE INITIALIZATION
+  // ==========================================================
+
+  function initializeProductPage() {
+    var variantSelect =
+      getVariantSelect();
+
+    var addToCartButton =
+      getAddToCartButton();
+
+    if (variantSelect) {
+      variantSelect.addEventListener(
+        "change",
+        handleVariantChange
+      );
+    }
+
+    if (addToCartButton) {
+      addToCartButton.addEventListener(
+        "click",
+        addToCart
+      );
+    }
+
+    setAddToCartButtonState();
+
+    var productId =
+      getProductIdFromUrl();
+
+    loadProduct(
+      productId
+    );
+
+    console.log(
+      "MMC product page initialized."
+    );
+
+    console.log(
+      "Product backend URL:",
+      BACKEND_URL
+    );
+  }
+
+  // ==========================================================
+  // STARTUP
+  // ==========================================================
 
   if (
-    result.rows.length === 0
+    document.readyState ===
+    "loading"
   ) {
-    return null;
+    document.addEventListener(
+      "DOMContentLoaded",
+      initializeProductPage
+    );
+  } else {
+    initializeProductPage();
   }
 
-  return getProductById(
-    productId,
-    true
-  );
-}
+  // ==========================================================
+  // GLOBAL SUPPORT
+  // ==========================================================
 
-// ============================================================
-// SEARCH PRODUCTS
-// ============================================================
+  window.loadProduct =
+    loadProduct;
 
-async function searchProducts(
-  searchText,
-  includeHidden
-) {
-  const cleanedSearch =
-    cleanText(
-      searchText,
-      250
-    );
-
-  if (!cleanedSearch) {
-    return includeHidden
-      ? getAllProducts()
-      : getPublicProducts();
-  }
-
-  const searchValue =
-    "%" +
-    cleanedSearch +
-    "%";
-
-  const showHidden =
-    includeHidden === true;
-
-  const result =
-    await db.query(
-      PRODUCT_SELECT +
-      `
-        WHERE
-          (
-            products.name ILIKE $1
-            OR products.sku ILIKE $1
-            OR products.category ILIKE $1
-            OR products.description ILIKE $1
-          )
-          AND (
-            $2::BOOLEAN = TRUE
-            OR products.active = TRUE
-          )
-        ORDER BY
-          products.name ASC
-      `,
-      [
-        searchValue,
-        showHidden
-      ]
-    );
-
-  return result.rows.map(
-    formatProduct
-  );
-}
-
-// ============================================================
-// CHECK FOR DUPLICATE SKU
-// ============================================================
-
-async function productSkuExists(
-  productSku,
-  excludedProductId
-) {
-  const cleanedSku =
-    cleanText(
-      productSku,
-      100
-    );
-
-  const excludedId =
-    excludedProductId || null;
-
-  const result =
-    await db.query(
-      `
-        SELECT id
-        FROM products
-        WHERE
-          LOWER(sku) =
-            LOWER($1)
-          AND (
-            $2::BIGINT IS NULL
-            OR id <> $2
-          )
-        LIMIT 1
-      `,
-      [
-        cleanedSku,
-        excludedId
-      ]
-    );
-
-  return (
-    result.rows.length > 0
-  );
-}
-
-// ============================================================
-// COUNT PRODUCTS
-// ============================================================
-
-async function countProducts() {
-  const result =
-    await db.query(
-      `
-        SELECT
-          COUNT(*)::INTEGER
-            AS product_count
-        FROM products
-      `
-    );
-
-  return Number(
-    result.rows[0]
-      .product_count || 0
-  );
-}
-
-// ============================================================
-// COUNT ACTIVE PRODUCTS
-// ============================================================
-
-async function countActiveProducts() {
-  const result =
-    await db.query(
-      `
-        SELECT
-          COUNT(*)::INTEGER
-            AS product_count
-        FROM products
-        WHERE active = TRUE
-      `
-    );
-
-  return Number(
-    result.rows[0]
-      .product_count || 0
-  );
-}
-
-// ============================================================
-// EXPORT PRODUCT MODEL
-// ============================================================
-
-module.exports = {
-  cleanText:
-    cleanText,
-
-  createSlug:
-    createSlug,
-
-  normalizeVariant:
-    normalizeVariant,
-
-  normalizeVariants:
-    normalizeVariants,
-
-  normalizeProductInput:
-    normalizeProductInput,
-
-  validateProduct:
-    validateProduct,
-
-  formatProduct:
-    formatProduct,
-
-  getPublicProducts:
-    getPublicProducts,
-
-  getAllProducts:
-    getAllProducts,
-
-  getProductById:
-    getProductById,
-
-  getProductBySku:
-    getProductBySku,
-
-  getProductBySlug:
-    getProductBySlug,
-
-  createProduct:
-    createProduct,
-
-  updateProduct:
-    updateProduct,
-
-  deleteProduct:
-    deleteProduct,
-
-  updateProductStock:
-    updateProductStock,
-
-  updateVariantStock:
-    updateVariantStock,
-
-  searchProducts:
-    searchProducts,
-
-  productSkuExists:
-    productSkuExists,
-
-  countProducts:
-    countProducts,
-
-  countActiveProducts:
-    countActiveProducts
-};
+  window.addToCart =
+    addToCart;
+}());

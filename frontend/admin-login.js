@@ -3,8 +3,9 @@
 // FILE: admin-login.js
 // ADMINISTRATOR LOGIN
 //
-// Frontend: HTML + JavaScript
-// Backend: Express + Neon PostgreSQL
+// Frontend hosting: Vercel
+// Backend: Express on Vercel
+// Database: Neon PostgreSQL
 // Authentication: JWT
 // ============================================================
 
@@ -24,14 +25,17 @@
   var ADMIN_USER_KEY =
     "adminUser";
 
+  var BACKEND_URL_STORAGE_KEY =
+    "MMC_BACKEND_URL";
+
+  var REQUEST_TIMEOUT_MILLISECONDS =
+    15000;
+
   var LEGACY_TOKEN_KEYS = [
     "MMC_ADMIN_TOKEN",
     "admin_token",
     "token"
   ];
-
-  var REQUEST_TIMEOUT_MILLISECONDS =
-    15000;
 
   // ==========================================================
   // BACKEND URL
@@ -50,14 +54,15 @@
 
   function getBackendUrl() {
     /*
-     * Preferred option:
-     *
-     * Define window.MMC_BACKEND_URL in admin-login.html before
-     * loading this file.
+     * Production:
+     * config.js sets window.MMC_BACKEND_URL to the public
+     * Vercel backend address.
      */
 
     if (
-      window.MMC_BACKEND_URL
+      typeof window.MMC_BACKEND_URL ===
+        "string" &&
+      window.MMC_BACKEND_URL.trim()
     ) {
       return removeTrailingSlashes(
         window.MMC_BACKEND_URL
@@ -65,25 +70,28 @@
     }
 
     /*
-     * Optional saved backend URL.
-     *
-     * This is useful while working in GitHub Codespaces.
+     * Optional localStorage override for temporary testing.
      */
 
     var savedBackendUrl =
       localStorage.getItem(
-        "MMC_BACKEND_URL"
+        BACKEND_URL_STORAGE_KEY
       );
 
-    if (savedBackendUrl) {
+    if (
+      typeof savedBackendUrl ===
+        "string" &&
+      savedBackendUrl.trim()
+    ) {
       return removeTrailingSlashes(
         savedBackendUrl
       );
     }
 
     /*
-     * During local development, the frontend normally runs on
-     * port 3000 and the backend normally runs on port 10000.
+     * Local development:
+     * Frontend normally uses port 3000.
+     * Backend normally uses port 10000.
      */
 
     if (
@@ -101,8 +109,8 @@
     }
 
     /*
-     * If frontend and backend are deployed together under one
-     * domain, the current website origin is the correct value.
+     * This fallback supports a same-domain deployment.
+     * Separate Vercel projects should use config.js instead.
      */
 
     return removeTrailingSlashes(
@@ -113,11 +121,25 @@
   var BACKEND_URL =
     getBackendUrl();
 
+  var ADMIN_LOGIN_URL =
+    BACKEND_URL +
+    "/admin/login";
+
+  var ADMIN_SESSION_URL =
+    BACKEND_URL +
+    "/admin/me";
+
+  var HEALTH_URL =
+    BACKEND_URL +
+    "/health";
+
   // ==========================================================
   // ELEMENT HELPERS
   // ==========================================================
 
-  function getElement(elementId) {
+  function getElement(
+    elementId
+  ) {
     return document.getElementById(
       elementId
     );
@@ -193,6 +215,168 @@
     ]);
   }
 
+  function getPasswordVisibilityButton() {
+    return getFirstAvailableElement([
+      "password-visibility-button",
+      "passwordVisibilityButton",
+      "show-password-button"
+    ]);
+  }
+
+  // ==========================================================
+  // ERROR MESSAGE NORMALIZATION
+  // ==========================================================
+
+  function normalizeErrorMessage(
+    errorValue,
+    fallbackMessage
+  ) {
+    var fallback =
+      String(
+        fallbackMessage || ""
+      ).trim();
+
+    if (
+      typeof errorValue ===
+      "string"
+    ) {
+      return (
+        errorValue.trim() ||
+        fallback
+      );
+    }
+
+    if (
+      typeof errorValue ===
+        "number" ||
+      typeof errorValue ===
+        "boolean"
+    ) {
+      return String(
+        errorValue
+      );
+    }
+
+    if (
+      Array.isArray(
+        errorValue
+      )
+    ) {
+      var arrayMessages =
+        errorValue
+          .map(
+            function (item) {
+              return normalizeErrorMessage(
+                item,
+                ""
+              );
+            }
+          )
+          .filter(Boolean);
+
+      return (
+        arrayMessages.join(" ") ||
+        fallback
+      );
+    }
+
+    if (
+      errorValue &&
+      typeof errorValue ===
+        "object"
+    ) {
+      if (
+        typeof errorValue.message ===
+          "string" &&
+        errorValue.message.trim()
+      ) {
+        return errorValue.message
+          .trim();
+      }
+
+      if (
+        errorValue.error !==
+        undefined
+      ) {
+        var nestedErrorMessage =
+          normalizeErrorMessage(
+            errorValue.error,
+            ""
+          );
+
+        if (nestedErrorMessage) {
+          return nestedErrorMessage;
+        }
+      }
+
+      if (
+        errorValue
+          .validationErrors !==
+        undefined
+      ) {
+        var validationMessage =
+          normalizeErrorMessage(
+            errorValue
+              .validationErrors,
+            ""
+          );
+
+        if (validationMessage) {
+          return validationMessage;
+        }
+      }
+
+      if (
+        errorValue.errors !==
+        undefined
+      ) {
+        var errorsMessage =
+          normalizeErrorMessage(
+            errorValue.errors,
+            ""
+          );
+
+        if (errorsMessage) {
+          return errorsMessage;
+        }
+      }
+
+      var objectMessages =
+        Object.keys(
+          errorValue
+        )
+          .filter(
+            function (key) {
+              return (
+                key !== "code" &&
+                key !== "status" &&
+                key !== "statusCode" &&
+                key !== "stack"
+              );
+            }
+          )
+          .map(
+            function (key) {
+              return normalizeErrorMessage(
+                errorValue[key],
+                ""
+              );
+            }
+          )
+          .filter(Boolean);
+
+      if (
+        objectMessages.length > 0
+      ) {
+        return objectMessages.join(
+          " "
+        );
+      }
+    }
+
+    return fallback;
+  }
+
   // ==========================================================
   // MESSAGE DISPLAY
   // ==========================================================
@@ -227,14 +411,14 @@
     message,
     messageType
   ) {
-    var messageElement =
-      getLoginMessageElement();
-
     var normalizedMessage =
-      String(
-        message ||
+      normalizeErrorMessage(
+        message,
         ""
       );
+
+    var messageElement =
+      getLoginMessageElement();
 
     if (!messageElement) {
       if (
@@ -261,6 +445,18 @@
       "login-success",
       "login-information"
     );
+
+    if (!normalizedMessage) {
+      messageElement.removeAttribute(
+        "role"
+      );
+
+      messageElement.removeAttribute(
+        "aria-label"
+      );
+
+      return;
+    }
 
     if (
       messageType ===
@@ -325,7 +521,7 @@
     }
 
     button.disabled =
-      loading;
+      Boolean(loading);
 
     button.setAttribute(
       "aria-disabled",
@@ -467,21 +663,35 @@
     }
 
     try {
-      return JSON.parse(
-        responseText
-      );
+      var parsedResponse =
+        JSON.parse(
+          responseText
+        );
+
+      if (
+        parsedResponse &&
+        typeof parsedResponse ===
+          "object"
+      ) {
+        return parsedResponse;
+      }
+
+      return {
+        message:
+          String(
+            parsedResponse
+          )
+      };
     } catch (error) {
       return {
         error:
-          response.ok
-            ? "The server returned an unexpected response."
-            : responseText
+          responseText
       };
     }
   }
 
   // ==========================================================
-  // ERROR MESSAGE HELPER
+  // REQUEST ERROR MESSAGE
   // ==========================================================
 
   function getRequestErrorMessage(
@@ -494,7 +704,7 @@
     ) {
       return (
         "The login request took too long. " +
-        "Make sure the backend is running and try again."
+        "Make sure the backend is available and try again."
       );
     }
 
@@ -504,20 +714,18 @@
     ) {
       return (
         "The login server could not be reached. " +
-        "Check the backend URL, CORS settings, and server status."
+        "Check the Vercel backend URL and CORS settings."
       );
     }
 
-    return (
-      error &&
-      error.message
-        ? error.message
-        : "Administrator login failed."
+    return normalizeErrorMessage(
+      error,
+      "Administrator login failed."
     );
   }
 
   // ==========================================================
-  // REDIRECT TO DASHBOARD
+  // DASHBOARD REDIRECTION
   // ==========================================================
 
   function redirectToDashboard(
@@ -534,10 +742,80 @@
   }
 
   // ==========================================================
+  // PASSWORD VISIBILITY
+  // ==========================================================
+
+  function togglePasswordVisibility() {
+    var passwordInput =
+      getPasswordInput();
+
+    var visibilityButton =
+      getPasswordVisibilityButton();
+
+    if (
+      !passwordInput ||
+      !visibilityButton
+    ) {
+      return;
+    }
+
+    var passwordIsVisible =
+      passwordInput.type ===
+      "text";
+
+    passwordInput.type =
+      passwordIsVisible
+        ? "password"
+        : "text";
+
+    visibilityButton.textContent =
+      passwordIsVisible
+        ? "Show"
+        : "Hide";
+
+    visibilityButton.setAttribute(
+      "aria-pressed",
+      passwordIsVisible
+        ? "false"
+        : "true"
+    );
+
+    passwordInput.focus();
+  }
+
+  function configurePasswordVisibility() {
+    var visibilityButton =
+      getPasswordVisibilityButton();
+
+    if (!visibilityButton) {
+      return;
+    }
+
+    if (
+      visibilityButton.dataset
+        .visibilityConnected ===
+      "true"
+    ) {
+      return;
+    }
+
+    visibilityButton.dataset
+      .visibilityConnected =
+      "true";
+
+    visibilityButton.addEventListener(
+      "click",
+      togglePasswordVisibility
+    );
+  }
+
+  // ==========================================================
   // ADMINISTRATOR LOGIN
   // ==========================================================
 
-  async function adminLogin(event) {
+  async function adminLogin(
+    event
+  ) {
     if (event) {
       event.preventDefault();
     }
@@ -578,7 +856,7 @@
 
     if (!username) {
       showLoginMessage(
-        "Please enter your username.",
+        "Please enter your administrator username.",
         "error"
       );
 
@@ -589,7 +867,7 @@
 
     if (!password) {
       showLoginMessage(
-        "Please enter your password.",
+        "Please enter your administrator password.",
         "error"
       );
 
@@ -608,8 +886,7 @@
 
       var response =
         await fetchWithTimeout(
-          BACKEND_URL +
-          "/admin/login",
+          ADMIN_LOGIN_URL,
           {
             method:
               "POST",
@@ -639,33 +916,54 @@
         );
 
       if (!response.ok) {
+        var loginErrorMessage =
+          normalizeErrorMessage(
+            responseData.error ||
+            responseData.message ||
+            responseData,
+            response.status === 401 ||
+            response.status === 403
+              ? "The username or password is incorrect."
+              : "Administrator login failed."
+          );
+
         var loginError =
           new Error(
-            responseData.error ||
-            "The username or password is incorrect."
+            loginErrorMessage
           );
 
         loginError.code =
           responseData.code ||
           "ADMIN_LOGIN_FAILED";
 
+        loginError.status =
+          response.status;
+
         throw loginError;
       }
 
-      if (!responseData.token) {
+      if (
+        typeof responseData.token !==
+          "string" ||
+        !responseData.token.trim()
+      ) {
         throw new Error(
           "The backend did not provide an administrator token."
         );
       }
 
-      if (!responseData.admin) {
+      if (
+        !responseData.admin ||
+        typeof responseData.admin !==
+          "object"
+      ) {
         throw new Error(
-          "The backend did not provide the administrator account information."
+          "The backend did not provide administrator account information."
         );
       }
 
       saveAdminLogin(
-        responseData.token,
+        responseData.token.trim(),
         responseData.admin
       );
 
@@ -710,8 +1008,11 @@
     var savedToken =
       getSavedAdminToken();
 
-    if (!savedToken) {
-      return;
+    if (
+      !savedToken ||
+      !String(savedToken).trim()
+    ) {
+      return false;
     }
 
     showLoginMessage(
@@ -722,8 +1023,7 @@
     try {
       var response =
         await fetchWithTimeout(
-          BACKEND_URL +
-          "/admin/me",
+          ADMIN_SESSION_URL,
           {
             method:
               "GET",
@@ -749,26 +1049,32 @@
         response.status === 403
       ) {
         clearSavedAdminLogin();
-
         clearLoginMessage();
 
-        return;
+        return false;
       }
 
       if (!response.ok) {
+        console.warn(
+          "Administrator session check returned status:",
+          response.status,
+          responseData
+        );
+
         clearLoginMessage();
 
-        return;
+        return false;
       }
 
       if (
-        !responseData.admin
+        !responseData.admin ||
+        typeof responseData.admin !==
+          "object"
       ) {
         clearSavedAdminLogin();
-
         clearLoginMessage();
 
-        return;
+        return false;
       }
 
       localStorage.setItem(
@@ -786,6 +1092,8 @@
       redirectToDashboard(
         500
       );
+
+      return true;
     } catch (error) {
       console.warn(
         "Existing administrator session check failed:",
@@ -793,11 +1101,14 @@
       );
 
       /*
-       * Do not remove the saved token for a temporary network
-       * error. Only confirmed 401 or 403 responses erase it.
+       * Keep the token after a temporary connection problem.
+       * Remove the token only after a confirmed unauthorized
+       * response.
        */
 
       clearLoginMessage();
+
+      return false;
     }
   }
 
@@ -809,8 +1120,7 @@
     try {
       var response =
         await fetchWithTimeout(
-          BACKEND_URL +
-          "/health",
+          HEALTH_URL,
           {
             method:
               "GET",
@@ -824,7 +1134,8 @@
 
       if (!response.ok) {
         console.warn(
-          "The MMC backend health check did not return a successful status."
+          "Backend health check returned status:",
+          response.status
         );
 
         return false;
@@ -833,7 +1144,7 @@
       return true;
     } catch (error) {
       console.warn(
-        "The MMC backend health check could not be completed:",
+        "Backend health check failed:",
         error
       );
 
@@ -855,16 +1166,14 @@
     var usernameInput =
       getUsernameInput();
 
+    configurePasswordVisibility();
+
     if (loginForm) {
       loginForm.addEventListener(
         "submit",
         adminLogin
       );
     } else if (loginButton) {
-      /*
-       * Fallback for older HTML files that do not use a form.
-       */
-
       loginButton.addEventListener(
         "click",
         adminLogin
@@ -890,12 +1199,26 @@
       BACKEND_URL
     );
 
+    if (
+      !BACKEND_URL ||
+      BACKEND_URL.includes(
+        "YOUR-BACKEND-PROJECT"
+      )
+    ) {
+      showLoginMessage(
+        "The Vercel backend URL has not been configured in config.js.",
+        "error"
+      );
+
+      return;
+    }
+
     var backendAvailable =
       await checkBackendStatus();
 
     if (!backendAvailable) {
       showLoginMessage(
-        "The backend could not be reached. You may still try to log in after confirming the backend is running.",
+        "The backend could not be reached. Confirm that the Vercel backend deployment is available and that config.js contains the correct backend URL.",
         "information"
       );
     }
@@ -931,4 +1254,11 @@
 
   window.checkExistingAdminLogin =
     checkExistingAdminLogin;
+
+  window.checkAdminBackendStatus =
+    checkBackendStatus;
+
+  window.toggleAdminPasswordVisibility =
+    togglePasswordVisibility;
 }());
+``

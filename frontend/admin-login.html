@@ -27,7 +27,6 @@
     Administrator Login | Multi-Maniacs Customs LLC
   </title>
 
-  <!-- Main MMC website theme -->
   <link
     rel="stylesheet"
     href="style.css"
@@ -38,157 +37,31 @@
        MMC ADMINISTRATOR LOGIN PAGE
        ======================================================== */
 
-    :root {
-      --admin-black: #000000;
-      --admin-near-black: #111111;
-      --admin-panel: rgba(255, 255, 255, 0.96);
-      --admin-white: #ffffff;
-      --admin-text: #111111;
-      --admin-muted: #4a4a4a;
-      --admin-border: #000000;
-      --admin-pink: #ff1493;
-      --admin-purple: #8a00ff;
-      --admin-blue: #007bff;
-      --admin-cyan: #00eaff;
-      --admin-green: #34e600;
-      --admin-yellow: #ffe600;
-      --admin-orange: #ff7a00;
-      --admin-danger: #b00020;
-      --admin-success: #126b22;
-      --admin-information: #004e87;
-    }
-
     .admin-login-page {
       display: flex;
       min-height: 100vh;
       flex-direction: column;
       margin: 0;
-      color: var(--admin-text);
-    }
-
-    .admin-login-header {
-      width: 100%;
-      padding: 16px 20px;
-      color: var(--admin-white);
-      background: var(--admin-black);
-      border-bottom: 4px solid transparent;
-      border-image:
-        linear-gradient(
-          90deg,
-          var(--admin-pink),
-          var(--admin-purple),
-          var(--admin-cyan),
-          var(--admin-green),
-          var(--admin-yellow),
-          var(--admin-orange),
-          var(--admin-pink)
-        )
-        1;
-      box-shadow:
-        0 8px 24px rgba(0, 0, 0, 0.4);
-    }
-
-    .admin-login-header-content {
-      display: flex;
-      width: 100%;
-      max-width: 1100px;
-      align-items: center;
-      justify-content: space-between;
-      gap: 18px;
-      margin: 0 auto;
-    }
-
-    .admin-login-brand {
-      display: flex;
-      align-items: center;
-      gap: 14px;
-      color: var(--admin-white);
-      text-decoration: none;
-    }
-
-    .admin-login-header-logo {
-      display: block;
-      width: 72px;
-      height: 72px;
-      object-fit: contain;
-      border-radius: 50%;
-      filter:
-        drop-shadow(
-          0 0 7px rgba(255, 20, 147, 0.8)
-        )
-        drop-shadow(
-          0 0 10px rgba(0, 234, 255, 0.5)
-        );
-    }
-
-    .admin-login-brand-text {
-      min-width: 0;
-    }
-
-    .admin-login-company-name {
-      margin: 0;
-      color: var(--admin-white);
-      font-size: clamp(19px, 4vw, 27px);
-      line-height: 1.2;
-    }
-
-    .admin-login-company-tagline {
-      margin: 5px 0 0;
-      color: #d4d4d4;
-      font-size: 14px;
-    }
-
-    .admin-home-link {
-      display: inline-flex;
-      min-height: 42px;
-      align-items: center;
-      justify-content: center;
-      padding: 9px 15px;
-      color: var(--admin-white);
-      background: #1e1e1e;
-      border: 1px solid #666666;
-      border-radius: 8px;
-      font-weight: 700;
-      text-decoration: none;
-      transition:
-        color 0.2s ease,
-        background 0.2s ease,
-        transform 0.2s ease,
-        box-shadow 0.2s ease;
-    }
-
-    .admin-home-link:hover,
-    .admin-home-link:focus {
-      color: var(--admin-black);
-      background:
-        linear-gradient(
-          135deg,
-          var(--admin-pink),
-          var(--admin-yellow),
-          var(--admin-green),
-          var(--admin-cyan)
-        );
-      box-shadow:
-        0 0 14px rgba(255, 20, 147, 0.6);
-      transform: translateY(-1px);
     }
 
     .admin-login-main {
       display: flex;
-      width: 100%;
+      width: calc(100% - 32px);
+      max-width: 1200px;
       flex: 1;
       align-items: center;
       justify-content: center;
-      padding: 42px 20px;
+      margin: 34px auto;
+      padding: 20px 0;
     }
 
     .admin-login-container {
       width: 100%;
-      max-width: 500px;
+      max-width: 520px;
       overflow: hidden;
-      color: var(--admin-text);
-      background: var(--admin-panel);
-      border: 3px solid var(--admin-border);
+      color: var(--mmc-black, #000000);
+      background: rgba(255, 255, 255, 0.96);
+      border: 3px solid var(--mmc-black, #000000);
       border-radius: 18px;
       box-shadow:
         0 22px 55px rgba(0, 0, 0, 0.45),
@@ -202,14 +75,14 @@
       background:
         linear-gradient(
           90deg,
-          var(--admin-pink),
-          var(--admin-purple),
-          var(--admin-blue),
-          var(--admin-cyan),
-          var(--admin-green),
-          var(--admin-yellow),
-          var(--admin-orange),
-          var(--admin-pink)
+          var(--mmc-hot-pink, #ff1493),
+          var(--mmc-purple, #8a00ff),
+          var(--mmc-blue, #007bff),
+          var(--mmc-cyan, #00eaff),
+          var(--mmc-green, #34e600),
+          var(--mmc-yellow, #ffe600),
+          var(--mmc-orange, #ff7a00),
+          var(--mmc-hot-pink, #ff1493)
         );
     }
 
@@ -226,8 +99,8 @@
       width: 125px;
       height: 125px;
       margin: 0 auto 16px;
-      object-fit: contain;
       border-radius: 50%;
+      object-fit: contain;
       filter:
         drop-shadow(
           0 0 8px rgba(255, 20, 147, 0.75)
@@ -241,23 +114,23 @@
       margin: 0 0 6px;
       color: #6f0078;
       font-size: 13px;
-      font-weight: 800;
+      font-weight: 900;
       letter-spacing: 0.1em;
       text-transform: uppercase;
     }
 
     .admin-login-heading {
       margin: 0;
-      color: var(--admin-black);
+      color: var(--mmc-black, #000000);
       font-size: clamp(28px, 6vw, 38px);
       line-height: 1.15;
     }
 
     .admin-login-description {
-      max-width: 390px;
+      max-width: 410px;
       margin: 12px auto 26px;
-      color: var(--admin-muted);
-      line-height: 1.6;
+      color: var(--mmc-muted-text, #333333);
+      line-height: 1.65;
     }
 
     .admin-login-form {
@@ -271,7 +144,7 @@
     .admin-login-form label {
       display: block;
       margin-bottom: 7px;
-      color: var(--admin-black);
+      color: var(--mmc-black, #000000);
       font-weight: 800;
     }
 
@@ -279,16 +152,16 @@
       width: 100%;
       min-height: 50px;
       padding: 11px 13px;
-      color: var(--admin-black);
-      background: var(--admin-white);
-      border: 2px solid var(--admin-black);
+      color: var(--mmc-black, #000000);
+      background: var(--mmc-white, #ffffff);
+      border: 2px solid var(--mmc-black, #000000);
       border-radius: 9px;
       font: inherit;
     }
 
     .admin-login-form input:focus {
       outline: none;
-      border-color: var(--admin-purple);
+      border-color: var(--mmc-purple, #8a00ff);
       box-shadow:
         0 0 0 4px rgba(138, 0, 255, 0.2),
         0 0 12px rgba(0, 234, 255, 0.35);
@@ -308,23 +181,23 @@
       right: 8px;
       min-height: 36px;
       padding: 6px 11px;
-      border: 2px solid var(--admin-black);
+      color: var(--mmc-white, #ffffff);
+      background: var(--mmc-black, #000000);
+      border: 2px solid var(--mmc-black, #000000);
       border-radius: 7px;
-      color: var(--admin-white);
-      background: var(--admin-black);
       font-size: 13px;
       font-weight: 800;
       cursor: pointer;
-      transform: translateY(-50%);
       box-shadow: none;
+      transform: translateY(-50%);
     }
 
     .password-visibility-button:hover,
     .password-visibility-button:focus {
-      color: var(--admin-black);
-      background: var(--admin-cyan);
-      transform: translateY(-50%);
+      color: var(--mmc-black, #000000);
+      background: var(--mmc-cyan, #00eaff);
       box-shadow: none;
+      transform: translateY(-50%);
     }
 
     .admin-login-button {
@@ -335,22 +208,22 @@
       justify-content: center;
       margin-top: 5px;
       padding: 12px 18px;
-      color: var(--admin-black);
+      color: var(--mmc-black, #000000);
       background:
         linear-gradient(
           135deg,
-          var(--admin-pink),
-          var(--admin-yellow),
-          var(--admin-green),
-          var(--admin-cyan)
+          var(--mmc-hot-pink, #ff1493),
+          var(--mmc-yellow, #ffe600),
+          var(--mmc-green, #34e600),
+          var(--mmc-cyan, #00eaff)
         );
-      border: 3px solid var(--admin-black);
+      border: 3px solid var(--mmc-black, #000000);
       border-radius: 9px;
       font: inherit;
       font-size: 17px;
       font-weight: 900;
       cursor: pointer;
-      box-shadow: 0 6px 0 var(--admin-black);
+      box-shadow: 0 6px 0 var(--mmc-black, #000000);
       transition:
         filter 0.2s ease,
         transform 0.2s ease,
@@ -363,13 +236,13 @@
       filter: saturate(1.25) brightness(1.04);
       transform: translateY(-2px);
       box-shadow:
-        0 8px 0 var(--admin-black),
+        0 8px 0 var(--mmc-black, #000000),
         0 0 15px rgba(255, 20, 147, 0.55);
     }
 
     .admin-login-button:active:not(:disabled) {
       transform: translateY(2px);
-      box-shadow: 0 2px 0 var(--admin-black);
+      box-shadow: 0 2px 0 var(--mmc-black, #000000);
     }
 
     .admin-login-button:disabled {
@@ -395,17 +268,17 @@
     }
 
     .login-error {
-      color: var(--admin-danger);
+      color: var(--mmc-danger, #c40028);
       background: #fff0f3;
     }
 
     .login-success {
-      color: var(--admin-success);
+      color: var(--mmc-success, #177a16);
       background: #effff2;
     }
 
     .login-information {
-      color: var(--admin-information);
+      color: #004e87;
       background: #edf8ff;
     }
 
@@ -421,64 +294,29 @@
           rgba(52, 230, 0, 0.12),
           rgba(0, 234, 255, 0.15)
         );
-      border: 2px solid var(--admin-black);
+      border: 2px solid var(--mmc-black, #000000);
       border-radius: 9px;
       font-size: 13px;
       line-height: 1.5;
       text-align: center;
     }
 
-    .admin-login-footer {
-      padding: 20px;
-      color: #d5d5d5;
-      background: var(--admin-black);
-      border-top: 3px solid var(--admin-black);
-      text-align: center;
-    }
-
-    .admin-login-footer p {
-      margin: 5px 0;
-      color: #d5d5d5;
-      font-size: 13px;
-    }
-
-    .admin-login-footer a {
-      color: var(--admin-cyan);
-      font-weight: 700;
-      text-underline-offset: 3px;
-    }
-
     .admin-login-noscript {
-      max-width: 600px;
+      max-width: 650px;
       margin: 20px auto;
       padding: 16px;
-      color: var(--admin-white);
+      color: #ffffff;
       background: #8b0000;
-      border: 2px solid var(--admin-white);
+      border: 2px solid #ffffff;
       border-radius: 8px;
       text-align: center;
     }
 
     @media (max-width: 650px) {
-      .admin-login-header {
-        padding: 14px;
-      }
-
-      .admin-login-header-content {
-        flex-direction: column;
-        text-align: center;
-      }
-
-      .admin-login-brand {
-        flex-direction: column;
-      }
-
-      .admin-home-link {
-        width: 100%;
-      }
-
       .admin-login-main {
-        padding: 26px 14px;
+        width: calc(100% - 24px);
+        margin: 22px auto;
+        padding: 0;
       }
 
       .admin-login-content {
@@ -490,32 +328,22 @@
         height: 105px;
       }
     }
-
-    @media (prefers-reduced-motion: reduce) {
-      *,
-      *::before,
-      *::after {
-        scroll-behavior: auto !important;
-        transition-duration: 0.01ms !important;
-        animation-duration: 0.01ms !important;
-        animation-iteration-count: 1 !important;
-      }
-    }
   </style>
 
   <!--
-    If the frontend and backend use DIFFERENT domains, place
-    this block before admin-login.js and enter the backend URL.
-
-    Example:
-
-    <script>
-      window.MMC_BACKEND_URL =
-        "https://your-backend-domain.vercel.app";
-    </script>
-
-    Do not include a trailing slash.
+    config.js must load before admin-login.js because it
+    provides the public Vercel backend address.
   -->
+
+  <script
+    src="config.js"
+    defer
+  ></script>
+
+  <script
+    src="navigation.js"
+    defer
+  ></script>
 
   <script
     src="admin-login.js"
@@ -529,35 +357,87 @@
   </a>
 
   <!-- ========================================================
-       ADMINISTRATOR LOGIN HEADER
+       SHARED WEBSITE HEADER
        ======================================================== -->
 
-  <header class="admin-login-header">
-    <div class="admin-login-header-content">
+  <header class="top-header">
+    <div class="header-content">
       <a
-        class="admin-login-brand"
+        class="site-logo-link"
         href="index.html"
-        aria-label="Return to the Multi-Maniacs Customs home page"
+        aria-label="Go to the Multi-Maniacs Customs homepage"
       >
         images/mmc-logo.png
-
-        <div class="admin-login-brand-text">
-          <p class="admin-login-company-name">
-            Multi-Maniacs Customs LLC
-          </p>
-
-          <p class="admin-login-company-tagline">
-            Secure Administrator Portal
-          </p>
-        </div>
       </a>
 
-      <a
-        class="admin-home-link"
-        href="index.html"
-      >
-        Return to Website
-      </a>
+      <div class="site-branding">
+        <p class="site-heading">
+          Multi-Maniacs Customs LLC
+        </p>
+
+        <p class="site-tagline">
+          Secure Administrator Portal
+        </p>
+
+        <nav
+          class="header-buttons"
+          aria-label="Main website navigation"
+        >
+          <a href="index.html">
+            Home
+          </a>
+
+          <a href="about.html">
+            About
+          </a>
+
+          <a href="services.html">
+            Services
+          </a>
+
+          <a href="gallery.html">
+            Gallery
+          </a>
+
+          <a href="shop.html">
+            Shop
+          </a>
+
+          <a
+            class="cart-navigation-link"
+            href="cart.html"
+          >
+            Cart
+
+            <span
+              id="cart-count"
+              class="cart-count-badge"
+              data-cart-count
+              aria-label="0 items in cart"
+            >
+              0
+            </span>
+          </a>
+
+          <a href="contact.html">
+            Contact
+          </a>
+
+          <a href="client-intake.html">
+            Client Intake
+          </a>
+
+          <a
+            id="admin-navigation-button"
+            class="admin-navigation-button"
+            href="admin-login.html"
+            data-admin-navigation
+            aria-current="page"
+          >
+            Admin
+          </a>
+        </nav>
+      </div>
     </div>
   </header>
 
@@ -594,9 +474,10 @@
           </h1>
 
           <p class="admin-login-description">
-            Enter your MMC administrator username and password to
-            access the dashboard, products, inventory, orders,
-            client intakes, settings, and administrator tools.
+            Enter your MMC administrator username and password
+            to access the dashboard, products, inventory,
+            orders, client intakes, settings, and administrator
+            tools.
           </p>
         </div>
 
@@ -676,86 +557,27 @@
           purposes.
         </div>
       </div>
-
-      <footer class="admin-login-footer">
-        <p>
-          Multi-Maniacs Customs LLC
-        </p>
-
-        <p>
-          Administrator access powered by Neon PostgreSQL and
-          secure JWT authentication.
-        </p>
-
-        <p>
-          <a href="index.html">
-            Return to the MMC website
-          </a>
-        </p>
-      </footer>
     </section>
   </main>
 
-  <noscript>
-    <div class="admin-login-noscript">
-      JavaScript must be enabled to securely sign in to the MMC
-      administrator portal.
-    </div>
-  </noscript>
-
   <!-- ========================================================
-       PASSWORD VISIBILITY
+       SHARED BLACK FOOTER
        ======================================================== -->
 
-  <script>
-    (function () {
-      "use strict";
+  <footer class="site-footer">
+    images/mmc-logo.png
 
-      var visibilityButton =
-        document.getElementById(
-          "password-visibility-button"
-        );
+    <p>
+      <strong>
+        Multi-Maniacs Customs LLC
+      </strong>
+    </p>
 
-      var passwordInput =
-        document.getElementById(
-          "adminPassword"
-        );
+    <p>
+      Multi-industry customization, creative builds, and
+      personalized client projects.
+    </p>
 
-      if (
-        !visibilityButton ||
-        !passwordInput
-      ) {
-        return;
-      }
-
-      visibilityButton.addEventListener(
-        "click",
-        function () {
-          var passwordIsVisible =
-            passwordInput.type ===
-            "text";
-
-          passwordInput.type =
-            passwordIsVisible
-              ? "password"
-              : "text";
-
-          visibilityButton.textContent =
-            passwordIsVisible
-              ? "Show"
-              : "Hide";
-
-          visibilityButton.setAttribute(
-            "aria-pressed",
-            passwordIsVisible
-              ? "false"
-              : "true"
-          );
-
-          passwordInput.focus();
-        }
-      );
-    }());
-  </script>
-</body>
-</html>
+    <p>
+      Essie, Kentucky | Clients accepted throughout the United
+    

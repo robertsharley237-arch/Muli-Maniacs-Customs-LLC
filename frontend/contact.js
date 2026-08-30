@@ -1,42 +1,157 @@
 // ============================================================
 // MULTI-MANIACS CUSTOMS LLC
+// FILE: contact.js
 // CONTACT FORM
 //
-// Hosting: Vercel
+// Frontend: Vercel
+// Backend: Express on Vercel
 // Database: Neon PostgreSQL
 // ============================================================
 
-(() => {
+(function () {
   "use strict";
 
-  const CONTACT_BACKEND_URL =
-    window.MMC_BACKEND_URL ||
-    window.location.origin;
+  // ==========================================================
+  // CONFIGURATION
+  // ==========================================================
 
-  const CONTACT_SUBMIT_API =
-    `${CONTACT_BACKEND_URL}/contact/submit`;
+  var REQUEST_TIMEOUT_MILLISECONDS =
+    15000;
+
+  var MINIMUM_SUBMISSION_DELAY =
+    3000;
+
+  var lastSubmissionTime =
+    0;
+
+  var submissionInProgress =
+    false;
 
   // ==========================================================
   // ELEMENT HELPERS
   // ==========================================================
 
-  function getContactElement(elementId) {
+  function getElement(
+    elementId
+  ) {
     return document.getElementById(
       elementId
     );
   }
 
-  function getContactValue(elementId) {
-    const element =
-      getContactElement(elementId);
+  function getValue(
+    elementId
+  ) {
+    var element =
+      getElement(
+        elementId
+      );
 
     if (!element) {
       return "";
     }
 
     return String(
-      element.value || ""
+      element.value ||
+      ""
     ).trim();
+  }
+
+  // ==========================================================
+  // BACKEND URL
+  // ==========================================================
+
+  function removeTrailingSlashes(
+    value
+  ) {
+    return String(value || "")
+      .trim()
+      .replace(
+        /\/+$/,
+        ""
+      );
+  }
+
+  function getBackendUrl() {
+    if (
+      typeof window.MMC_BACKEND_URL ===
+        "string" &&
+      window.MMC_BACKEND_URL.trim()
+    ) {
+      return removeTrailingSlashes(
+        window.MMC_BACKEND_URL
+      );
+    }
+
+    if (
+      window.location.hostname ===
+        "localhost" ||
+      window.location.hostname ===
+        "127.0.0.1"
+    ) {
+      return "http://localhost:10000";
+    }
+
+    return removeTrailingSlashes(
+      window.location.origin
+    );
+  }
+
+  var CONTACT_SUBMIT_URL =
+    getBackendUrl() +
+    "/contact/submit";
+
+  // ==========================================================
+  // MESSAGE NORMALIZATION
+  // ==========================================================
+
+  function normalizeMessage(
+    value,
+    fallbackMessage
+  ) {
+    if (
+      typeof value ===
+        "string" &&
+      value.trim()
+    ) {
+      return value.trim();
+    }
+
+    if (
+      value &&
+      typeof value ===
+        "object"
+    ) {
+      if (
+        typeof value.message ===
+          "string" &&
+        value.message.trim()
+      ) {
+        return value.message.trim();
+      }
+
+      if (
+        value.error !==
+        undefined
+      ) {
+        return normalizeMessage(
+          value.error,
+          fallbackMessage
+        );
+      }
+
+      if (
+        value.errors !==
+        undefined
+      ) {
+        return normalizeMessage(
+          value.errors,
+          fallbackMessage
+        );
+      }
+    }
+
+    return fallbackMessage;
   }
 
   // ==========================================================
@@ -45,23 +160,32 @@
 
   function showContactMessage(
     message,
-    messageType = "status"
+    messageType
   ) {
-    const messageElement =
-      getContactElement(
+    var messageElement =
+      getElement(
         "contact-message"
       );
 
+    var normalizedMessage =
+      String(message || "");
+
     if (!messageElement) {
-      if (messageType === "error") {
-        alert(message);
+      if (
+        messageType ===
+          "error" &&
+        normalizedMessage
+      ) {
+        console.error(
+          normalizedMessage
+        );
       }
 
       return;
     }
 
     messageElement.textContent =
-      message;
+      normalizedMessage;
 
     messageElement.classList.remove(
       "contact-error",
@@ -69,51 +193,66 @@
       "contact-status"
     );
 
-    if (messageType === "error") {
-      messageElement.classList.add(
-        "contact-error"
-      );
-    } else if (
-      messageType === "success"
+    messageElement.removeAttribute(
+      "role"
+    );
+
+    if (!normalizedMessage) {
+      return;
+    }
+
+    if (
+      messageType ===
+      "success"
     ) {
       messageElement.classList.add(
         "contact-success"
       );
-    } else {
+
+      messageElement.setAttribute(
+        "role",
+        "status"
+      );
+    } else if (
+      messageType ===
+      "status"
+    ) {
       messageElement.classList.add(
         "contact-status"
+      );
+
+      messageElement.setAttribute(
+        "role",
+        "status"
+      );
+    } else {
+      messageElement.classList.add(
+        "contact-error"
+      );
+
+      messageElement.setAttribute(
+        "role",
+        "alert"
       );
     }
   }
 
   function clearContactMessage() {
-    const messageElement =
-      getContactElement(
-        "contact-message"
-      );
-
-    if (!messageElement) {
-      return;
-    }
-
-    messageElement.textContent = "";
-
-    messageElement.classList.remove(
-      "contact-error",
-      "contact-success",
-      "contact-status"
+    showContactMessage(
+      "",
+      "status"
     );
   }
 
   // ==========================================================
-  // SUBMIT BUTTON STATUS
+  // SUBMIT BUTTON STATE
   // ==========================================================
 
   function setContactButtonLoading(
     isLoading
   ) {
-    const submitButton =
-      getContactElement(
+    var submitButton =
+      getElement(
         "contact-submit-button"
       );
 
@@ -121,39 +260,78 @@
       return;
     }
 
+    if (
+      !submitButton.dataset
+        .originalText
+    ) {
+      submitButton.dataset.originalText =
+        submitButton.textContent
+          .trim() ||
+        "Send Message";
+    }
+
     submitButton.disabled =
-      isLoading;
+      Boolean(
+        isLoading
+      );
+
+    submitButton.setAttribute(
+      "aria-disabled",
+      isLoading
+        ? "true"
+        : "false"
+    );
+
+    submitButton.setAttribute(
+      "aria-busy",
+      isLoading
+        ? "true"
+        : "false"
+    );
 
     submitButton.textContent =
       isLoading
         ? "Sending Message..."
-        : "Send Message";
+        : submitButton.dataset
+            .originalText;
   }
 
   // ==========================================================
   // EMAIL VALIDATION
   // ==========================================================
 
-  function isValidContactEmail(email) {
-    const emailPattern =
+  function isValidContactEmail(
+    email
+  ) {
+    var emailPattern =
       /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-    return emailPattern.test(email);
+    return emailPattern.test(
+      email
+    );
   }
 
   // ==========================================================
   // PHONE VALIDATION
   // ==========================================================
 
-  function isValidContactPhone(phone) {
+  function isValidContactPhone(
+    phone
+  ) {
     if (!phone) {
       return true;
     }
 
-    const digitsOnly =
-      phone.replace(/\D/g, "");
+    var digitsOnly =
+      phone.replace(
+        /\D/g,
+        ""
+      );
 
-    return digitsOnly.length >= 10;
+    return (
+      digitsOnly.length >=
+      10
+    );
   }
 
   // ==========================================================
@@ -161,76 +339,77 @@
   // ==========================================================
 
   function validateContactForm() {
-    const name =
-      getContactValue(
+    var name =
+      getValue(
         "contact-name"
       );
 
-    const email =
-      getContactValue(
+    var email =
+      getValue(
         "contact-email"
       );
 
-    const phone =
-      getContactValue(
+    var phone =
+      getValue(
         "contact-phone"
       );
 
-    const subject =
-      getContactValue(
+    var subject =
+      getValue(
         "contact-subject"
       );
 
-    const details =
-      getContactValue(
+    var details =
+      getValue(
         "contact-details"
       );
 
-    if (name.length < 2) {
-      return (
-        "Please enter your full name."
-      );
+    if (
+      name.length < 2
+    ) {
+      return "Please enter your full name.";
     }
 
     if (!email) {
-      return (
-        "Please enter your email address."
-      );
+      return "Please enter your email address.";
     }
 
     if (
-      !isValidContactEmail(email)
+      !isValidContactEmail(
+        email
+      )
     ) {
-      return (
-        "Please enter a valid email address."
-      );
+      return "Please enter a valid email address.";
     }
 
     if (
-      phone &&
-      !isValidContactPhone(phone)
+      !isValidContactPhone(
+        phone
+      )
     ) {
       return (
-        "Please enter a valid phone number with at least 10 digits."
+        "Please enter a valid phone number " +
+        "with at least 10 digits."
       );
     }
 
     if (!subject) {
+      return "Please select a message subject.";
+    }
+
+    if (
+      details.length < 10
+    ) {
       return (
-        "Please select a message subject."
+        "Please enter at least 10 characters " +
+        "in your message."
       );
     }
 
-    if (details.length < 10) {
-      return (
-        "Please enter at least 10 characters in your message."
-      );
-    }
-
-    if (details.length > 5000) {
-      return (
-        "Your message cannot exceed 5,000 characters."
-      );
+    if (
+      details.length > 5000
+    ) {
+      return "Your message cannot exceed 5,000 characters.";
     }
 
     return "";
@@ -243,30 +422,68 @@
   function buildContactRequest() {
     return {
       name:
-        getContactValue(
+        getValue(
           "contact-name"
         ),
 
       email:
-        getContactValue(
+        getValue(
           "contact-email"
         ),
 
       phone:
-        getContactValue(
+        getValue(
           "contact-phone"
         ),
 
       subject:
-        getContactValue(
+        getValue(
           "contact-subject"
         ),
 
       details:
-        getContactValue(
+        getValue(
           "contact-details"
         )
     };
+  }
+
+  // ==========================================================
+  // FETCH WITH TIMEOUT
+  // ==========================================================
+
+  async function fetchWithTimeout(
+    url,
+    options
+  ) {
+    var controller =
+      new AbortController();
+
+    var timeoutIdentifier =
+      window.setTimeout(
+        function () {
+          controller.abort();
+        },
+        REQUEST_TIMEOUT_MILLISECONDS
+      );
+
+    try {
+      return await fetch(
+        url,
+        Object.assign(
+          {},
+          options || {},
+          {
+            signal:
+              controller.signal
+          }
+        )
+      );
+    } finally {
+      window.clearTimeout(
+        timeoutIdentifier
+      );
+    }
   }
 
   // ==========================================================
@@ -276,27 +493,48 @@
   async function readContactResponse(
     response
   ) {
-    let data;
+    var responseText =
+      "";
 
     try {
-      data =
-        await response.json();
+      responseText =
+        await response.text();
     } catch (error) {
-      data = {
+      return {
         error:
-          "The server returned an unexpected response."
+          "The server response could not be read."
       };
     }
 
-    if (!response.ok) {
-      throw new Error(
-        data.error ||
-        data.message ||
-        `Request failed with status ${response.status}.`
-      );
+    if (!responseText) {
+      return {};
     }
 
-    return data;
+    try {
+      return JSON.parse(
+        responseText
+      );
+    } catch (error) {
+      return {
+        error:
+          responseText
+      };
+    }
+  }
+
+  // ==========================================================
+  // RESET CONTACT FORM
+  // ==========================================================
+
+  function resetContactForm() {
+    var contactForm =
+      getElement(
+        "contact-form"
+      );
+
+    if (contactForm) {
+      contactForm.reset();
+    }
   }
 
   // ==========================================================
@@ -310,9 +548,13 @@
       event.preventDefault();
     }
 
+    if (submissionInProgress) {
+      return;
+    }
+
     clearContactMessage();
 
-    const validationError =
+    var validationError =
       validateContactForm();
 
     if (validationError) {
@@ -324,114 +566,14 @@
       return;
     }
 
-    try {
-      setContactButtonLoading(true);
-
-      showContactMessage(
-        "Sending your message...",
-        "status"
-      );
-
-      const response = await fetch(
-        CONTACT_SUBMIT_API,
-        {
-          method: "POST",
-
-          headers: {
-            "Content-Type":
-              "application/json"
-          },
-
-          body: JSON.stringify(
-            buildContactRequest()
-          )
-        }
-      );
-
-      const data =
-        await readContactResponse(
-          response
-        );
-
-      showContactMessage(
-        data.message ||
-        (
-          "Your message was sent successfully. " +
-          "Multi-Maniacs Customs will respond as soon as possible."
-        ),
-        "success"
-      );
-
-      resetContactForm();
-    } catch (error) {
-      console.error(
-        "Contact form submission failed:",
-        error
-      );
-
-      showContactMessage(
-        error.message ||
-        (
-          "Your message could not be sent. " +
-          "Please try again or contact us directly."
-        ),
-        "error"
-      );
-    } finally {
-      setContactButtonLoading(false);
-    }
-  }
-
-  // ==========================================================
-  // RESET CONTACT FORM
-  // ==========================================================
-
-  function resetContactForm() {
-    const contactForm =
-      getContactElement(
-        "contact-form"
-      );
-
-    if (contactForm) {
-      contactForm.reset();
-    }
-  }
-
-  // ==========================================================
-  // PREVENT RAPID DUPLICATE SUBMISSIONS
-  // ==========================================================
-
-  let lastContactSubmissionTime = 0;
-
-  function canSubmitContactForm() {
-    const currentTime =
+    var currentTime =
       Date.now();
-
-    const minimumDelay =
-      3000;
 
     if (
       currentTime -
-      lastContactSubmissionTime <
-      minimumDelay
+      lastSubmissionTime <
+      MINIMUM_SUBMISSION_DELAY
     ) {
-      return false;
-    }
-
-    lastContactSubmissionTime =
-      currentTime;
-
-    return true;
-  }
-
-  async function safelySubmitContactForm(
-    event
-  ) {
-    if (event) {
-      event.preventDefault();
-    }
-
-    if (!canSubmitContactForm()) {
       showContactMessage(
         "Please wait a few seconds before submitting again.",
         "error"
@@ -440,37 +582,171 @@
       return;
     }
 
-    await submitContactForm();
+    submissionInProgress =
+      true;
+
+    lastSubmissionTime =
+      currentTime;
+
+    setContactButtonLoading(
+      true
+    );
+
+    showContactMessage(
+      "Sending your message...",
+      "status"
+    );
+
+    try {
+      var response =
+        await fetchWithTimeout(
+          CONTACT_SUBMIT_URL,
+          {
+            method:
+              "POST",
+
+            headers: {
+              "Content-Type":
+                "application/json",
+
+              Accept:
+                "application/json"
+            },
+
+            body:
+              JSON.stringify(
+                buildContactRequest()
+              )
+          }
+        );
+
+      var responseData =
+        await readContactResponse(
+          response
+        );
+
+      if (!response.ok) {
+        throw new Error(
+          normalizeMessage(
+            responseData.error ||
+            responseData.message ||
+            responseData,
+            "Your message could not be sent."
+          )
+        );
+      }
+
+      resetContactForm();
+
+      showContactMessage(
+        normalizeMessage(
+          responseData.message,
+          (
+            "Your message was sent successfully. " +
+            "Multi-Maniacs Customs will respond " +
+            "as soon as possible."
+          )
+        ),
+        "success"
+      );
+    } catch (error) {
+      console.error(
+        "Contact form submission failed.",
+        error
+      );
+
+      var errorMessage;
+
+      if (
+        error &&
+        error.name ===
+          "AbortError"
+      ) {
+        errorMessage =
+          "The request took too long. Please try again.";
+      } else if (
+        error instanceof
+        TypeError
+      ) {
+        errorMessage =
+          "The contact server could not be reached. " +
+          "Check the backend URL and try again.";
+      } else {
+        errorMessage =
+          normalizeMessage(
+            error,
+            (
+              "Your message could not be sent. " +
+              "Please try again or contact MMC directly."
+            )
+          );
+      }
+
+      showContactMessage(
+        errorMessage,
+        "error"
+      );
+    } finally {
+      submissionInProgress =
+        false;
+
+      setContactButtonLoading(
+        false
+      );
+    }
   }
 
   // ==========================================================
-  // PAGE STARTUP
+  // PAGE INITIALIZATION
   // ==========================================================
 
-  document.addEventListener(
-    "DOMContentLoaded",
-    () => {
-      const contactForm =
-        getContactElement(
-          "contact-form"
-        );
+  function initializeContactForm() {
+    var contactForm =
+      getElement(
+        "contact-form"
+      );
 
-      if (contactForm) {
-        contactForm.addEventListener(
-          "submit",
-          safelySubmitContactForm
-        );
-      }
+    if (!contactForm) {
+      console.error(
+        "The contact form could not be found."
+      );
+
+      return;
     }
-  );
+
+    contactForm.addEventListener(
+      "submit",
+      submitContactForm
+    );
+
+    console.log(
+      "MMC contact form initialized."
+    );
+  }
 
   // ==========================================================
-  // OPTIONAL INLINE HTML SUPPORT
+  // STARTUP
+  // ==========================================================
+
+  if (
+    document.readyState ===
+    "loading"
+  ) {
+    document.addEventListener(
+      "DOMContentLoaded",
+      initializeContactForm
+    );
+  } else {
+    initializeContactForm();
+  }
+
+  // ==========================================================
+  // GLOBAL SUPPORT
   // ==========================================================
 
   window.submitContactForm =
-    safelySubmitContactForm;
+    submitContactForm;
 
   window.resetContactForm =
     resetContactForm;
-})();
+}());

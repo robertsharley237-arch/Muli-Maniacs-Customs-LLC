@@ -1,15 +1,23 @@
 // ============================================================
 // MULTI-MANIACS CUSTOMS LLC
-// GALLERY FILTERS AND MINI CART
+// FILE: gallery.js
+// GALLERY FILTERS AND CART SUMMARY
 // ============================================================
 
 (function () {
   "use strict";
 
-  var GALLERY_FILTER_STORAGE_KEY =
+  // ==========================================================
+  // CONFIGURATION
+  // ==========================================================
+
+  var FILTER_STORAGE_KEY =
     "mmcGalleryFilter";
 
-  var GALLERY_ALL_FILTER =
+  var CART_STORAGE_KEY =
+    "cart";
+
+  var ALL_FILTER =
     "all";
 
   // ==========================================================
@@ -24,7 +32,7 @@
     );
   }
 
-  function getGalleryFilterButtons() {
+  function getFilterButtons() {
     return Array.prototype.slice.call(
       document.querySelectorAll(
         "[data-gallery-filter]"
@@ -32,7 +40,7 @@
     );
   }
 
-  function normalizeGalleryCategory(
+  function normalizeCategory(
     value
   ) {
     return String(value || "")
@@ -40,20 +48,41 @@
       .toLowerCase();
   }
 
+  function isKnownFilter(
+    filter
+  ) {
+    if (
+      filter ===
+      ALL_FILTER
+    ) {
+      return true;
+    }
+
+    return getGalleryCards().some(
+      function (card) {
+        return (
+          normalizeCategory(
+            card.getAttribute(
+              "data-gallery-category"
+            )
+          ) ===
+          filter
+        );
+      }
+    );
+  }
+
   // ==========================================================
   // ACTIVE FILTER BUTTON
   // ==========================================================
 
-  function updateActiveGalleryButton(
+  function updateActiveButton(
     selectedFilter
   ) {
-    var buttons =
-      getGalleryFilterButtons();
-
-    buttons.forEach(
+    getFilterButtons().forEach(
       function (button) {
         var buttonFilter =
-          normalizeGalleryCategory(
+          normalizeCategory(
             button.getAttribute(
               "data-gallery-filter"
             )
@@ -82,32 +111,34 @@
   // SAVE AND RESTORE FILTER
   // ==========================================================
 
-  function saveGalleryFilter(
+  function saveFilter(
     selectedFilter
   ) {
     try {
       sessionStorage.setItem(
-        GALLERY_FILTER_STORAGE_KEY,
+        FILTER_STORAGE_KEY,
         selectedFilter
       );
     } catch (error) {
       console.warn(
-        "Gallery filter could not be saved:",
+        "The gallery filter could not be saved.",
         error
       );
     }
   }
 
-  function getSavedGalleryFilter() {
+  function getSavedFilter() {
     try {
       return (
-        sessionStorage.getItem(
-          GALLERY_FILTER_STORAGE_KEY
+        normalizeCategory(
+          sessionStorage.getItem(
+            FILTER_STORAGE_KEY
+          )
         ) ||
-        GALLERY_ALL_FILTER
+        ALL_FILTER
       );
     } catch (error) {
-      return GALLERY_ALL_FILTER;
+      return ALL_FILTER;
     }
   }
 
@@ -119,20 +150,27 @@
     selectedCategory
   ) {
     var selectedFilter =
-      normalizeGalleryCategory(
+      normalizeCategory(
         selectedCategory
       ) ||
-      GALLERY_ALL_FILTER;
+      ALL_FILTER;
 
-    var cards =
-      getGalleryCards();
+    if (
+      !isKnownFilter(
+        selectedFilter
+      )
+    ) {
+      selectedFilter =
+        ALL_FILTER;
+    }
 
-    var visibleCount = 0;
+    var visibleCount =
+      0;
 
-    cards.forEach(
+    getGalleryCards().forEach(
       function (card) {
         var cardCategory =
-          normalizeGalleryCategory(
+          normalizeCategory(
             card.getAttribute(
               "data-gallery-category"
             )
@@ -140,7 +178,7 @@
 
         var shouldShow =
           selectedFilter ===
-            GALLERY_ALL_FILTER ||
+            ALL_FILTER ||
           cardCategory ===
             selectedFilter;
 
@@ -148,12 +186,13 @@
           !shouldShow;
 
         if (shouldShow) {
-          visibleCount += 1;
+          visibleCount +=
+            1;
         }
       }
     );
 
-    updateActiveGalleryButton(
+    updateActiveButton(
       selectedFilter
     );
 
@@ -167,7 +206,22 @@
         visibleCount > 0;
     }
 
-    saveGalleryFilter(
+    var resultCount =
+      document.getElementById(
+        "gallery-result-count"
+      );
+
+    if (resultCount) {
+      resultCount.textContent =
+        visibleCount === 1
+          ? "1 gallery item"
+          : (
+              visibleCount +
+              " gallery items"
+            );
+    }
+
+    saveFilter(
       selectedFilter
     );
   }
@@ -176,38 +230,37 @@
   // FILTER BUTTON CLICK
   // ==========================================================
 
-  function handleGalleryFilterClick(
+  function handleFilterClick(
     event
   ) {
-    var button =
-      event.currentTarget;
-
     var selectedFilter =
-      button.getAttribute(
-        "data-gallery-filter"
-      );
+      event.currentTarget
+        .getAttribute(
+          "data-gallery-filter"
+        );
 
     filterGallery(
       selectedFilter ||
-      GALLERY_ALL_FILTER
+      ALL_FILTER
     );
   }
 
   // ==========================================================
-  // MINI CART
+  // CART STORAGE
   // ==========================================================
 
-  function readGalleryCart() {
+  function readCart() {
     try {
       var savedCart =
         localStorage.getItem(
-          "cart"
+          CART_STORAGE_KEY
         );
 
       var parsedCart =
-        savedCart
-          ? JSON.parse(savedCart)
-          : [];
+        JSON.parse(
+          savedCart ||
+          "[]"
+        );
 
       return Array.isArray(
         parsedCart
@@ -216,7 +269,7 @@
         : [];
     } catch (error) {
       console.warn(
-        "Gallery mini cart could not be loaded:",
+        "The Gallery cart summary could not be loaded.",
         error
       );
 
@@ -224,33 +277,104 @@
     }
   }
 
-  function getGalleryCartQuantity(
+  function getItemQuantity(
+    item
+  ) {
+    var quantity =
+      Number(
+        item &&
+        item.quantity
+      );
+
+    if (
+      !Number.isInteger(
+        quantity
+      ) ||
+      quantity < 1
+    ) {
+      return 1;
+    }
+
+    return quantity;
+  }
+
+  function getCartQuantity(
     cart
   ) {
     return cart.reduce(
-      function (total, item) {
-        var quantity =
-          Number(
-            item &&
-            item.quantity
-          );
-
-        if (
-          !Number.isInteger(
-            quantity
-          ) ||
-          quantity < 1
-        ) {
-          quantity = 1;
-        }
-
-        return total + quantity;
+      function (
+        total,
+        item
+      ) {
+        return (
+          total +
+          getItemQuantity(
+            item
+          )
+        );
       },
       0
     );
   }
 
+  // ==========================================================
+  // CART BADGES
+  // ==========================================================
+
+  function updateCartBadges(
+    totalQuantity
+  ) {
+    var accessibleLabel =
+      totalQuantity === 1
+        ? "1 item in cart"
+        : (
+            totalQuantity +
+            " items in cart"
+          );
+
+    var cartBadges =
+      document.querySelectorAll(
+        "#cart-count, " +
+        "[data-cart-count]"
+      );
+
+    cartBadges.forEach(
+      function (badge) {
+        badge.textContent =
+          String(
+            totalQuantity
+          );
+
+        badge.setAttribute(
+          "aria-label",
+          accessibleLabel
+        );
+
+        badge.dataset.cartQuantity =
+          String(
+            totalQuantity
+          );
+      }
+    );
+  }
+
+  // ==========================================================
+  // GALLERY MINI CART
+  // ==========================================================
+
   function loadGalleryMiniCart() {
+    var cart =
+      readCart();
+
+    var totalQuantity =
+      getCartQuantity(
+        cart
+      );
+
+    updateCartBadges(
+      totalQuantity
+    );
+
     var miniCartItems =
       document.getElementById(
         "miniCartItems"
@@ -260,60 +384,59 @@
       return;
     }
 
-    var cart =
-      readGalleryCart();
-
     miniCartItems.replaceChildren();
-
-    if (cart.length === 0) {
-      var emptyMessage =
-        document.createElement(
-          "p"
-        );
-
-      emptyMessage.textContent =
-        "Your cart is empty.";
-
-      miniCartItems.appendChild(
-        emptyMessage
-      );
-
-      return;
-    }
-
-    var itemCount =
-      getGalleryCartQuantity(
-        cart
-      );
 
     var cartSummary =
       document.createElement(
         "p"
       );
 
+    if (
+      totalQuantity ===
+      0
+    ) {
+      cartSummary.textContent =
+        "Your cart is empty.";
+    } else if (
+      totalQuantity ===
+      1
+    ) {
+      cartSummary.textContent =
+        "1 item in your cart.";
+    } else {
+      cartSummary.textContent =
+        totalQuantity +
+        " items in your cart.";
+    }
+
+    miniCartItems.appendChild(
+      cartSummary
+    );
+
     var cartLink =
       document.createElement(
         "a"
       );
 
-    if (itemCount === 1) {
-      cartSummary.textContent =
-        "1 item in your cart.";
+    cartLink.className =
+      "mini-cart-link";
+
+    if (
+      totalQuantity ===
+      0
+    ) {
+      cartLink.href =
+        "shop.html";
+
+      cartLink.textContent =
+        "Browse the Shop";
     } else {
-      cartSummary.textContent =
-        itemCount +
-        " items in your cart.";
+      cartLink.href =
+        "cart.html";
+
+      cartLink.textContent =
+        "View Cart";
     }
-
-    cartLink.href =
-      "Cart.html";
-
-    cartLink.textContent =
-      "View Cart";
-
-    miniCartItems.appendChild(
-      cartSummary
-    );
 
     miniCartItems.appendChild(
       cartLink
@@ -321,15 +444,17 @@
   }
 
   // ==========================================================
-  // PAGE STARTUP
+  // PAGE INITIALIZATION
   // ==========================================================
 
   function initializeGallery() {
-    var buttons =
-      getGalleryFilterButtons();
-
-    buttons.forEach(
+    getFilterButtons().forEach(
       function (button) {
+        button.setAttribute(
+          "type",
+          "button"
+        );
+
         button.setAttribute(
           "aria-pressed",
           "false"
@@ -337,25 +462,62 @@
 
         button.addEventListener(
           "click",
-          handleGalleryFilterClick
+          handleFilterClick
         );
       }
     );
 
     filterGallery(
-      getSavedGalleryFilter()
+      getSavedFilter()
     );
 
     loadGalleryMiniCart();
+
+    document.addEventListener(
+      "cartUpdated",
+      loadGalleryMiniCart
+    );
+
+    window.addEventListener(
+      "mmc-cart-updated",
+      loadGalleryMiniCart
+    );
+
+    window.addEventListener(
+      "storage",
+      function (event) {
+        if (
+          event.key ===
+          CART_STORAGE_KEY
+        ) {
+          loadGalleryMiniCart();
+        }
+      }
+    );
+
+    console.log(
+      "MMC Gallery initialized."
+    );
   }
 
-  document.addEventListener(
-    "DOMContentLoaded",
-    initializeGallery
-  );
+  // ==========================================================
+  // STARTUP
+  // ==========================================================
+
+  if (
+    document.readyState ===
+    "loading"
+  ) {
+    document.addEventListener(
+      "DOMContentLoaded",
+      initializeGallery
+    );
+  } else {
+    initializeGallery();
+  }
 
   // ==========================================================
-  // OPTIONAL INLINE HTML SUPPORT
+  // GLOBAL SUPPORT
   // ==========================================================
 
   window.filterGallery =
@@ -363,4 +525,4 @@
 
   window.loadGalleryMiniCart =
     loadGalleryMiniCart;
-})();
+}());

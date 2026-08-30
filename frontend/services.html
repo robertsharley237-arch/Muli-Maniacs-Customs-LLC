@@ -13,473 +13,428 @@
     content="Explore the multi-industry customization, fabrication, design, branding, decor, and project services offered by Multi-Maniacs Customs LLC."
   >
 
+  <meta
+    name="theme-color"
+    content="#000000"
+  >
+
   <title>
     Services | Multi-Maniacs Customs LLC
   </title>
 
-  <link rel="stylesheet" href="style.css">
+  <link
+    rel="stylesheet"
+    href="style.css"
+  >
 
   <style>
-    :root {
-      --services-background: #111111;
-      --services-header: #000000;
-      --services-panel: #222222;
-      --services-card: #191919;
-      --services-border: #444444;
-      --services-text: #ffffff;
-      --services-muted: #cccccc;
-      --services-primary: #2196f3;
-      --services-primary-hover: #1976d2;
-      --services-secondary: #444444;
-      --services-secondary-hover: #5a5a5a;
-      --services-accent: #4caf50;
-      --services-danger: #e53935;
-    }
-
-    * {
-      box-sizing: border-box;
-    }
-
-    html {
-      min-height: 100%;
-    }
-
-    body {
-      min-height: 100vh;
-      margin: 0;
-      color: var(--services-text);
-      background: var(--services-background);
-      font-family: Arial, Helvetica, sans-serif;
-    }
-
-    .top-header {
-      padding: 18px 20px;
-      background: var(--services-header);
-      border-bottom: 1px solid var(--services-border);
-    }
-
-    .header-content {
-      width: 100%;
-      max-width: 1200px;
-      margin: 0 auto;
-    }
-
-    .site-heading {
-      margin: 0 0 16px;
-      font-size: 26px;
-      line-height: 1.25;
-    }
-
-    .header-buttons {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-    }
-
-    .header-buttons a {
-      display: inline-flex;
-      min-height: 42px;
-      align-items: center;
-      justify-content: center;
-      gap: 7px;
-      padding: 9px 13px;
-      color: #ffffff;
-      background: #222222;
-      border: 1px solid #353535;
-      border-radius: 7px;
-      text-decoration: none;
-      transition:
-        background-color 0.2s ease,
-        transform 0.2s ease;
-    }
-
-    .header-buttons a:hover,
-    .header-buttons a:focus {
-      background: #333333;
-      transform: translateY(-1px);
-    }
-
-    .header-buttons a[aria-current="page"] {
-      background: var(--services-primary);
-      border-color: var(--services-primary);
-    }
-
-    .cart-count-badge {
-      display: inline-flex;
-      min-width: 24px;
-      height: 24px;
-      align-items: center;
-      justify-content: center;
-      padding: 0 7px;
-      color: #ffffff;
-      background: var(--services-danger);
-      border-radius: 999px;
-      font-size: 12px;
-      font-weight: 700;
-    }
+    /* ========================================================
+       MMC SERVICES PAGE
+       Page-specific layout only.
+       Shared colors, navigation, buttons, header, and footer
+       come from style.css.
+       ======================================================== */
 
     .services-page {
-      width: 100%;
+      width: calc(100% - 32px);
       max-width: 1200px;
-      margin: 36px auto;
-      padding: 0 20px;
+      margin: 34px auto;
+    }
+
+    .services-hero,
+    .services-section,
+    .custom-project-notice,
+    .service-disclaimer {
+      position: relative;
+      overflow: hidden;
+      margin-bottom: 28px;
+      padding: 28px;
+      color: var(--mmc-black, #000000);
+      background: rgba(255, 255, 255, 0.94);
+      border: 3px solid var(--mmc-black, #000000);
+      border-radius: 16px;
+      box-shadow:
+        0 14px 34px rgba(0, 0, 0, 0.38),
+        0 0 0 4px rgba(255, 255, 255, 0.25);
     }
 
     .services-hero {
-      padding: 48px 30px;
-      background:
-        linear-gradient(
-          135deg,
-          #232323 0%,
-          #181818 100%
-        );
-      border: 1px solid var(--services-border);
-      border-radius: 16px;
+      padding: 42px 30px;
       text-align: center;
-      box-shadow:
-        0 18px 50px rgba(0, 0, 0, 0.4);
+    }
+
+    .services-eyebrow {
+      margin: 0 0 8px;
+      color: #72007c;
+      font-size: 14px;
+      font-weight: 900;
+      letter-spacing: 0.09em;
+      text-transform: uppercase;
     }
 
     .services-heading {
-      margin: 0 0 16px;
-      font-size: clamp(34px, 7vw, 54px);
-      line-height: 1.1;
+      max-width: 950px;
+      margin: 0 auto 18px;
+      color: var(--mmc-black, #000000);
+      font-size: clamp(38px, 7vw, 60px);
+      line-height: 1.08;
     }
 
     .services-introduction {
-      max-width: 820px;
+      max-width: 850px;
       margin: 0 auto;
-      color: var(--services-muted);
+      color: var(--mmc-muted-text, #333333);
       font-size: 18px;
       line-height: 1.7;
     }
 
-    .hero-actions {
+    .hero-actions,
+    .service-actions {
       display: flex;
       flex-wrap: wrap;
       justify-content: center;
-      gap: 12px;
-      margin-top: 28px;
-    }
-
-    .hero-action {
-      display: inline-flex;
-      min-height: 48px;
-      align-items: center;
-      justify-content: center;
-      padding: 11px 18px;
-      color: #ffffff;
-      border-radius: 8px;
-      font-weight: 700;
-      text-decoration: none;
-      transition:
-        background-color 0.2s ease,
-        transform 0.2s ease;
-    }
-
-    .primary-action {
-      background: var(--services-primary);
-    }
-
-    .primary-action:hover,
-    .primary-action:focus {
-      background: var(--services-primary-hover);
-      transform: translateY(-1px);
-    }
-
-    .secondary-action {
-      background: var(--services-secondary);
-    }
-
-    .secondary-action:hover,
-    .secondary-action:focus {
-      background: var(--services-secondary-hover);
-      transform: translateY(-1px);
-    }
-
-    .services-section {
-      margin-top: 30px;
-      padding: 30px;
-      background: var(--services-panel);
-      border: 1px solid var(--services-border);
-      border-radius: 14px;
+      gap: 14px;
+      margin-top: 26px;
     }
 
     .section-heading {
-      margin: 0 0 10px;
+      margin: 0 0 12px;
+      color: var(--mmc-black, #000000);
+      font-size: clamp(28px, 5vw, 38px);
+      line-height: 1.2;
       text-align: center;
-      font-size: 30px;
     }
 
     .section-description {
-      max-width: 760px;
-      margin: 0 auto 24px;
-      color: var(--services-muted);
+      max-width: 820px;
+      margin: 0 auto 26px;
+      color: var(--mmc-muted-text, #333333);
+      line-height: 1.7;
       text-align: center;
-      line-height: 1.6;
     }
 
     .services-grid {
       display: grid;
       grid-template-columns:
-        repeat(2, minmax(0, 1fr));
+        repeat(auto-fit, minmax(270px, 1fr));
       gap: 20px;
     }
 
     .service-card {
       padding: 24px;
-      background: var(--services-card);
-      border: 1px solid var(--services-border);
-      border-radius: 11px;
+      color: var(--mmc-black, #000000);
+      background: rgba(255, 255, 255, 0.96);
+      border: 3px solid var(--mmc-black, #000000);
+      border-radius: 14px;
+      box-shadow:
+        0 10px 24px rgba(0, 0, 0, 0.3);
+      transition:
+        transform 0.2s ease,
+        box-shadow 0.2s ease;
+    }
+
+    .service-card:hover {
+      transform: translateY(-4px);
+      box-shadow:
+        0 15px 30px rgba(0, 0, 0, 0.4),
+        0 0 16px rgba(255, 20, 147, 0.35),
+        0 0 22px rgba(0, 234, 255, 0.22);
     }
 
     .service-icon {
       display: flex;
-      width: 52px;
-      height: 52px;
+      width: 58px;
+      height: 58px;
       align-items: center;
       justify-content: center;
       margin-bottom: 16px;
-      background: #292929;
-      border: 1px solid var(--services-border);
-      border-radius: 10px;
-      font-size: 27px;
+      background:
+        linear-gradient(
+          135deg,
+          rgba(255, 20, 147, 0.25),
+          rgba(255, 230, 0, 0.25),
+          rgba(52, 230, 0, 0.22),
+          rgba(0, 234, 255, 0.25)
+        );
+      border: 2px solid var(--mmc-black, #000000);
+      border-radius: 12px;
+      font-size: 29px;
     }
 
     .service-card h3 {
       margin: 0 0 10px;
+      color: var(--mmc-black, #000000);
       font-size: 21px;
     }
 
     .service-card p {
       margin: 0;
-      color: var(--services-muted);
-      line-height: 1.6;
+      color: var(--mmc-muted-text, #333333);
+      line-height: 1.65;
     }
 
     .process-grid {
       display: grid;
       grid-template-columns:
         repeat(4, minmax(0, 1fr));
-      gap: 16px;
+      gap: 18px;
     }
 
     .process-step {
-      padding: 20px;
-      background: var(--services-card);
-      border: 1px solid var(--services-border);
-      border-radius: 10px;
+      padding: 22px;
+      color: var(--mmc-black, #000000);
+      background: rgba(255, 255, 255, 0.96);
+      border: 3px solid var(--mmc-black, #000000);
+      border-radius: 14px;
       text-align: center;
+      box-shadow:
+        0 10px 22px rgba(0, 0, 0, 0.27);
     }
 
     .process-number {
       display: flex;
-      width: 42px;
-      height: 42px;
-      margin: 0 auto 14px;
+      width: 48px;
+      height: 48px;
       align-items: center;
       justify-content: center;
-      color: #ffffff;
-      background: var(--services-primary);
+      margin: 0 auto 15px;
+      color: var(--mmc-black, #000000);
+      background:
+        linear-gradient(
+          135deg,
+          var(--mmc-hot-pink, #ff1493),
+          var(--mmc-yellow, #ffe600),
+          var(--mmc-green, #34e600),
+          var(--mmc-cyan, #00eaff)
+        );
+      border: 2px solid var(--mmc-black, #000000);
       border-radius: 50%;
-      font-size: 18px;
-      font-weight: 700;
+      font-size: 19px;
+      font-weight: 900;
     }
 
     .process-step h3 {
       margin: 0 0 9px;
-      font-size: 18px;
+      color: var(--mmc-black, #000000);
+      font-size: 19px;
     }
 
     .process-step p {
       margin: 0;
-      color: var(--services-muted);
-      line-height: 1.55;
+      color: var(--mmc-muted-text, #333333);
+      line-height: 1.6;
     }
 
     .custom-project-notice {
-      margin-top: 30px;
-      padding: 30px;
-      background: #172219;
-      border: 1px solid #355b3b;
-      border-radius: 14px;
       text-align: center;
     }
 
     .custom-project-notice h2 {
       margin: 0 0 12px;
-      font-size: 28px;
+      color: var(--mmc-black, #000000);
+      font-size: clamp(27px, 5vw, 38px);
     }
 
-    .custom-project-notice p {
-      max-width: 760px;
+    .custom-project-notice > p {
+      max-width: 800px;
       margin: 0 auto;
-      color: var(--services-muted);
-      line-height: 1.65;
-    }
-
-    .custom-project-action {
-      display: inline-flex;
-      min-height: 48px;
-      align-items: center;
-      justify-content: center;
-      margin-top: 22px;
-      padding: 11px 18px;
-      color: #ffffff;
-      background: var(--services-accent);
-      border-radius: 8px;
-      font-weight: 700;
-      text-decoration: none;
-    }
-
-    .custom-project-action:hover,
-    .custom-project-action:focus {
-      background: #43a047;
+      color: var(--mmc-muted-text, #333333);
+      line-height: 1.7;
     }
 
     .service-disclaimer {
-      margin: 28px 0 0;
-      padding: 18px;
-      color: var(--services-muted);
-      background: #181818;
-      border: 1px solid var(--services-border);
-      border-radius: 9px;
-      line-height: 1.6;
+      margin-bottom: 34px;
+      padding: 20px;
+      color: var(--mmc-muted-text, #333333);
+      line-height: 1.65;
     }
 
     .service-disclaimer strong {
-      color: var(--services-text);
+      color: var(--mmc-black, #000000);
     }
 
-    .site-footer {
-      margin-top: 42px;
-      padding: 24px 20px;
-      color: var(--services-muted);
-      background: #000000;
-      border-top: 1px solid var(--services-border);
-      text-align: center;
-    }
-
-    .site-footer p {
-      margin: 5px 0;
-      line-height: 1.5;
-    }
-
-    .site-footer a {
-      color: #ffffff;
-      text-decoration: underline;
-      text-underline-offset: 3px;
-    }
-
-    @media (max-width: 900px) {
+    @media (max-width: 950px) {
       .process-grid {
         grid-template-columns:
           repeat(2, minmax(0, 1fr));
       }
     }
 
-    @media (max-width: 720px) {
-      .services-grid {
-        grid-template-columns: 1fr;
-      }
-    }
-
-    @media (max-width: 600px) {
-      .header-buttons {
-        flex-direction: column;
-      }
-
-      .header-buttons a {
-        width: 100%;
-      }
-
+    @media (max-width: 700px) {
       .services-page {
+        width: calc(100% - 24px);
         margin: 22px auto;
-        padding: 0 14px;
       }
 
       .services-hero,
       .services-section,
-      .custom-project-notice {
-        padding: 26px 17px;
+      .custom-project-notice,
+      .service-disclaimer {
+        padding: 22px 16px;
       }
 
-      .hero-actions {
+      .services-hero {
+        padding-top: 32px;
+        padding-bottom: 32px;
+      }
+
+      .services-grid,
+      .process-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .hero-actions,
+      .service-actions {
         flex-direction: column;
       }
 
-      .hero-action {
+      .hero-actions .primary-action,
+      .hero-actions .secondary-action,
+      .service-actions .primary-action,
+      .service-actions .secondary-action {
         width: 100%;
-      }
-
-      .process-grid {
-        grid-template-columns: 1fr;
       }
     }
   </style>
 
-  <script src="navigation.js" defer></script>
-  <script src="cart.js" defer></script>
+  <!--
+    config.js loads first because it provides the public
+    Vercel backend URL for shared frontend scripts.
+  -->
+
+  <script
+    src="config.js"
+    defer
+  ></script>
+
+  <script
+    src="navigation.js"
+    defer
+  ></script>
+
+  <script
+    src="cart.js"
+    defer
+  ></script>
 </head>
 
 <body>
+  #main-content
+    Skip to main content
+  </a>
+
+  <!-- ========================================================
+       SHARED WEBSITE HEADER
+       ======================================================== -->
+
   <header class="top-header">
     <div class="header-content">
-      <h1 class="site-heading">
-        Multi-Maniacs Customs LLC
-      </h1>
-
-      <nav
-        class="header-buttons"
-        aria-label="Main website navigation"
+      <a
+        class="site-logo-link"
+        href="index.html"
+        aria-label="Go to the Multi-Maniacs Customs homepage"
       >
-        <a href="index.html">
-          Home
-        </a>
+        images/mmc-logo.png
+      </a>
 
-        <a href="about.html">
-          About
-        </a>
+      <div class="site-branding">
+        <p class="site-heading">
+          Multi-Maniacs Customs LLC
+        </p>
 
-        <a
-          href="services.html"
-          aria-current="page"
+        <p class="site-tagline">
+          Custom Possibilities Across Industries
+        </p>
+
+        <nav
+          class="header-buttons"
+          aria-label="Main website navigation"
         >
-          Services
-        </a>
+          <a href="index.html">
+            Home
+          </a>
 
-        <a href="shop.html">
-          Shop
-        </a>
+          <a href="about.html">
+            About
+          </a>
 
-        <a href="cart.html">
-          Cart
-
-          <span
-            id="cart-count"
-            class="cart-count-badge"
-            aria-label="0 items in cart"
+          <a
+            href="services.html"
+            aria-current="page"
           >
-            0
-          </span>
-        </a>
+            Services
+          </a>
 
-        <a href="contact.html">
-          Contact
-        </a>
+          <a href="gallery.html">
+            Gallery
+          </a>
 
-        <a href="gallery.html">
-          Gallery
-        </a>
-      </nav>
+          <a href="shop.html">
+            Shop
+          </a>
+
+          <a
+            class="cart-navigation-link"
+            href="cart.html"
+          >
+            Cart
+
+            <span
+              id="cart-count"
+              class="cart-count-badge"
+              data-cart-count
+              aria-label="0 items in cart"
+            >
+              0
+            </span>
+          </a>
+
+          <a href="contact.html">
+            Contact
+          </a>
+
+          <a href="client-intake.html">
+            Client Intake
+          </a>
+
+          <a
+            id="admin-navigation-button"
+            class="admin-navigation-button"
+            href="admin-login.html"
+            data-admin-navigation
+          >
+            Admin
+          </a>
+        </nav>
+      </div>
     </div>
   </header>
 
-  <main class="services-page">
+  <!-- ========================================================
+       SERVICES PAGE
+       ======================================================== -->
+
+  <main
+    id="main-content"
+    class="services-page"
+  >
+    <!-- ======================================================
+         SERVICES HERO
+         ====================================================== -->
+
     <section
       class="services-hero"
       aria-labelledby="services-heading"
     >
+      <div
+        class="tie-dye-color-bar"
+        aria-hidden="true"
+      ></div>
+
+      <p class="services-eyebrow">
+        Multi-Industry Customization
+      </p>
+
       <h1
         id="services-heading"
         class="services-heading"
@@ -498,14 +453,14 @@
 
       <div class="hero-actions">
         <a
-          class="hero-action primary-action"
-          href="contact.html"
+          class="primary-action"
+          href="client-intake.html"
         >
           Start a Custom Project
         </a>
 
         <a
-          class="hero-action secondary-action"
+          class="secondary-action"
           href="gallery.html"
         >
           View Our Gallery
@@ -513,10 +468,23 @@
       </div>
     </section>
 
+    <!-- ======================================================
+         SERVICE CATEGORIES
+         ====================================================== -->
+
     <section
       class="services-section"
       aria-labelledby="service-categories-heading"
     >
+      <div
+        class="tie-dye-color-bar"
+        aria-hidden="true"
+      ></div>
+
+      <p class="section-eyebrow">
+        Explore the Possibilities
+      </p>
+
       <h2
         id="service-categories-heading"
         class="section-heading"
@@ -526,9 +494,9 @@
 
       <p class="section-description">
         The categories below represent common project types, but
-        they do not limit what MMC can consider. Clients are
-        welcome to submit unique ideas through the client intake
-        process.
+        the categories do not limit what MMC can consider.
+        Clients are welcome to submit unique ideas through the
+        client intake process.
       </p>
 
       <div class="services-grid">
@@ -645,13 +613,139 @@
             and meaningful gifts.
           </p>
         </article>
+
+        <article class="service-card">
+          <div
+            class="service-icon"
+            aria-hidden="true"
+          >
+            👕
+          </div>
+
+          <h3>
+            Clothing and Apparel
+          </h3>
+
+          <p>
+            Personalized clothing, apparel graphics, names,
+            wording, images, themes, and design details created
+            around the client’s request.
+          </p>
+        </article>
+
+        <article class="service-card">
+          <div
+            class="service-icon"
+            aria-hidden="true"
+          >
+            💍
+          </div>
+
+          <h3>
+            Jewelry and Engraving
+          </h3>
+
+          <p>
+            Personalized jewelry concepts, engraving, keepsakes,
+            and meaningful custom details for personal use,
+            events, or gifts.
+          </p>
+        </article>
+
+        <article class="service-card">
+          <div
+            class="service-icon"
+            aria-hidden="true"
+          >
+            ⚙️
+          </div>
+
+          <h3>
+            Tools and Equipment
+          </h3>
+
+          <p>
+            Customization for tools, equipment, workspaces, and
+            specialized functional or decorative projects.
+          </p>
+        </article>
+
+        <article class="service-card">
+          <div
+            class="service-icon"
+            aria-hidden="true"
+          >
+            📹
+          </div>
+
+          <h3>
+            Home Protection
+          </h3>
+
+          <p>
+            Security camera and home-protection system
+            installation services planned around the property
+            and the client’s requested needs.
+          </p>
+        </article>
+
+        <article class="service-card">
+          <div
+            class="service-icon"
+            aria-hidden="true"
+          >
+            🌿
+          </div>
+
+          <h3>
+            Landscaping and Property Projects
+          </h3>
+
+          <p>
+            Landscaping, demolition, rebuilding, visual
+            improvements, customized property features, and
+            other project-based services.
+          </p>
+        </article>
+
+        <article class="service-card">
+          <div
+            class="service-icon"
+            aria-hidden="true"
+          >
+            🐾
+          </div>
+
+          <h3>
+            Pet Care
+          </h3>
+
+          <p>
+            Pet grooming and personalized pet-care services based
+            on the client’s requested needs and available
+            scheduling.
+          </p>
+        </article>
       </div>
     </section>
+
+    <!-- ======================================================
+         PROJECT PROCESS
+         ====================================================== -->
 
     <section
       class="services-section"
       aria-labelledby="service-process-heading"
     >
+      <div
+        class="tie-dye-color-bar"
+        aria-hidden="true"
+      ></div>
+
+      <p class="section-eyebrow">
+        From Idea to Completion
+      </p>
+
       <h2
         id="service-process-heading"
         class="section-heading"
@@ -662,12 +756,15 @@
       <p class="section-description">
         Custom projects begin with information gathering so MMC
         can understand the request before discussing pricing,
-        materials, and scheduling.
+        materials, production, and scheduling.
       </p>
 
       <div class="process-grid">
         <article class="process-step">
-          <div class="process-number">
+          <div
+            class="process-number"
+            aria-hidden="true"
+          >
             1
           </div>
 
@@ -677,13 +774,16 @@
 
           <p>
             Share the project type, description, goals, budget,
-            timeline, location, and any available reference
-            images.
+            timeline, location, measurements, and available
+            reference images.
           </p>
         </article>
 
         <article class="process-step">
-          <div class="process-number">
+          <div
+            class="process-number"
+            aria-hidden="true"
+          >
             2
           </div>
 
@@ -699,7 +799,10 @@
         </article>
 
         <article class="process-step">
-          <div class="process-number">
+          <div
+            class="process-number"
+            aria-hidden="true"
+          >
             3
           </div>
 
@@ -715,7 +818,10 @@
         </article>
 
         <article class="process-step">
-          <div class="process-number">
+          <div
+            class="process-number"
+            aria-hidden="true"
+          >
             4
           </div>
 
@@ -724,72 +830,193 @@
           </h3>
 
           <p>
-            Once approved, MMC begins the project and communicates
-            with the client about progress, changes, and
-            completion arrangements.
+            After approval, MMC begins the project and
+            communicates with the client about progress, changes,
+            and completion arrangements.
           </p>
         </article>
       </div>
     </section>
 
+    <!-- ======================================================
+         CUSTOM PROJECT NOTICE
+         ====================================================== -->
+
     <section
       class="custom-project-notice"
       aria-labelledby="custom-project-heading"
     >
+      <div
+        class="tie-dye-color-bar"
+        aria-hidden="true"
+      ></div>
+
+      <p class="section-eyebrow">
+        Unique Requests Are Welcome
+      </p>
+
       <h2 id="custom-project-heading">
         Have an Idea That Is Not Listed?
       </h2>
 
       <p>
         MMC is built around customization, creativity, and
-        open-minded project development. If a request does not fit
-        one of the service categories above, submit the idea
+        open-minded project development. If a request does not
+        fit one of the listed service categories, submit the idea
         anyway. The project can be reviewed to determine whether
-        it is a good fit for MMC.
+        the request is a good fit for MMC.
       </p>
 
-      <a
-        class="custom-project-action"
-        href="contact.html"
-      >
-        Submit a Client Intake Request
-      </a>
+      <div class="service-actions">
+        <a
+          class="primary-action"
+          href="client-intake.html"
+        >
+          Submit a Client Intake Request
+        </a>
+
+        <a
+          class="secondary-action"
+          href="contact.html"
+        >
+          Contact MMC
+        </a>
+      </div>
     </section>
 
-    <div class="service-disclaimer">
+    <!-- ======================================================
+         SERVICE DISCLAIMER
+         ====================================================== -->
+
+    <aside
+      class="service-disclaimer"
+      aria-label="Service availability notice"
+    >
       <strong>
         Project availability:
       </strong>
 
       Services, materials, pricing, timelines, shipping options,
       and project acceptance depend on the specific request.
-      Submitting an intake request does not guarantee project
-      acceptance or establish a final price.
-    </div>
+      Submitting a client intake request does not guarantee
+      project acceptance or establish a final price.
+    </aside>
   </main>
 
+  <!-- ========================================================
+       SHARED BLACK FOOTER
+       ======================================================== -->
+
   <footer class="site-footer">
+    images/mmc-logo.png
+
     <p>
-      &copy; 2026 Multi-Maniacs Customs LLC
+      <strong>
+        Multi-Maniacs Customs LLC
+      </strong>
     </p>
 
     <p>
-      Essie, Kentucky | Serving clients throughout the United
+      Multi-industry customization, creative builds, and
+      personalized client projects.
+    </p>
+
+    <p>
+      Essie, Kentucky | Clients accepted throughout the United
       States
     </p>
 
     <p>
-      <a href="contact.html">
-        Contact Multi-Maniacs Customs
+      Phone:
+
+      tel:+16062200185
+        (606) 220-0185
       </a>
+
+      <span aria-hidden="true">
+        |
+      </span>
+
+      tel:+16062124695
+        (606) 212-4695
+      </a>
+    </p>
+
+    <p>
+      Email:
+
+      <a href="mailto:multimaniacscustoms@gmail.com">
+        multimaniacscustoms@gmail.com
+      </a>
+    </p>
+
+    <p>
+      <a
+        href="https://www.facebook.com/profile.php?id=61576404930589"
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        Visit the MMC Facebook Page
+      </a>
+    </p>
+
+    <nav
+      class="footer-navigation"
+      aria-label="Footer navigation"
+    >
+      <a href="index.html">
+        Home
+      </a>
+
+      <a href="about.html">
+        About
+      </a>
+
+      <a
+        href="services.html"
+        aria-current="page"
+      >
+        Services
+      </a>
+
+      <a href="gallery.html">
+        Gallery
+      </a>
+
+      <a href="shop.html">
+        Shop
+      </a>
+
+      <a href="cart.html">
+        Cart
+      </a>
+
+      <a href="contact.html">
+        Contact
+      </a>
+
+      <a href="client-intake.html">
+        Client Intake
+      </a>
+
+      <a
+        href="admin-login.html"
+        data-admin-navigation
+      >
+        Admin
+      </a>
+    </nav>
+
+    <p class="footer-copyright">
+      &copy; 2026 Multi-Maniacs Customs LLC. All rights reserved.
     </p>
   </footer>
 
   <noscript>
-    <p>
+    <div class="noscript-message">
       JavaScript is disabled, but the service information and
       navigation links will still work.
-    </p>
+    </div>
   </noscript>
 </body>
 </html>

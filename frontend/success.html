@@ -13,113 +13,125 @@
     content="Your Multi-Maniacs Customs submission was successfully received."
   >
 
+  <meta
+    name="theme-color"
+    content="#000000"
+  >
+
+  <meta
+    name="robots"
+    content="noindex, nofollow"
+  >
+
   <title>
     Success | Multi-Maniacs Customs LLC
   </title>
 
-  <link rel="stylesheet" href="style.css">
+  <link
+    rel="stylesheet"
+    href="style.css"
+  >
 
   <style>
+    /* ========================================================
+       MMC SUCCESS PAGE
+       Page-specific layout only.
+       Shared header, footer, navigation, colors, and buttons
+       are controlled by style.css.
+       ======================================================== */
+
     .success-page {
       display: flex;
-      width: 100%;
-      max-width: 760px;
+      width: calc(100% - 32px);
+      max-width: 800px;
       min-height: 65vh;
-      margin: 0 auto;
       align-items: center;
       justify-content: center;
-      padding: 40px 20px;
+      margin: 34px auto;
     }
 
     .success-panel {
+      position: relative;
       width: 100%;
-      padding: 42px 30px;
-      color: #000000;
-      background: rgba(255, 255, 255, 0.94);
-      border: 3px solid #000000;
-      border-radius: 16px;
+      overflow: hidden;
+      padding: 38px 30px;
+      color: var(--mmc-black, #000000);
+      background: rgba(255, 255, 255, 0.96);
+      border: 3px solid var(--mmc-black, #000000);
+      border-radius: 18px;
       text-align: center;
       box-shadow:
-        0 20px 60px rgba(0, 0, 0, 0.4),
-        0 0 22px rgba(255, 0, 168, 0.35),
-        0 0 30px rgba(0, 234, 255, 0.25);
-    }
-
-    .success-color-bar {
-      width: 100%;
-      height: 9px;
-      margin-bottom: 26px;
-      background:
-        linear-gradient(
-          90deg,
-          #ff1493,
-          #ef00ff,
-          #007bff,
-          #00eaff,
-          #34e600,
-          #ffe600,
-          #ff7a00,
-          #ff1493
-        );
-      border: 2px solid #000000;
-      border-radius: 999px;
+        0 20px 55px rgba(0, 0, 0, 0.45),
+        0 0 20px rgba(255, 20, 147, 0.35),
+        0 0 26px rgba(0, 234, 255, 0.25);
     }
 
     .success-icon {
       display: flex;
       width: 82px;
       height: 82px;
-      margin: 0 auto 22px;
       align-items: center;
       justify-content: center;
-      color: #000000;
+      margin: 0 auto 22px;
+      color: var(--mmc-black, #000000);
       background:
         linear-gradient(
           135deg,
-          #ff1493,
-          #ffe600,
-          #34e600,
-          #00eaff
+          var(--mmc-hot-pink, #ff1493),
+          var(--mmc-yellow, #ffe600),
+          var(--mmc-green, #34e600),
+          var(--mmc-cyan, #00eaff)
         );
-      border: 3px solid #000000;
+      border: 3px solid var(--mmc-black, #000000);
       border-radius: 50%;
       font-size: 42px;
       font-weight: 900;
+      line-height: 1;
       box-shadow:
-        0 6px 0 #000000,
-        0 0 18px rgba(255, 0, 168, 0.45);
+        0 6px 0 var(--mmc-black, #000000),
+        0 0 18px rgba(255, 20, 147, 0.45);
+    }
+
+    .success-eyebrow {
+      margin: 0 0 8px;
+      color: #126b17;
+      font-size: 13px;
+      font-weight: 900;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
     }
 
     .success-heading {
       margin: 0 0 14px;
-      color: #000000;
+      color: var(--mmc-black, #000000);
       font-size: clamp(34px, 7vw, 48px);
       line-height: 1.1;
     }
 
     .success-description {
-      max-width: 610px;
+      max-width: 620px;
       margin: 0 auto;
-      color: #222222;
+      color: var(--mmc-muted-text, #333333);
       font-size: 17px;
-      line-height: 1.65;
+      line-height: 1.7;
     }
 
     .success-notice {
-      margin-top: 24px;
-      padding: 16px;
-      color: #000000;
+      max-width: 650px;
+      margin: 24px auto 0;
+      padding: 18px;
+      color: var(--mmc-black, #000000);
       background:
         linear-gradient(
           135deg,
-          rgba(255, 20, 147, 0.20),
-          rgba(255, 230, 0, 0.22),
-          rgba(52, 230, 0, 0.20),
-          rgba(0, 234, 255, 0.22)
+          rgba(255, 20, 147, 0.14),
+          rgba(255, 230, 0, 0.18),
+          rgba(52, 230, 0, 0.14),
+          rgba(0, 234, 255, 0.16)
         );
-      border: 2px solid #000000;
+      border: 2px solid var(--mmc-black, #000000);
       border-radius: 10px;
-      line-height: 1.55;
+      line-height: 1.6;
     }
 
     .success-actions {
@@ -136,24 +148,26 @@
       align-items: center;
       justify-content: center;
       padding: 11px 18px;
-      color: #000000;
+      color: var(--mmc-black, #000000);
       background:
         linear-gradient(
           135deg,
-          #ff1493,
-          #ffe600,
-          #34e600,
-          #00eaff
+          var(--mmc-hot-pink, #ff1493),
+          var(--mmc-yellow, #ffe600),
+          var(--mmc-green, #34e600),
+          var(--mmc-cyan, #00eaff)
         );
-      border: 2px solid #000000;
+      border: 2px solid var(--mmc-black, #000000);
       border-radius: 8px;
-      font-weight: 800;
+      font-weight: 900;
+      text-align: center;
       text-decoration: none;
-      box-shadow: 0 5px 0 #000000;
+      box-shadow:
+        0 5px 0 var(--mmc-black, #000000);
       transition:
+        filter 0.2s ease,
         transform 0.2s ease,
-        box-shadow 0.2s ease,
-        filter 0.2s ease;
+        box-shadow 0.2s ease;
     }
 
     .success-action:hover,
@@ -161,29 +175,30 @@
       filter: saturate(1.2) brightness(1.04);
       transform: translateY(-2px);
       box-shadow:
-        0 7px 0 #000000,
-        0 0 14px rgba(255, 0, 168, 0.45);
+        0 7px 0 var(--mmc-black, #000000),
+        0 0 14px rgba(255, 20, 147, 0.45);
     }
 
     .secondary-success-action {
-      color: #ffffff;
-      background: #000000;
+      color: var(--mmc-white, #ffffff);
+      background: var(--mmc-black, #000000);
     }
 
     .secondary-success-action:hover,
     .secondary-success-action:focus {
-      color: #000000;
-      background: #00eaff;
+      color: var(--mmc-black, #000000);
+      background: var(--mmc-cyan, #00eaff);
     }
 
     @media (max-width: 600px) {
       .success-page {
+        width: calc(100% - 24px);
         min-height: 55vh;
-        padding: 26px 14px;
+        margin: 22px auto;
       }
 
       .success-panel {
-        padding: 32px 18px;
+        padding: 32px 16px;
       }
 
       .success-actions {
@@ -196,25 +211,49 @@
     }
   </style>
 
-  <script src="navigation.js" defer></script>
-  <script src="cart.js" defer></script>
+  <script
+    src="config.js"
+    defer
+  ></script>
+
+  <script
+    src="navigation.js"
+    defer
+  ></script>
+
+  <script
+    src="cart.js"
+    defer
+  ></script>
 </head>
 
 <body>
+  #main-content
+    Skip to main content
+  </a>
+
+  <!-- ========================================================
+       SHARED WEBSITE HEADER
+       ======================================================== -->
+
   <header class="top-header">
     <div class="header-content">
       <a
         class="site-logo-link"
         href="index.html"
-        aria-label="Go to the Multi-Maniacs Customs home page"
+        aria-label="Go to the Multi-Maniacs Customs homepage"
       >
-        mmc-logo.png
+        images/mmc-logo.png
       </a>
 
       <div class="site-branding">
-        <h1 class="site-heading">
+        <p class="site-heading">
           Multi-Maniacs Customs LLC
-        </h1>
+        </p>
+
+        <p class="site-tagline">
+          Custom Possibilities Across Industries
+        </p>
 
         <nav
           class="header-buttons"
@@ -240,12 +279,16 @@
             Shop
           </a>
 
-          <a href="cart.html">
+          <a
+            class="cart-navigation-link"
+            href="cart.html"
+          >
             Cart
 
             <span
               id="cart-count"
               class="cart-count-badge"
+              data-cart-count
               aria-label="0 items in cart"
             >
               0
@@ -255,18 +298,38 @@
           <a href="contact.html">
             Contact
           </a>
+
+          <a href="client-intake.html">
+            Client Intake
+          </a>
+
+          <a
+            id="admin-navigation-button"
+            class="admin-navigation-button"
+            href="admin-login.html"
+            data-admin-navigation
+          >
+            Admin
+          </a>
         </nav>
       </div>
     </div>
   </header>
 
-  <main class="success-page">
+  <!-- ========================================================
+       SUCCESS CONFIRMATION
+       ======================================================== -->
+
+  <main
+    id="main-content"
+    class="success-page"
+  >
     <section
       class="success-panel"
       aria-labelledby="success-heading"
     >
       <div
-        class="success-color-bar"
+        class="tie-dye-color-bar"
         aria-hidden="true"
       ></div>
 
@@ -277,6 +340,10 @@
         ✓
       </div>
 
+      <p class="success-eyebrow">
+        Submission Received
+      </p>
+
       <h1
         id="success-heading"
         class="success-heading"
@@ -285,16 +352,17 @@
       </h1>
 
       <p class="success-description">
-        Thank you! Your request, order, or submission has been
-        received by Multi-Maniacs Customs. We will review the
+        Thank you. Your request, order, or submission has been
+        received by Multi-Maniacs Customs. MMC will review the
         details and follow up with the next steps as soon as
         possible.
       </p>
 
       <div class="success-notice">
-        Please keep any confirmation information you received. If
-        you have questions or need to provide additional project
-        details, contact Multi-Maniacs Customs for assistance.
+        Please keep any confirmation information you received.
+        If you have questions or need to provide additional
+        project details, contact Multi-Maniacs Customs for
+        assistance.
       </div>
 
       <div class="success-actions">
@@ -322,29 +390,117 @@
     </section>
   </main>
 
+  <!-- ========================================================
+       SHARED BLACK FOOTER
+       ======================================================== -->
+
   <footer class="site-footer">
-    mmc-logo.png
+    images/mmc-logo.png
 
     <p>
-      &copy; 2026 Multi-Maniacs Customs LLC
+      <strong>
+        Multi-Maniacs Customs LLC
+      </strong>
     </p>
 
     <p>
-      Essie, Kentucky | Serving clients throughout the United States
+      Multi-industry customization, creative builds, and
+      personalized client projects.
     </p>
 
     <p>
-      <a href="contact.html">
-        Contact Multi-Maniacs Customs
+      Essie, Kentucky | Clients accepted throughout the United
+      States
+    </p>
+
+    <p>
+      Phone:
+
+      tel:+16062200185
+        (606) 220-0185
       </a>
+
+      <span aria-hidden="true">
+        |
+      </span>
+
+      tel:+16062124695
+        (606) 212-4695
+      </a>
+    </p>
+
+    <p>
+      Email:
+
+      <a href="mailto:multimaniacscustoms@gmail.com">
+        multimaniacscustoms@gmail.com
+      </a>
+    </p>
+
+    <p>
+      <a
+        href="https://www.facebook.com/profile.php?id=61576404930589"
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        Visit the MMC Facebook Page
+      </a>
+    </p>
+
+    <nav
+      class="footer-navigation"
+      aria-label="Footer navigation"
+    >
+      <a href="index.html">
+        Home
+      </a>
+
+      <a href="about.html">
+        About
+      </a>
+
+      <a href="services.html">
+        Services
+      </a>
+
+      <a href="gallery.html">
+        Gallery
+      </a>
+
+      <a href="shop.html">
+        Shop
+      </a>
+
+      <a href="cart.html">
+        Cart
+      </a>
+
+      <a href="contact.html">
+        Contact
+      </a>
+
+      <a href="client-intake.html">
+        Client Intake
+      </a>
+
+      <a
+        href="admin-login.html"
+        data-admin-navigation
+      >
+        Admin
+      </a>
+    </nav>
+
+    <p class="footer-copyright">
+      &copy; 2026 Multi-Maniacs Customs LLC. All rights reserved.
     </p>
   </footer>
 
   <noscript>
-    <p>
+    <div class="noscript-message">
       JavaScript is disabled, but all links on this confirmation
       page will still work.
-    </p>
+    </div>
   </noscript>
 </body>
-</html>  
+</html>

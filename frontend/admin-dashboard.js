@@ -1,544 +1,1218 @@
 // ============================================================
 // MULTI-MANIACS CUSTOMS LLC
-// ADMIN DASHBOARD
+// FILE: admin-dashboard.js
+// ADMINISTRATOR DASHBOARD
 //
 // Hosting: Vercel
 // Database: Neon PostgreSQL
 // Authentication: JWT multi-admin system
 // ============================================================
 
-const BACKEND_URL =
-  window.MMC_BACKEND_URL ||
-  window.location.origin;
+(function () {
+  "use strict";
 
-const ADMIN_PRODUCTS_API =
-  `${BACKEND_URL}/admin/products`;
+  // ==========================================================
+  // CONFIGURATION
+  // ==========================================================
 
-// ============================================================
-// AUTHENTICATION HELPERS
-// ============================================================
+  var REQUEST_TIMEOUT_MS =
+    15000;
 
-function getAdminToken() {
-  return localStorage.getItem(
-    "adminToken"
-  );
-}
+  var dashboardLoading =
+    false;
 
-function getAdminHeaders() {
-  return {
-    Authorization:
-      `Bearer ${getAdminToken()}`
-  };
-}
+  // ==========================================================
+  // ELEMENT HELPERS
+  // ==========================================================
 
-function redirectToLogin() {
-  localStorage.removeItem(
-    "adminToken"
-  );
-
-  localStorage.removeItem(
-    "adminUser"
-  );
-
-  localStorage.removeItem(
-    "MMC_ADMIN_TOKEN"
-  );
-
-  window.location.href =
-    "admin-login.html";
-}
-
-function logoutAdmin() {
-  redirectToLogin();
-}
-
-// ============================================================
-// QUICK NAVIGATION
-// ============================================================
-
-function go(page) {
-  if (!page) {
-    return;
+  function getElement(
+    elementId
+  ) {
+    return document.getElementById(
+      elementId
+    );
   }
 
-  window.location.href = page;
-}
+  // ==========================================================
+  // BACKEND URL
+  // ==========================================================
 
-// ============================================================
-// READ SERVER RESPONSE
-// ============================================================
+  function removeTrailingSlashes(
+    value
+  ) {
+    return String(value || "")
+      .trim()
+      .replace(
+        /\/+$/,
+        ""
+      );
+  }
 
-async function readDashboardResponse(
-  response
-) {
-  let data;
+  function getBackendUrl() {
+    if (
+      typeof window.MMC_BACKEND_URL ===
+        "string" &&
+      window.MMC_BACKEND_URL.trim()
+    ) {
+      return removeTrailingSlashes(
+        window.MMC_BACKEND_URL
+      );
+    }
 
-  try {
-    data = await response.json();
-  } catch (error) {
-    data = {
-      error:
-        "The server returned an unexpected response."
+    if (
+      window.location.hostname ===
+        "localhost" ||
+      window.location.hostname ===
+        "127.0.0.1"
+    ) {
+      return "http://localhost:10000";
+    }
+
+    return removeTrailingSlashes(
+      window.location.origin
+    );
+  }
+
+  var BACKEND_URL =
+    getBackendUrl();
+
+  var ADMIN_SESSION_URL =
+    BACKEND_URL +
+    "/admin/me";
+
+  var ADMIN_PRODUCTS_URL =
+    BACKEND_URL +
+    "/admin/products";
+
+  // ==========================================================
+  // AUTHENTICATION
+  // ==========================================================
+
+  function getAdminToken() {
+    return String(
+      localStorage.getItem(
+        "adminToken"
+      ) ||
+      localStorage.getItem(
+        "MMC_ADMIN_TOKEN"
+      ) ||
+      ""
+    ).trim();
+  }
+
+  function getAdminHeaders() {
+    return {
+      Accept:
+        "application/json",
+
+      Authorization:
+        "Bearer " +
+        getAdminToken()
     };
   }
 
-  if (response.status === 401) {
-    redirectToLogin();
+  function clearSavedAdminLogin() {
+    localStorage.removeItem(
+      "adminToken"
+    );
 
-    throw new Error(
-      data.error ||
-      "Your admin session expired. Please log in again."
+    localStorage.removeItem(
+      "adminUser"
+    );
+
+    localStorage.removeItem(
+      "MMC_ADMIN_TOKEN"
     );
   }
 
-  if (!response.ok) {
-    throw new Error(
-      data.error ||
-      `Request failed with status ${response.status}.`
-    );
-  }
+  function redirectToLogin() {
+    clearSavedAdminLogin();
 
-  return data;
-}
-
-// ============================================================
-// VERIFY ADMIN SESSION
-// ============================================================
-
-async function verifyAdminSession() {
-  const token = getAdminToken();
-
-  if (!token) {
-    redirectToLogin();
-    return false;
-  }
-
-  try {
-    const response = await fetch(
-      `${BACKEND_URL}/admin/me`,
-      {
-        method: "GET",
-        headers: getAdminHeaders()
-      }
-    );
-
-    const data =
-      await readDashboardResponse(
-        response
-      );
-
-    localStorage.setItem(
-      "adminUser",
-      JSON.stringify(
-        data.admin || {}
+    window.location.replace(
+      "admin-login.html?return=" +
+      encodeURIComponent(
+        "admin-dashboard.html"
       )
     );
-
-    displayAdminInformation(
-      data.admin || {}
-    );
-
-    return true;
-  } catch (error) {
-    console.error(
-      "Admin session check failed:",
-      error
-    );
-
-    return false;
-  }
-}
-
-// ============================================================
-// DISPLAY LOGGED-IN ADMIN
-// ============================================================
-
-function displayAdminInformation(
-  admin
-) {
-  const usernameElement =
-    document.getElementById(
-      "admin-username"
-    );
-
-  const roleElement =
-    document.getElementById(
-      "admin-role"
-    );
-
-  if (usernameElement) {
-    usernameElement.textContent =
-      admin.username || "";
   }
 
-  if (roleElement) {
-    roleElement.textContent =
-      formatRole(admin.role);
+  function logoutAdmin() {
+    redirectToLogin();
   }
 
-  updateAdminManagementVisibility(
-    admin.role
-  );
-}
+  // ==========================================================
+  // QUICK NAVIGATION
+  // ==========================================================
 
-function formatRole(role) {
-  if (!role) {
-    return "";
-  }
-
-  return String(role)
-    .replaceAll("_", " ")
-    .replace(
-      /\b\w/g,
-      (letter) =>
-        letter.toUpperCase()
-    );
-}
-
-function updateAdminManagementVisibility(
-  role
-) {
-  const protectedElements =
-    document.querySelectorAll(
-      "[data-super-admin-only]"
-    );
-
-  protectedElements.forEach(
-    (element) => {
-      element.hidden =
-        role !== "super_admin";
-    }
-  );
-}
-
-// ============================================================
-// UPDATE A DASHBOARD STATISTIC
-// ============================================================
-
-function updateStat(
-  elementId,
-  value
-) {
-  const element =
-    document.getElementById(
-      elementId
-    );
-
-  if (element) {
-    element.textContent =
-      String(value);
-  }
-}
-
-// ============================================================
-// LOAD DASHBOARD STATISTICS
-// ============================================================
-
-async function loadStats() {
-  const statusElement =
-    document.getElementById(
-      "dashboard-status"
-    );
-
-  try {
-    if (statusElement) {
-      statusElement.textContent =
-        "Loading dashboard...";
+  function go(
+    page
+  ) {
+    if (!page) {
+      return;
     }
 
-    const response = await fetch(
-      ADMIN_PRODUCTS_API,
-      {
-        method: "GET",
-        headers: getAdminHeaders()
-      }
-    );
+    window.location.href =
+      page;
+  }
 
-    const products =
-      await readDashboardResponse(
-        response
+  function openProductManagement() {
+    window.location.href =
+      "admin-products.html";
+  }
+
+  function openSettings() {
+    window.location.href =
+      "admin-settings.html";
+  }
+
+  function openWebsite() {
+    window.location.href =
+      "index.html";
+  }
+
+  // ==========================================================
+  // FETCH WITH TIMEOUT
+  // ==========================================================
+
+  async function fetchWithTimeout(
+    url,
+    options
+  ) {
+    var controller =
+      new AbortController();
+
+    var timeoutIdentifier =
+      window.setTimeout(
+        function () {
+          controller.abort();
+        },
+        REQUEST_TIMEOUT_MS
       );
 
-    if (!Array.isArray(products)) {
-      throw new Error(
-        "The server did not return a valid product list."
-      );
-    }
-
-    const totalProducts =
-      products.length;
-
-    let totalVariants = 0;
-    let activeProducts = 0;
-    let inactiveProducts = 0;
-    let totalStock = 0;
-    let lowStockProducts = 0;
-    let outOfStockProducts = 0;
-
-    products.forEach((product) => {
-      const variants =
-        Array.isArray(
-          product.variants
+    try {
+      return await fetch(
+        url,
+        Object.assign(
+          {},
+          options || {},
+          {
+            signal:
+              controller.signal
+          }
         )
-          ? product.variants
-          : [];
+      );
+    } finally {
+      window.clearTimeout(
+        timeoutIdentifier
+      );
+    }
+  }
 
-      totalVariants +=
-        variants.length;
+  // ==========================================================
+  // SERVER RESPONSE
+  // ==========================================================
 
-      if (product.active) {
-        activeProducts += 1;
-      } else {
-        inactiveProducts += 1;
+  async function readDashboardResponse(
+    response
+  ) {
+    var responseText =
+      "";
+
+    try {
+      responseText =
+        await response.text();
+    } catch (error) {
+      responseText =
+        "";
+    }
+
+    var responseData =
+      {};
+
+    if (responseText) {
+      try {
+        responseData =
+          JSON.parse(
+            responseText
+          );
+      } catch (error) {
+        responseData = {
+          error:
+            responseText
+        };
+      }
+    }
+
+    if (
+      response.status ===
+      401
+    ) {
+      redirectToLogin();
+
+      throw new Error(
+        getErrorMessage(
+          responseData,
+          "Your administrator session expired. Please log in again."
+        )
+      );
+    }
+
+    if (
+      response.status ===
+      403
+    ) {
+      throw new Error(
+        getErrorMessage(
+          responseData,
+          "You do not have permission to perform this action."
+        )
+      );
+    }
+
+    if (!response.ok) {
+      throw new Error(
+        getErrorMessage(
+          responseData,
+          (
+            "The request failed with status " +
+            response.status +
+            "."
+          )
+        )
+      );
+    }
+
+    return responseData;
+  }
+
+  function getErrorMessage(
+    value,
+    fallbackMessage
+  ) {
+    if (
+      typeof value ===
+        "string" &&
+      value.trim()
+    ) {
+      return value.trim();
+    }
+
+    if (
+      value &&
+      typeof value ===
+        "object"
+    ) {
+      if (
+        typeof value.message ===
+          "string" &&
+        value.message.trim()
+      ) {
+        return value.message.trim();
       }
 
-      const lowStockLimit =
-        Number(
-          product.lowStockWarning ||
-          5
+      if (
+        value.error !==
+        undefined
+      ) {
+        return getErrorMessage(
+          value.error,
+          fallbackMessage
         );
+      }
+    }
 
-      if (variants.length > 0) {
-        variants.forEach(
-          (variant) => {
-            totalStock += Math.max(
-              0,
-              Number(
-                variant.stock || 0
-              )
-            );
+    return fallbackMessage;
+  }
+
+  // ==========================================================
+  // DASHBOARD STATUS
+  // ==========================================================
+
+  function showDashboardStatus(
+    message,
+    messageType
+  ) {
+    var statusElement =
+      getElement(
+        "dashboard-status"
+      );
+
+    if (!statusElement) {
+      return;
+    }
+
+    statusElement.textContent =
+      String(message || "");
+
+    statusElement.classList.remove(
+      "dashboard-success",
+      "dashboard-error",
+      "dashboard-information",
+      "admin-success",
+      "admin-error",
+      "admin-information"
+    );
+
+    statusElement.removeAttribute(
+      "role"
+    );
+
+    if (!message) {
+      return;
+    }
+
+    if (
+      messageType ===
+      "success"
+    ) {
+      statusElement.classList.add(
+        "dashboard-success"
+      );
+
+      statusElement.setAttribute(
+        "role",
+        "status"
+      );
+    } else if (
+      messageType ===
+      "error"
+    ) {
+      statusElement.classList.add(
+        "dashboard-error"
+      );
+
+      statusElement.setAttribute(
+        "role",
+        "alert"
+      );
+    } else {
+      statusElement.classList.add(
+        "dashboard-information"
+      );
+
+      statusElement.setAttribute(
+        "role",
+        "status"
+      );
+    }
+  }
+
+  // ==========================================================
+  // ADMINISTRATOR INFORMATION
+  // ==========================================================
+
+  function formatRole(
+    role
+  ) {
+    return String(
+      role ||
+      "Administrator"
+    )
+      .replace(
+        /_/g,
+        " "
+      )
+      .replace(
+        /\b\w/g,
+        function (letter) {
+          return letter.toUpperCase();
+        }
+      );
+  }
+
+  function displayAdminInformation(
+    admin
+  ) {
+    var username =
+      String(
+        admin.username ||
+        admin.name ||
+        admin.email ||
+        "Administrator"
+      );
+
+    var formattedRole =
+      formatRole(
+        admin.role
+      );
+
+    [
+      "admin-username",
+      "admin-header-username"
+    ].forEach(
+      function (elementId) {
+        var element =
+          getElement(
+            elementId
+          );
+
+        if (element) {
+          element.textContent =
+            username;
+        }
+      }
+    );
+
+    [
+      "admin-role",
+      "admin-header-role"
+    ].forEach(
+      function (elementId) {
+        var element =
+          getElement(
+            elementId
+          );
+
+        if (element) {
+          element.textContent =
+            formattedRole;
+        }
+      }
+    );
+
+    updateAdminManagementVisibility(
+      admin.role
+    );
+  }
+
+  function updateAdminManagementVisibility(
+    role
+  ) {
+    var protectedElements =
+      document.querySelectorAll(
+        "[data-super-admin-only]"
+      );
+
+    var normalizedRole =
+      String(role || "")
+        .trim()
+        .toLowerCase();
+
+    var isSuperAdministrator =
+      normalizedRole ===
+        "super_admin" ||
+      normalizedRole ===
+        "super-admin" ||
+      normalizedRole ===
+        "super administrator";
+
+    protectedElements.forEach(
+      function (element) {
+        element.hidden =
+          !isSuperAdministrator;
+      }
+    );
+  }
+
+  // ==========================================================
+  // VERIFY ADMINISTRATOR SESSION
+  // ==========================================================
+
+  async function verifyAdminSession() {
+    var token =
+      getAdminToken();
+
+    if (!token) {
+      redirectToLogin();
+
+      return false;
+    }
+
+    try {
+      var response =
+        await fetchWithTimeout(
+          ADMIN_SESSION_URL,
+          {
+            method:
+              "GET",
+
+            headers:
+              getAdminHeaders()
           }
         );
 
-        const allVariantsOutOfStock =
-          variants.every(
-            (variant) =>
-              Number(
-                variant.stock || 0
-              ) <= 0
-          );
+      var responseData =
+        await readDashboardResponse(
+          response
+        );
 
-        const hasLowStockVariant =
-          variants.some(
-            (variant) => {
-              const variantStock =
-                Number(
-                  variant.stock || 0
-                );
+      var administrator =
+        responseData.admin ||
+        responseData.user ||
+        responseData;
 
-              return (
-                variantStock > 0 &&
-                variantStock <=
-                  lowStockLimit
-              );
-            }
-          );
+      localStorage.setItem(
+        "adminUser",
+        JSON.stringify(
+          administrator
+        )
+      );
 
-        if (allVariantsOutOfStock) {
-          outOfStockProducts += 1;
-        } else if (
-          hasLowStockVariant
-        ) {
-          lowStockProducts += 1;
-        }
+      displayAdminInformation(
+        administrator
+      );
+
+      return true;
+    } catch (error) {
+      console.error(
+        "Administrator session check failed.",
+        error
+      );
+
+      if (
+        error &&
+        error.name ===
+          "AbortError"
+      ) {
+        showDashboardStatus(
+          "The administrator session check took too long. Please reload the page.",
+          "error"
+        );
       } else {
-        const productStock =
-          Math.max(
-            0,
-            Number(
-              product.stock || 0
-            )
-          );
-
-        totalStock += productStock;
-
-        if (productStock <= 0) {
-          outOfStockProducts += 1;
-        } else if (
-          productStock <=
-          lowStockLimit
-        ) {
-          lowStockProducts += 1;
-        }
+        showDashboardStatus(
+          getErrorMessage(
+            error,
+            "Your administrator session could not be verified."
+          ),
+          "error"
+        );
       }
-    });
 
+      return false;
+    }
+  }
+
+  // ==========================================================
+  // UPDATE STATISTIC
+  // ==========================================================
+
+  function updateStat(
+    elementId,
+    value
+  ) {
+    var element =
+      getElement(
+        elementId
+      );
+
+    if (element) {
+      element.textContent =
+        String(value);
+    }
+  }
+
+  function resetDashboardStatistics() {
     updateStat(
       "totalProducts",
-      totalProducts
+      0
     );
 
     updateStat(
       "totalVariants",
-      totalVariants
+      0
     );
 
     updateStat(
       "activeProducts",
-      activeProducts
+      0
     );
 
     updateStat(
       "inactiveProducts",
-      inactiveProducts
+      0
     );
 
     updateStat(
       "totalStock",
-      totalStock
+      0
     );
 
     updateStat(
       "lowStockProducts",
-      lowStockProducts
+      0
     );
 
     updateStat(
       "outOfStockProducts",
-      outOfStockProducts
-    );
-
-    if (statusElement) {
-      statusElement.textContent =
-        "Dashboard updated.";
-    }
-  } catch (error) {
-    console.error(
-      "Dashboard statistics failed:",
-      error
-    );
-
-    if (statusElement) {
-      statusElement.textContent =
-        error.message ||
-        "Unable to load the dashboard.";
-    }
-  }
-}
-// ============================================================
-// REFRESH DASHBOARD
-// ============================================================
-
-async function refreshDashboard() {
-  const refreshButton =
-    document.getElementById(
-      "refresh-dashboard-button"
-    );
-
-  try {
-    if (refreshButton) {
-      refreshButton.disabled = true;
-
-      refreshButton.textContent =
-        "Refreshing...";
-    }
-
-    await loadStats();
-  } finally {
-    if (refreshButton) {
-      refreshButton.disabled = false;
-
-      refreshButton.textContent =
-        "Refresh Dashboard";
-    }
-  }
-}
-// ============================================================
-// OPEN PRODUCT MANAGEMENT
-// ============================================================
-
-function openProductManagement() {
-  window.location.href =
-    "admin.html";
-}
-
-// ============================================================
-// OPEN ADMIN MANAGEMENT
-// ============================================================
-
-function openAdminManagement() {
-  const savedAdmin =
-    localStorage.getItem(
-      "adminUser"
-    );
-
-  let admin = null;
-
-  try {
-    admin = savedAdmin
-      ? JSON.parse(savedAdmin)
-      : null;
-  } catch (error) {
-    console.error(
-      "Could not read administrator information:",
-      error
+      0
     );
   }
 
-  if (
-    !admin ||
-    admin.role !== "super_admin"
+  // ==========================================================
+  // PRODUCT DATA HELPERS
+  // ==========================================================
+
+  function getProductList(
+    responseData
   ) {
-    alert(
-      "Only a super administrator can manage administrator accounts."
-    );
+    if (
+      Array.isArray(
+        responseData
+      )
+    ) {
+      return responseData;
+    }
 
-    return;
+    if (
+      responseData &&
+      Array.isArray(
+        responseData.products
+      )
+    ) {
+      return responseData.products;
+    }
+
+    if (
+      responseData &&
+      responseData.data &&
+      Array.isArray(
+        responseData.data.products
+      )
+    ) {
+      return responseData.data.products;
+    }
+
+    return null;
   }
 
-  window.location.href =
-    "admin-users.html";
-}
+  function getNonNegativeNumber(
+    value
+  ) {
+    var number =
+      Number(value);
 
-// ============================================================
-// OPEN SETTINGS
-// ============================================================
+    if (
+      !Number.isFinite(number)
+    ) {
+      return 0;
+    }
 
-function openSettings() {
-  window.location.href =
-    "admin-settings.html";
-}
+    return Math.max(
+      0,
+      number
+    );
+  }
 
-// ============================================================
-// OPEN PUBLIC WEBSITE
-// ============================================================
+  function getLowStockLimit(
+    product
+  ) {
+    var warningValue =
+      product.lowStockWarning;
 
-function openWebsite() {
-  window.location.href =
-    "index.html";
-}
+    if (
+      warningValue ===
+      undefined
+    ) {
+      warningValue =
+        product.low_stock_warning;
+    }
 
-// ============================================================
-// PAGE STARTUP
-// ============================================================
+    var limit =
+      Number(
+        warningValue
+      );
 
-document.addEventListener(
-  "DOMContentLoaded",
-  async () => {
-    const validSession =
-      await verifyAdminSession();
+    if (
+      !Number.isFinite(limit) ||
+      limit < 0
+    ) {
+      return 5;
+    }
 
-    if (!validSession) {
+    return limit;
+  }
+
+  function isProductActive(
+    product
+  ) {
+    if (
+      product.active ===
+      false
+    ) {
+      return false;
+    }
+
+    if (
+      product.active ===
+      0
+    ) {
+      return false;
+    }
+
+    if (
+      String(
+        product.active
+      ).toLowerCase() ===
+      "false"
+    ) {
+      return false;
+    }
+
+    return true;
+  }
+
+  // ==========================================================
+  // CALCULATE DASHBOARD STATISTICS
+  // ==========================================================
+
+  function calculateDashboardStatistics(
+    products
+  ) {
+    var statistics = {
+      totalProducts:
+        products.length,
+
+      totalVariants:
+        0,
+
+      activeProducts:
+        0,
+
+      inactiveProducts:
+        0,
+
+      totalStock:
+        0,
+
+      lowStockProducts:
+        0,
+
+      outOfStockProducts:
+        0
+    };
+
+    products.forEach(
+      function (product) {
+        if (
+          !product ||
+          typeof product !==
+            "object"
+        ) {
+          return;
+        }
+
+        var variants =
+          Array.isArray(
+            product.variants
+          )
+            ? product.variants
+            : [];
+
+        statistics.totalVariants +=
+          variants.length;
+
+        if (
+          isProductActive(
+            product
+          )
+        ) {
+          statistics.activeProducts +=
+            1;
+        } else {
+          statistics.inactiveProducts +=
+            1;
+        }
+
+        var lowStockLimit =
+          getLowStockLimit(
+            product
+          );
+
+        if (
+          variants.length >
+          0
+        ) {
+          var allVariantsOutOfStock =
+            true;
+
+          var hasLowStockVariant =
+            false;
+
+          variants.forEach(
+            function (variant) {
+              var variantStock =
+                getNonNegativeNumber(
+                  variant &&
+                  variant.stock
+                );
+
+              statistics.totalStock +=
+                variantStock;
+
+              if (
+                variantStock >
+                0
+              ) {
+                allVariantsOutOfStock =
+                  false;
+
+                if (
+                  variantStock <=
+                  lowStockLimit
+                ) {
+                  hasLowStockVariant =
+                    true;
+                }
+              }
+            }
+          );
+
+          if (
+            allVariantsOutOfStock
+          ) {
+            statistics.outOfStockProducts +=
+              1;
+          } else if (
+            hasLowStockVariant
+          ) {
+            statistics.lowStockProducts +=
+              1;
+          }
+        } else {
+          var productStock =
+            getNonNegativeNumber(
+              product.stock
+            );
+
+          statistics.totalStock +=
+            productStock;
+
+          if (
+            productStock <=
+            0
+          ) {
+            statistics.outOfStockProducts +=
+              1;
+          } else if (
+            productStock <=
+            lowStockLimit
+          ) {
+            statistics.lowStockProducts +=
+              1;
+          }
+        }
+      }
+    );
+
+    statistics.totalStock =
+      Math.floor(
+        statistics.totalStock
+      );
+
+    return statistics;
+  }
+
+  function displayDashboardStatistics(
+    statistics
+  ) {
+    updateStat(
+      "totalProducts",
+      statistics.totalProducts
+    );
+
+    updateStat(
+      "totalVariants",
+      statistics.totalVariants
+    );
+
+    updateStat(
+      "activeProducts",
+      statistics.activeProducts
+    );
+
+    updateStat(
+      "inactiveProducts",
+      statistics.inactiveProducts
+    );
+
+    updateStat(
+      "totalStock",
+      statistics.totalStock
+    );
+
+    updateStat(
+      "lowStockProducts",
+      statistics.lowStockProducts
+    );
+
+    updateStat(
+      "outOfStockProducts",
+      statistics.outOfStockProducts
+    );
+  }
+
+  // ==========================================================
+  // REFRESH BUTTON STATE
+  // ==========================================================
+
+  function setRefreshButtonLoading(
+    isLoading
+  ) {
+    var refreshButton =
+      getElement(
+        "refresh-dashboard-button"
+      );
+
+    if (!refreshButton) {
       return;
     }
 
-    await loadStats();
-
-    const logoutButton =
-      document.getElementById(
-        "admin-logout-button"
+    refreshButton.disabled =
+      Boolean(
+        isLoading
       );
 
-    if (logoutButton) {
-      logoutButton.addEventListener(
-        "click",
-        logoutAdmin
-      );
+    refreshButton.setAttribute(
+      "aria-busy",
+      isLoading
+        ? "true"
+        : "false"
+    );
+
+    refreshButton.textContent =
+      isLoading
+        ? "Refreshing..."
+        : "Refresh Dashboard";
+  }
+
+  // ==========================================================
+  // LOAD DASHBOARD STATISTICS
+  // ==========================================================
+
+  async function loadStats() {
+    if (dashboardLoading) {
+      return false;
     }
 
-    const refreshButton =
-      document.getElementById(
+    dashboardLoading =
+      true;
+
+    setRefreshButtonLoading(
+      true
+    );
+
+    showDashboardStatus(
+      "Loading dashboard...",
+      "information"
+    );
+
+    try {
+      var response =
+        await fetchWithTimeout(
+          ADMIN_PRODUCTS_URL,
+          {
+            method:
+              "GET",
+
+            headers:
+              getAdminHeaders()
+          }
+        );
+
+      var responseData =
+        await readDashboardResponse(
+          response
+        );
+
+      var products =
+        getProductList(
+          responseData
+        );
+
+      if (!products) {
+        throw new Error(
+          "The server did not return a valid product list."
+        );
+      }
+
+      var statistics =
+        calculateDashboardStatistics(
+          products
+        );
+
+      displayDashboardStatistics(
+        statistics
+      );
+
+      showDashboardStatus(
+        "Dashboard updated successfully.",
+        "success"
+      );
+
+      return true;
+    } catch (error) {
+      console.error(
+        "Dashboard statistics failed.",
+        error
+      );
+
+      resetDashboardStatistics();
+
+      var errorMessage;
+
+      if (
+        error &&
+        error.name ===
+          "AbortError"
+      ) {
+        errorMessage =
+          "The dashboard request took too long. Please try again.";
+      } else if (
+        error instanceof
+        TypeError
+      ) {
+        errorMessage =
+          "The dashboard server could not be reached. " +
+          "Check the backend URL and try again.";
+      } else {
+        errorMessage =
+          getErrorMessage(
+            error,
+            "Unable to load the dashboard."
+          );
+      }
+
+      showDashboardStatus(
+        errorMessage,
+        "error"
+      );
+
+      return false;
+    } finally {
+      dashboardLoading =
+        false;
+
+      setRefreshButtonLoading(
+        false
+      );
+    }
+  }
+
+  // ==========================================================
+  // REFRESH DASHBOARD
+  // ==========================================================
+
+  async function refreshDashboard() {
+    await loadStats();
+  }
+
+  // ==========================================================
+  // ADMINISTRATOR MANAGEMENT
+  // ==========================================================
+
+  function getSavedAdministrator() {
+    var savedAdministrator =
+      localStorage.getItem(
+        "adminUser"
+      );
+
+    if (!savedAdministrator) {
+      return null;
+    }
+
+    try {
+      return JSON.parse(
+        savedAdministrator
+      );
+    } catch (error) {
+      console.error(
+        "Could not read saved administrator information.",
+        error
+      );
+
+      return null;
+    }
+  }
+
+  function isSuperAdministrator(
+    role
+  ) {
+    var normalizedRole =
+      String(role || "")
+        .trim()
+        .toLowerCase();
+
+    return (
+      normalizedRole ===
+        "super_admin" ||
+      normalizedRole ===
+        "super-admin" ||
+      normalizedRole ===
+        "super administrator"
+    );
+  }
+
+  function openAdminManagement() {
+    var administrator =
+      getSavedAdministrator();
+
+    if (
+      !administrator ||
+      !isSuperAdministrator(
+        administrator.role
+      )
+    ) {
+      showDashboardStatus(
+        "Only a super administrator can manage administrator accounts.",
+        "error"
+      );
+
+      return;
+    }
+
+    window.location.href =
+      "admin-users.html";
+  }
+
+  // ==========================================================
+  // CONNECT BUTTONS
+  // ==========================================================
+
+  function connectLogoutButtons() {
+    [
+      "admin-logout-button",
+      "admin-navigation-logout-button"
+    ].forEach(
+      function (elementId) {
+        var button =
+          getElement(
+            elementId
+          );
+
+        if (button) {
+          button.addEventListener(
+            "click",
+            logoutAdmin
+          );
+        }
+      }
+    );
+  }
+
+  function connectDashboardButtons() {
+    var refreshButton =
+      getElement(
         "refresh-dashboard-button"
+      );
+
+    var manageProductsButton =
+      getElement(
+        "manage-products-button"
+      );
+
+    var manageAdminsButton =
+      getElement(
+        "manage-admins-button"
+      );
+
+    var manageSettingsButton =
+      getElement(
+        "manage-settings-button"
+      );
+
+    var viewWebsiteButton =
+      getElement(
+        "view-website-button"
       );
 
     if (refreshButton) {
@@ -548,80 +1222,94 @@ document.addEventListener(
       );
     }
 
-    const productsButton =
-      document.getElementById(
-        "manage-products-button"
-      );
-
-    if (productsButton) {
-      productsButton.addEventListener(
+    if (manageProductsButton) {
+      manageProductsButton.addEventListener(
         "click",
         openProductManagement
       );
     }
 
-    const administratorsButton =
-      document.getElementById(
-        "manage-admins-button"
-      );
-
-    if (administratorsButton) {
-      administratorsButton.addEventListener(
+    if (manageAdminsButton) {
+      manageAdminsButton.addEventListener(
         "click",
         openAdminManagement
       );
     }
 
-    const settingsButton =
-      document.getElementById(
-        "manage-settings-button"
-      );
-
-    if (settingsButton) {
-      settingsButton.addEventListener(
+    if (manageSettingsButton) {
+      manageSettingsButton.addEventListener(
         "click",
         openSettings
       );
     }
 
-    const websiteButton =
-      document.getElementById(
-        "view-website-button"
-      );
-
-    if (websiteButton) {
-      websiteButton.addEventListener(
+    if (viewWebsiteButton) {
+      viewWebsiteButton.addEventListener(
         "click",
         openWebsite
       );
     }
   }
-);
 
-// ============================================================
-// SUPPORT EXISTING INLINE HTML BUTTONS
-// ============================================================
+  // ==========================================================
+  // PAGE STARTUP
+  // ==========================================================
 
-window.go =
-  go;
+  async function initializeDashboard() {
+    connectLogoutButtons();
+    connectDashboardButtons();
 
-window.loadStats =
-  loadStats;
+    var validSession =
+      await verifyAdminSession();
 
-window.refreshDashboard =
-  refreshDashboard;
+    if (!validSession) {
+      return;
+    }
 
-window.logoutAdmin =
-  logoutAdmin;
+    await loadStats();
 
-window.openProductManagement =
-  openProductManagement;
+    console.log(
+      "MMC administrator dashboard initialized."
+    );
+  }
 
-window.openAdminManagement =
-  openAdminManagement;
+  if (
+    document.readyState ===
+    "loading"
+  ) {
+    document.addEventListener(
+      "DOMContentLoaded",
+      initializeDashboard
+    );
+  } else {
+    initializeDashboard();
+  }
 
-window.openSettings =
-  openSettings;
+  // ==========================================================
+  // OPTIONAL INLINE HTML SUPPORT
+  // ==========================================================
 
-window.openWebsite =
-  openWebsite;
+  window.go =
+    go;
+
+  window.loadStats =
+    loadStats;
+
+  window.refreshDashboard =
+    refreshDashboard;
+
+  window.logoutAdmin =
+    logoutAdmin;
+
+  window.openProductManagement =
+    openProductManagement;
+
+  window.openAdminManagement =
+    openAdminManagement;
+
+  window.openSettings =
+    openSettings;
+
+  window.openWebsite =
+    openWebsite;
+}());

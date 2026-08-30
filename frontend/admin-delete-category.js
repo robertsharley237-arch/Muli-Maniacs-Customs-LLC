@@ -1,5 +1,6 @@
 // ============================================================
 // MULTI-MANIACS CUSTOMS LLC
+// FILE: admin-delete-category.js
 // DELETE CATEGORY ADMIN PAGE
 //
 // Hosting: Vercel
@@ -7,973 +8,1632 @@
 // Authentication: JWT multi-admin system
 // ============================================================
 
-const BACKEND_URL =
-  window.MMC_BACKEND_URL ||
-  window.location.origin;
+(function () {
+  "use strict";
 
-const CATEGORIES_API =
-  `${BACKEND_URL}/categories`;
+  // ==========================================================
+  // CONFIGURATION
+  // ==========================================================
 
-const ADMIN_PRODUCTS_API =
-  `${BACKEND_URL}/admin/products`;
+  var REQUEST_TIMEOUT_MS =
+    15000;
 
-let availableCategories = [];
-let availableProducts = [];
+  var availableCategories =
+    [];
 
-// ============================================================
-// ADMIN AUTHENTICATION
-// ============================================================
+  var availableProducts =
+    [];
 
-function getAdminToken() {
-  return localStorage.getItem(
-    "adminToken"
-  );
-}
+  var selectedCategory =
+    null;
 
-function getAdminHeaders(
-  includeContentType = true
-) {
-  const headers = {
-    Authorization:
-      `Bearer ${getAdminToken()}`
-  };
+  var deleteInProgress =
+    false;
 
-  if (includeContentType) {
-    headers["Content-Type"] =
-      "application/json";
+  // ==========================================================
+  // ELEMENT HELPERS
+  // ==========================================================
+
+  function getElement(
+    elementId
+  ) {
+    return document.getElementById(
+      elementId
+    );
   }
 
-  return headers;
-}
+  // ==========================================================
+  // BACKEND URL
+  // ==========================================================
 
-function redirectToLogin() {
-  localStorage.removeItem(
-    "adminToken"
-  );
+  function removeTrailingSlashes(
+    value
+  ) {
+    return String(value || "")
+      .trim()
+      .replace(
+        /\/+$/,
+        ""
+      );
+  }
 
-  localStorage.removeItem(
-    "adminUser"
-  );
+  function getBackendUrl() {
+    if (
+      typeof window.MMC_BACKEND_URL ===
+        "string" &&
+      window.MMC_BACKEND_URL.trim()
+    ) {
+      return removeTrailingSlashes(
+        window.MMC_BACKEND_URL
+      );
+    }
 
-  localStorage.removeItem(
-    "MMC_ADMIN_TOKEN"
-  );
+    if (
+      window.location.hostname ===
+        "localhost" ||
+      window.location.hostname ===
+        "127.0.0.1"
+    ) {
+      return "http://localhost:10000";
+    }
 
-  window.location.href =
-    "admin-login.html";
-}
+    return removeTrailingSlashes(
+      window.location.origin
+    );
+  }
 
-function logoutAdmin() {
-  redirectToLogin();
-}
+  var BACKEND_URL =
+    getBackendUrl();
 
-// ============================================================
-// SERVER RESPONSE HELPER
-// ============================================================
+  var CATEGORIES_URL =
+    BACKEND_URL +
+    "/categories";
 
-async function readApiResponse(
-  response
-) {
-  let data;
+  var ADMIN_PRODUCTS_URL =
+    BACKEND_URL +
+    "/admin/products";
 
-  try {
-    data = await response.json();
-  } catch (error) {
-    data = {
-      error:
-        "The server returned an unexpected response."
+  var ADMIN_SESSION_URL =
+    BACKEND_URL +
+    "/admin/me";
+
+  // ==========================================================
+  // ADMIN AUTHENTICATION
+  // ==========================================================
+
+  function getAdminToken() {
+    return String(
+      localStorage.getItem(
+        "adminToken"
+      ) ||
+      localStorage.getItem(
+        "MMC_ADMIN_TOKEN"
+      ) ||
+      ""
+    ).trim();
+  }
+
+  function getAdminHeaders(
+    includeContentType
+  ) {
+    var headers = {
+      Accept:
+        "application/json",
+
+      Authorization:
+        "Bearer " +
+        getAdminToken()
     };
+
+    if (
+      includeContentType !==
+      false
+    ) {
+      headers["Content-Type"] =
+        "application/json";
+    }
+
+    return headers;
   }
 
-  if (response.status === 401) {
-    redirectToLogin();
+  function clearSavedAdminLogin() {
+    localStorage.removeItem(
+      "adminToken"
+    );
 
-    throw new Error(
-      data.error ||
-      "Your admin session expired."
+    localStorage.removeItem(
+      "MMC_ADMIN_TOKEN"
+    );
+
+    localStorage.removeItem(
+      "adminUser"
     );
   }
 
-  if (response.status === 403) {
-    throw new Error(
-      data.error ||
-      "You do not have permission to perform this action."
+  function redirectToAdminLogin() {
+    clearSavedAdminLogin();
+
+    window.location.replace(
+      "admin-login.html?return=" +
+      encodeURIComponent(
+        "admin-delete-category.html"
+      )
     );
   }
 
-  if (!response.ok) {
-    throw new Error(
-      data.error ||
-      `Request failed with status ${response.status}.`
-    );
+  function logoutAdmin() {
+    redirectToAdminLogin();
   }
 
-  return data;
-}
+  // ==========================================================
+  // FETCH WITH TIMEOUT
+  // ==========================================================
 
-// ============================================================
-// VERIFY ADMIN SESSION
-// ============================================================
+  async function fetchWithTimeout(
+    url,
+    options
+  ) {
+    var controller =
+      new AbortController();
 
-async function verifyAdminSession() {
-  const token = getAdminToken();
+    var timeoutIdentifier =
+      window.setTimeout(
+        function () {
+          controller.abort();
+        },
+        REQUEST_TIMEOUT_MS
+      );
 
-  if (!token) {
-    redirectToLogin();
-    return false;
+    try {
+      return await fetch(
+        url,
+        Object.assign(
+          {},
+          options || {},
+          {
+            signal:
+              controller.signal
+          }
+        )
+      );
+    } finally {
+      window.clearTimeout(
+        timeoutIdentifier
+      );
+    }
   }
 
-  try {
-    const response = await fetch(
-      `${BACKEND_URL}/admin/me`,
-      {
-        method: "GET",
-        headers:
-          getAdminHeaders(false)
+  // ==========================================================
+  // SERVER RESPONSE
+  // ==========================================================
+
+  async function readResponse(
+    response
+  ) {
+    var responseText =
+      "";
+
+    try {
+      responseText =
+        await response.text();
+    } catch (error) {
+      return {
+        error:
+          "The server response could not be read."
+      };
+    }
+
+    if (!responseText) {
+      return {};
+    }
+
+    try {
+      return JSON.parse(
+        responseText
+      );
+    } catch (error) {
+      return {
+        error:
+          responseText
+      };
+    }
+  }
+
+  function getErrorMessage(
+    value,
+    fallbackMessage
+  ) {
+    if (
+      typeof value ===
+        "string" &&
+      value.trim()
+    ) {
+      return value.trim();
+    }
+
+    if (
+      value &&
+      typeof value ===
+        "object"
+    ) {
+      if (
+        typeof value.message ===
+          "string" &&
+        value.message.trim()
+      ) {
+        return value.message.trim();
       }
-    );
 
-    const data =
-      await readApiResponse(
+      if (
+        value.error !==
+        undefined
+      ) {
+        return getErrorMessage(
+          value.error,
+          fallbackMessage
+        );
+      }
+    }
+
+    return fallbackMessage;
+  }
+
+  async function requestJson(
+    url,
+    options
+  ) {
+    var response =
+      await fetchWithTimeout(
+        url,
+        options
+      );
+
+    var responseData =
+      await readResponse(
         response
       );
 
-    localStorage.setItem(
-      "adminUser",
-      JSON.stringify(
-        data.admin || {}
-      )
-    );
+    if (
+      response.status ===
+      401
+    ) {
+      redirectToAdminLogin();
 
-    displayAdminInformation(
-      data.admin || {}
-    );
-
-    return true;
-  } catch (error) {
-    console.error(
-      "Admin session verification failed:",
-      error
-    );
-
-    showCategoryMessage(
-      error.message ||
-      "Your administrator session could not be verified.",
-      "error"
-    );
-
-    return false;
-  }
-}
-
-// ============================================================
-// DISPLAY ADMIN INFORMATION
-// ============================================================
-
-function displayAdminInformation(
-  admin
-) {
-  const usernameElement =
-    document.getElementById(
-      "admin-username"
-    );
-
-  const roleElement =
-    document.getElementById(
-      "admin-role"
-    );
-
-  if (usernameElement) {
-    usernameElement.textContent =
-      admin.username || "";
-  }
-
-  if (roleElement) {
-    roleElement.textContent =
-      formatRole(admin.role);
-  }
-}
-
-function formatRole(role) {
-  if (!role) {
-    return "";
-  }
-
-  return String(role)
-    .replaceAll("_", " ")
-    .replace(
-      /\b\w/g,
-      (letter) =>
-        letter.toUpperCase()
-    );
-}
-
-// ============================================================
-// MESSAGE DISPLAY
-// ============================================================
-
-function showCategoryMessage(
-  message,
-  type = "information"
-) {
-  const messageElement =
-    document.getElementById(
-      "category-message"
-    );
-
-  if (!messageElement) {
-    if (type === "error") {
-      alert(message);
+      throw new Error(
+        "Your administrator session expired."
+      );
     }
 
-    return;
+    if (
+      response.status ===
+      403
+    ) {
+      throw new Error(
+        getErrorMessage(
+          responseData,
+          "You do not have permission to perform this action."
+        )
+      );
+    }
+
+    if (!response.ok) {
+      throw new Error(
+        getErrorMessage(
+          responseData,
+          "The request failed with status " +
+            response.status +
+            "."
+        )
+      );
+    }
+
+    return responseData;
   }
 
-  messageElement.textContent =
-    message;
+  // ==========================================================
+  // ADMINISTRATOR INFORMATION
+  // ==========================================================
 
-  messageElement.classList.remove(
-    "category-error",
-    "category-success",
-    "category-information"
-  );
-
-  if (type === "error") {
-    messageElement.classList.add(
-      "category-error"
-    );
-  } else if (type === "success") {
-    messageElement.classList.add(
-      "category-success"
-    );
-  } else {
-    messageElement.classList.add(
-      "category-information"
-    );
-  }
-}
-
-function clearCategoryMessage() {
-  const messageElement =
-    document.getElementById(
-      "category-message"
-    );
-
-  if (!messageElement) {
-    return;
-  }
-
-  messageElement.textContent = "";
-
-  messageElement.classList.remove(
-    "category-error",
-    "category-success",
-    "category-information"
-  );
-}
-
-// ============================================================
-// NORMALIZE CATEGORY
-// ============================================================
-
-function normalizeCategory(
-  category
-) {
-  return {
-    id: String(
-      category.id ||
-      category._id ||
-      ""
-    ),
-
-    name: String(
-      category.name || ""
-    ),
-
-    slug: String(
-      category.slug || ""
-    ),
-
-    description: String(
-      category.description || ""
-    ),
-
-    image: String(
-      category.image || ""
-    ),
-
-    active:
-      category.active !== false,
-
-    displayOrder: Number(
-      category.displayOrder ??
-      category.display_order ??
-      0
+  function formatAdminRole(
+    role
+  ) {
+    return String(
+      role ||
+      "Administrator"
     )
-  };
-}
+      .replace(
+        /_/g,
+        " "
+      )
+      .replace(
+        /\b\w/g,
+        function (letter) {
+          return letter.toUpperCase();
+        }
+      );
+  }
 
-// ============================================================
-// LOAD CATEGORIES
-// ============================================================
+  function displayAdminInformation(
+    administrator
+  ) {
+    var username =
+      String(
+        administrator.username ||
+        administrator.name ||
+        administrator.email ||
+        "Administrator"
+      );
 
-async function loadCategories() {
-  const categorySelect =
-    document.getElementById(
-      "category-to-delete"
+    var role =
+      formatAdminRole(
+        administrator.role
+      );
+
+    [
+      "admin-username",
+      "admin-header-username"
+    ].forEach(
+      function (elementId) {
+        var element =
+          getElement(
+            elementId
+          );
+
+        if (element) {
+          element.textContent =
+            username;
+        }
+      }
     );
 
-  const deleteButton =
-    document.getElementById(
-      "delete-category-button"
-    );
+    [
+      "admin-role",
+      "admin-header-role"
+    ].forEach(
+      function (elementId) {
+        var element =
+          getElement(
+            elementId
+          );
 
-  if (!categorySelect) {
-    throw new Error(
-      "The category dropdown could not be found."
+        if (element) {
+          element.textContent =
+            role;
+        }
+      }
     );
   }
 
-  categorySelect.disabled = true;
+  async function verifyAdminSession() {
+    if (!getAdminToken()) {
+      redirectToAdminLogin();
 
-  if (deleteButton) {
-    deleteButton.disabled = true;
-  }
-
-  categorySelect.replaceChildren();
-
-  const loadingOption =
-    document.createElement(
-      "option"
-    );
-
-  loadingOption.value = "";
-
-  loadingOption.textContent =
-    "Loading categories...";
-
-  categorySelect.appendChild(
-    loadingOption
-  );
-
-  const response = await fetch(
-    CATEGORIES_API,
-    {
-      method: "GET"
+      return false;
     }
-  );
 
-  const data =
-    await readApiResponse(response);
+    try {
+      var responseData =
+        await requestJson(
+          ADMIN_SESSION_URL,
+          {
+            method:
+              "GET",
 
-  const categoryList =
-    Array.isArray(data)
-      ? data
-      : Array.isArray(data.categories)
-        ? data.categories
-        : [];
+            headers:
+              getAdminHeaders(
+                false
+              )
+          }
+        );
 
-  availableCategories =
-    categoryList
-      .map(normalizeCategory)
-      .sort((first, second) => {
-        if (
-          first.displayOrder !==
-          second.displayOrder
-        ) {
+      var administrator =
+        responseData.admin ||
+        responseData.user ||
+        responseData;
+
+      localStorage.setItem(
+        "adminUser",
+        JSON.stringify(
+          administrator
+        )
+      );
+
+      displayAdminInformation(
+        administrator
+      );
+
+      return true;
+    } catch (error) {
+      console.error(
+        "Administrator session verification failed.",
+        error
+      );
+
+      showDeleteCategoryMessage(
+        getErrorMessage(
+          error,
+          "Your administrator session could not be verified."
+        ),
+        "error"
+      );
+
+      return false;
+    }
+  }
+
+  // ==========================================================
+  // STATUS MESSAGE
+  // ==========================================================
+
+  function showDeleteCategoryMessage(
+    message,
+    messageType
+  ) {
+    var messageElement =
+      getElement(
+        "delete-category-message"
+      );
+
+    if (!messageElement) {
+      return;
+    }
+
+    messageElement.textContent =
+      String(message || "");
+
+    messageElement.classList.remove(
+      "delete-category-error",
+      "delete-category-success",
+      "delete-category-information"
+    );
+
+    messageElement.removeAttribute(
+      "role"
+    );
+
+    if (!message) {
+      return;
+    }
+
+    if (
+      messageType ===
+      "success"
+    ) {
+      messageElement.classList.add(
+        "delete-category-success"
+      );
+
+      messageElement.setAttribute(
+        "role",
+        "status"
+      );
+    } else if (
+      messageType ===
+      "information"
+    ) {
+      messageElement.classList.add(
+        "delete-category-information"
+      );
+
+      messageElement.setAttribute(
+        "role",
+        "status"
+      );
+    } else {
+      messageElement.classList.add(
+        "delete-category-error"
+      );
+
+      messageElement.setAttribute(
+        "role",
+        "alert"
+      );
+    }
+  }
+
+  // ==========================================================
+  // CATEGORY NORMALIZATION
+  // ==========================================================
+
+  function normalizeCategory(
+    category
+  ) {
+    var source =
+      category &&
+      typeof category ===
+        "object"
+        ? category
+        : {};
+
+    return {
+      id:
+        String(
+          source.id ||
+          source._id ||
+          ""
+        ),
+
+      name:
+        String(
+          source.name ||
+          ""
+        ),
+
+      slug:
+        String(
+          source.slug ||
+          ""
+        ),
+
+      description:
+        String(
+          source.description ||
+          ""
+        ),
+
+      image:
+        String(
+          source.image ||
+          ""
+        ),
+
+      active:
+        source.active !==
+        false,
+
+      displayOrder:
+        Number(
+          source.sortOrder !==
+            undefined
+            ? source.sortOrder
+            : (
+                source.displayOrder !==
+                  undefined
+                  ? source.displayOrder
+                  : (
+                      source.display_order ||
+                      0
+                    )
+              )
+        )
+    };
+  }
+
+  function getCategoryId(
+    category
+  ) {
+    return String(
+      category &&
+      category.id
+        ? category.id
+        : ""
+    );
+  }
+
+  function getSelectedCategoryName() {
+    if (!selectedCategory) {
+      return "";
+    }
+
+    return String(
+      selectedCategory.name ||
+      ""
+    ).trim();
+  }
+
+  // ==========================================================
+  // PRODUCT LIST
+  // ==========================================================
+
+  function getProductList(
+    responseData
+  ) {
+    if (
+      Array.isArray(
+        responseData
+      )
+    ) {
+      return responseData;
+    }
+
+    if (
+      responseData &&
+      Array.isArray(
+        responseData.products
+      )
+    ) {
+      return responseData.products;
+    }
+
+    if (
+      responseData &&
+      responseData.data &&
+      Array.isArray(
+        responseData.data.products
+      )
+    ) {
+      return responseData.data.products;
+    }
+
+    return [];
+  }
+
+  async function loadProducts() {
+    try {
+      var responseData =
+        await requestJson(
+          ADMIN_PRODUCTS_URL,
+          {
+            method:
+              "GET",
+
+            headers:
+              getAdminHeaders(
+                false
+              )
+          }
+        );
+
+      availableProducts =
+        getProductList(
+          responseData
+        );
+    } catch (error) {
+      console.error(
+        "Products could not be loaded.",
+        error
+      );
+
+      availableProducts =
+        [];
+    }
+  }
+
+  // ==========================================================
+  // COUNT PRODUCTS IN CATEGORY
+  // ==========================================================
+
+  function countProductsInCategory(
+    category
+  ) {
+    if (!category) {
+      return 0;
+    }
+
+    var categoryId =
+      String(
+        category.id ||
+        ""
+      );
+
+    var categoryName =
+      String(
+        category.name ||
+        ""
+      )
+        .trim()
+        .toLowerCase();
+
+    var categorySlug =
+      String(
+        category.slug ||
+        ""
+      )
+        .trim()
+        .toLowerCase();
+
+    return availableProducts.filter(
+      function (product) {
+        var productCategoryId =
+          String(
+            product.categoryId ||
+            product.category_id ||
+            ""
+          );
+
+        var productCategoryName =
+          String(
+            product.category ||
+            product.categoryName ||
+            ""
+          )
+            .trim()
+            .toLowerCase();
+
+        var productCategorySlug =
+          String(
+            product.categorySlug ||
+            product.category_slug ||
+            ""
+          )
+            .trim()
+            .toLowerCase();
+
+        return (
+          (
+            categoryId &&
+            productCategoryId ===
+              categoryId
+          ) ||
+          (
+            categoryName &&
+            productCategoryName ===
+              categoryName
+          ) ||
+          (
+            categorySlug &&
+            productCategorySlug ===
+              categorySlug
+          )
+        );
+      }
+    ).length;
+  }
+
+  // ==========================================================
+  // DELETE BUTTON STATE
+  // ==========================================================
+
+  function setDeleteButtonState() {
+    var deleteButton =
+      getElement(
+        "delete-category-button"
+      );
+
+    var confirmationInput =
+      getElement(
+        "category-confirmation"
+      );
+
+    var productCount =
+      countProductsInCategory(
+        selectedCategory
+      );
+
+    var confirmationMatches =
+      Boolean(
+        selectedCategory &&
+        confirmationInput &&
+        confirmationInput.value.trim() ===
+          getSelectedCategoryName()
+      );
+
+    if (!deleteButton) {
+      return;
+    }
+
+    deleteButton.disabled =
+      deleteInProgress ||
+      !selectedCategory ||
+      !confirmationMatches ||
+      productCount > 0;
+
+    deleteButton.textContent =
+      deleteInProgress
+        ? "Deleting Category..."
+        : "Permanently Delete Category";
+
+    deleteButton.setAttribute(
+      "aria-busy",
+      deleteInProgress
+        ? "true"
+        : "false"
+    );
+  }
+
+  // ==========================================================
+  // CATEGORY DETAILS
+  // ==========================================================
+
+  function setTextContent(
+    elementId,
+    value
+  ) {
+    var element =
+      getElement(
+        elementId
+      );
+
+    if (element) {
+      element.textContent =
+        String(
+          value ===
+            undefined ||
+          value ===
+            null
+            ? ""
+            : value
+        );
+    }
+  }
+
+  function clearCategoryImage() {
+    var image =
+      getElement(
+        "selected-category-image"
+      );
+
+    if (!image) {
+      return;
+    }
+
+    image.hidden =
+      true;
+
+    image.removeAttribute(
+      "src"
+    );
+  }
+
+  function displayCategoryImage(
+    category
+  ) {
+    var image =
+      getElement(
+        "selected-category-image"
+      );
+
+    if (!image) {
+      return;
+    }
+
+    if (!category.image) {
+      clearCategoryImage();
+
+      return;
+    }
+
+    image.onerror =
+      function () {
+        clearCategoryImage();
+      };
+
+    image.onload =
+      function () {
+        image.hidden =
+          false;
+      };
+
+    image.alt =
+      category.name +
+      " category";
+
+    image.src =
+      category.image;
+  }
+
+  function clearCategoryDetails() {
+    selectedCategory =
+      null;
+
+    var detailsSection =
+      getElement(
+        "selected-category-details"
+      );
+
+    var confirmationInput =
+      getElement(
+        "category-confirmation"
+      );
+
+    if (detailsSection) {
+      detailsSection.hidden =
+        true;
+    }
+
+    if (confirmationInput) {
+      confirmationInput.value =
+        "";
+    }
+
+    setTextContent(
+      "selected-category-name",
+      ""
+    );
+
+    setTextContent(
+      "selected-category-slug",
+      ""
+    );
+
+    setTextContent(
+      "selected-category-description",
+      ""
+    );
+
+    setTextContent(
+      "selected-category-status",
+      ""
+    );
+
+    setTextContent(
+      "selected-category-product-count",
+      "0"
+    );
+
+    setTextContent(
+      "confirmation-category-name",
+      "shown above"
+    );
+
+    clearCategoryImage();
+    setDeleteButtonState();
+  }
+
+  function displayCategoryDetails(
+    category
+  ) {
+    selectedCategory =
+      category;
+
+    var detailsSection =
+      getElement(
+        "selected-category-details"
+      );
+
+    var confirmationInput =
+      getElement(
+        "category-confirmation"
+      );
+
+    var productCount =
+      countProductsInCategory(
+        category
+      );
+
+    setTextContent(
+      "selected-category-name",
+      category.name ||
+      "Unnamed category"
+    );
+
+    setTextContent(
+      "selected-category-slug",
+      category.slug ||
+      "No category tag"
+    );
+
+    setTextContent(
+      "selected-category-description",
+      category.description ||
+      "No description provided."
+    );
+
+    setTextContent(
+      "selected-category-status",
+      category.active
+        ? "Active"
+        : "Inactive"
+    );
+
+    setTextContent(
+      "selected-category-product-count",
+      productCount
+    );
+
+    setTextContent(
+      "confirmation-category-name",
+      category.name ||
+      ""
+    );
+
+    displayCategoryImage(
+      category
+    );
+
+    if (confirmationInput) {
+      confirmationInput.value =
+        "";
+
+      confirmationInput.focus();
+    }
+
+    if (detailsSection) {
+      detailsSection.hidden =
+        false;
+    }
+
+    if (
+      productCount > 0
+    ) {
+      showDeleteCategoryMessage(
+        (
+          productCount +
+          (
+            productCount === 1
+              ? " product is"
+              : " products are"
+          ) +
+          " assigned to this category. " +
+          "Move those products to another category before deleting it."
+        ),
+        "error"
+      );
+    } else {
+      showDeleteCategoryMessage(
+        "Type the exact category name to enable permanent deletion.",
+        "information"
+      );
+    }
+
+    setDeleteButtonState();
+  }
+
+  function handleCategorySelection() {
+    var categorySelect =
+      getElement(
+        "category-select"
+      );
+
+    var selectedId =
+      categorySelect
+        ? categorySelect.value
+        : "";
+
+    var matchingCategory =
+      availableCategories.find(
+        function (category) {
           return (
-            first.displayOrder -
-            second.displayOrder
+            category.id ===
+            selectedId
           );
         }
+      );
 
-        return first.name.localeCompare(
-          second.name
-        );
-      });
+    if (!matchingCategory) {
+      clearCategoryDetails();
 
-  categorySelect.replaceChildren();
+      showDeleteCategoryMessage(
+        "Select the category you want to delete.",
+        "information"
+      );
 
-  const defaultOption =
-    document.createElement(
-      "option"
+      return;
+    }
+
+    displayCategoryDetails(
+      matchingCategory
+    );
+  }
+
+  // ==========================================================
+  // CATEGORY SELECT
+  // ==========================================================
+
+  function populateCategorySelect() {
+    var categorySelect =
+      getElement(
+        "category-select"
+      );
+
+    if (!categorySelect) {
+      return;
+    }
+
+    categorySelect.replaceChildren();
+
+    var defaultOption =
+      document.createElement(
+        "option"
+      );
+
+    defaultOption.value =
+      "";
+
+    defaultOption.textContent =
+      availableCategories.length > 0
+        ? "Select a category to delete"
+        : "No categories available";
+
+    categorySelect.appendChild(
+      defaultOption
     );
 
-  defaultOption.value = "";
+    availableCategories
+      .slice()
+      .sort(
+        function (
+          firstCategory,
+          secondCategory
+        ) {
+          if (
+            firstCategory.displayOrder !==
+            secondCategory.displayOrder
+          ) {
+            return (
+              firstCategory.displayOrder -
+              secondCategory.displayOrder
+            );
+          }
 
-  defaultOption.textContent =
-    availableCategories.length > 0
-      ? "Select a category"
-      : "No categories are available";
+          return firstCategory.name.localeCompare(
+            secondCategory.name
+          );
+        }
+      )
+      .forEach(
+        function (category) {
+          var option =
+            document.createElement(
+              "option"
+            );
 
-  categorySelect.appendChild(
-    defaultOption
-  );
+          option.value =
+            category.id;
 
-  availableCategories.forEach(
-    (category) => {
-      const option =
+          option.textContent =
+            category.active
+              ? category.name
+              : (
+                  category.name +
+                  " (Inactive)"
+                );
+
+          categorySelect.appendChild(
+            option
+          );
+        }
+      );
+
+    categorySelect.disabled =
+      availableCategories.length ===
+      0;
+  }
+
+  // ==========================================================
+  // LOAD CATEGORIES
+  // ==========================================================
+
+  async function loadCategories() {
+    var categorySelect =
+      getElement(
+        "category-select"
+      );
+
+    var refreshButton =
+      getElement(
+        "refresh-categories-button"
+      );
+
+    if (categorySelect) {
+      categorySelect.disabled =
+        true;
+
+      categorySelect.replaceChildren();
+
+      var loadingOption =
         document.createElement(
           "option"
         );
 
-      option.value = category.id;
+      loadingOption.value =
+        "";
 
-      option.textContent =
-        category.active
-          ? category.name
-          : `${category.name} (Hidden)`;
+      loadingOption.textContent =
+        "Loading categories...";
 
       categorySelect.appendChild(
-        option
+        loadingOption
       );
     }
-  );
 
-  categorySelect.disabled =
-    availableCategories.length === 0;
+    if (refreshButton) {
+      refreshButton.disabled =
+        true;
 
-  if (
-    availableCategories.length === 0
-  ) {
-    showCategoryMessage(
-      "No categories have been created yet.",
+      refreshButton.textContent =
+        "Loading Categories...";
+    }
+
+    clearCategoryDetails();
+
+    showDeleteCategoryMessage(
+      "Loading categories...",
       "information"
     );
-  }
-}
 
-// ============================================================
-// LOAD PRODUCTS FOR CATEGORY COUNT
-// ============================================================
+    try {
+      var responseData =
+        await requestJson(
+          CATEGORIES_URL,
+          {
+            method:
+              "GET",
 
-async function loadProducts() {
-  try {
-    const response = await fetch(
-      ADMIN_PRODUCTS_API,
-      {
-        method: "GET",
-        headers:
-          getAdminHeaders(false)
-      }
-    );
-
-    const data =
-      await readApiResponse(
-        response
-      );
-
-    availableProducts =
-      Array.isArray(data)
-        ? data
-        : [];
-  } catch (error) {
-    console.error(
-      "Products could not be loaded:",
-      error
-    );
-
-    availableProducts = [];
-  }
-}
-
-// ============================================================
-// FIND SELECTED CATEGORY
-// ============================================================
-
-function getSelectedCategory() {
-  const categorySelect =
-    document.getElementById(
-      "category-to-delete"
-    );
-
-  if (!categorySelect) {
-    return null;
-  }
-
-  const selectedId =
-    categorySelect.value;
-
-  return (
-    availableCategories.find(
-      (category) =>
-        category.id === selectedId
-    ) || null
-  );
-}
-
-// ============================================================
-// COUNT PRODUCTS ASSIGNED TO CATEGORY
-// ============================================================
-
-function countProductsInCategory(
-  category
-) {
-  if (!category) {
-    return 0;
-  }
-
-  return availableProducts.filter(
-    (product) => {
-      const productCategoryId =
-        String(
-          product.categoryId ||
-          product.category_id ||
-          ""
+            headers:
+              getAdminHeaders(
+                false
+              )
+          }
         );
 
-      const productCategoryName =
-        String(
-          product.category || ""
+      var categoryList =
+        Array.isArray(
+          responseData
         )
-          .trim()
-          .toLowerCase();
+          ? responseData
+          : (
+              Array.isArray(
+                responseData.categories
+              )
+                ? responseData.categories
+                : []
+            );
 
-      const categoryName =
-        category.name
-          .trim()
-          .toLowerCase();
+      availableCategories =
+        categoryList
+          .map(
+            normalizeCategory
+          )
+          .filter(
+            function (category) {
+              return Boolean(
+                category.id
+              );
+            }
+          );
 
-      return (
-        productCategoryId ===
-          category.id ||
-        productCategoryName ===
-          categoryName
+      populateCategorySelect();
+
+      showDeleteCategoryMessage(
+        availableCategories.length > 0
+          ? "Select the category you want to delete."
+          : "No categories are available to delete.",
+        "information"
       );
+    } catch (error) {
+      console.error(
+        "Categories could not be loaded.",
+        error
+      );
+
+      availableCategories =
+        [];
+
+      populateCategorySelect();
+
+      var errorMessage;
+
+      if (
+        error &&
+        error.name ===
+          "AbortError"
+      ) {
+        errorMessage =
+          "The category request took too long. Please try again.";
+      } else if (
+        error instanceof
+        TypeError
+      ) {
+        errorMessage =
+          "The category server could not be reached. " +
+          "Check the backend URL and try again.";
+      } else {
+        errorMessage =
+          getErrorMessage(
+            error,
+            "Categories could not be loaded."
+          );
+      }
+
+      showDeleteCategoryMessage(
+        errorMessage,
+        "error"
+      );
+    } finally {
+      if (refreshButton) {
+        refreshButton.disabled =
+          false;
+
+        refreshButton.textContent =
+          "Refresh Categories";
+      }
     }
-  ).length;
-}
-
-// ============================================================
-// DISPLAY SELECTED CATEGORY
-// ============================================================
-
-function displaySelectedCategory() {
-  clearCategoryMessage();
-
-  const category =
-    getSelectedCategory();
-
-  const detailsSection =
-    document.getElementById(
-      "selected-category-details"
-    );
-
-  const confirmCheckbox =
-    document.getElementById(
-      "confirm-category-deletion"
-    );
-
-  if (confirmCheckbox) {
-    confirmCheckbox.checked = false;
   }
 
-  updateDeleteButtonState();
+  // ==========================================================
+  // DELETE CATEGORY
+  // ==========================================================
 
-  if (!category) {
-    if (detailsSection) {
-      detailsSection.hidden = true;
+  async function deleteCategory(
+    event
+  ) {
+    if (event) {
+      event.preventDefault();
     }
 
-    clearCategoryDetails();
-    return;
-  }
+    if (
+      deleteInProgress ||
+      !selectedCategory
+    ) {
+      return;
+    }
 
-  const productCount =
-    countProductsInCategory(
-      category
-    );
+    var confirmationInput =
+      getElement(
+        "category-confirmation"
+      );
 
-  setTextContent(
-    "selected-category-name",
-    category.name
-  );
+    var categoryName =
+      getSelectedCategoryName();
 
-  setTextContent(
-    "selected-category-slug",
-    category.slug ||
-    "No tag assigned"
-  );
+    var categoryId =
+      getCategoryId(
+        selectedCategory
+      );
 
-  setTextContent(
-    "selected-category-description",
-    category.description ||
-    "No description provided"
-  );
+    var productCount =
+      countProductsInCategory(
+        selectedCategory
+      );
 
-  setTextContent(
-    "selected-category-product-count",
-    productCount
-  );
+    if (
+      productCount > 0
+    ) {
+      showDeleteCategoryMessage(
+        (
+          "This category still has " +
+          productCount +
+          " assigned product(s). Move those products before deleting it."
+        ),
+        "error"
+      );
 
-  setTextContent(
-    "selected-category-status",
-    category.active
-      ? "Active"
-      : "Hidden"
-  );
+      return;
+    }
 
-  displayCategoryImage(
-    category
-  );
+    if (
+      !confirmationInput ||
+      confirmationInput.value.trim() !==
+        categoryName
+    ) {
+      showDeleteCategoryMessage(
+        "Type the category name exactly before deleting it.",
+        "error"
+      );
 
-  if (detailsSection) {
-    detailsSection.hidden = false;
-  }
+      setDeleteButtonState();
 
-  if (productCount > 0) {
-    showCategoryMessage(
-      `${productCount} product(s) are currently assigned to this category. The category cannot be safely deleted until those products are moved or the backend is configured to unassign them.`,
+      return;
+    }
+
+    var confirmed =
+      window.confirm(
+        'Permanently delete the category "' +
+        categoryName +
+        '"?'
+      );
+
+    if (!confirmed) {
+      return;
+    }
+
+    deleteInProgress =
+      true;
+
+    setDeleteButtonState();
+
+    showDeleteCategoryMessage(
+      "Deleting category...",
       "information"
     );
-  }
-}
 
-function setTextContent(
-  elementId,
-  value
-) {
-  const element =
-    document.getElementById(
-      elementId
-    );
+    try {
+      var responseData =
+        await requestJson(
+          CATEGORIES_URL +
+          "/" +
+          encodeURIComponent(
+            categoryId
+          ),
+          {
+            method:
+              "DELETE",
 
-  if (element) {
-    element.textContent =
-      String(value ?? "");
-  }
-}
+            headers:
+              getAdminHeaders(
+                false
+              )
+          }
+        );
 
-function displayCategoryImage(
-  category
-) {
-  const image =
-    document.getElementById(
-      "selected-category-image"
-    );
+      availableCategories =
+        availableCategories.filter(
+          function (category) {
+            return (
+              category.id !==
+              categoryId
+            );
+          }
+        );
 
-  if (!image) {
-    return;
-  }
+      populateCategorySelect();
+      clearCategoryDetails();
 
-  if (!category.image) {
-    image.hidden = true;
-    image.removeAttribute("src");
-    return;
-  }
+      showDeleteCategoryMessage(
+        getErrorMessage(
+          responseData.message,
+          "The category \"" +
+            categoryName +
+            "\" was deleted successfully."
+        ),
+        "success"
+      );
+    } catch (error) {
+      console.error(
+        "Category deletion failed.",
+        error
+      );
 
-  image.src = category.image;
+      var errorMessage;
 
-  image.alt =
-    `${category.name} category`;
+      if (
+        error &&
+        error.name ===
+          "AbortError"
+      ) {
+        errorMessage =
+          "The delete request took too long. Please try again.";
+      } else if (
+        error instanceof
+        TypeError
+      ) {
+        errorMessage =
+          "The category server could not be reached. " +
+          "Check the backend URL and try again.";
+      } else {
+        errorMessage =
+          getErrorMessage(
+            error,
+            "The category could not be deleted."
+          );
+      }
 
-  image.hidden = false;
+      showDeleteCategoryMessage(
+        errorMessage,
+        "error"
+      );
+    } finally {
+      deleteInProgress =
+        false;
 
-  image.onerror = () => {
-    image.hidden = true;
-    image.removeAttribute("src");
-  };
-}
-
-function clearCategoryDetails() {
-  setTextContent(
-    "selected-category-name",
-    ""
-  );
-
-  setTextContent(
-    "selected-category-slug",
-    ""
-  );
-
-  setTextContent(
-    "selected-category-description",
-    ""
-  );
-
-  setTextContent(
-    "selected-category-product-count",
-    "0"
-  );
-
-  setTextContent(
-    "selected-category-status",
-    ""
-  );
-
-  const image =
-    document.getElementById(
-      "selected-category-image"
-    );
-
-  if (image) {
-    image.hidden = true;
-    image.removeAttribute("src");
-  }
-}
-
-// ============================================================
-// DELETE BUTTON STATE
-// ============================================================
-
-function updateDeleteButtonState() {
-  const selectedCategory =
-    getSelectedCategory();
-
-  const confirmationCheckbox =
-    document.getElementById(
-      "confirm-category-deletion"
-    );
-
-  const deleteButton =
-    document.getElementById(
-      "delete-category-button"
-    );
-
-  if (!deleteButton) {
-    return;
-  }
-
-  deleteButton.disabled =
-    !selectedCategory ||
-    !confirmationCheckbox ||
-    !confirmationCheckbox.checked;
-}
-
-// ============================================================
-// DELETE CATEGORY
-// ============================================================
-
-async function deleteSelectedCategory(
-  event
-) {
-  if (event) {
-    event.preventDefault();
-  }
-
-  clearCategoryMessage();
-
-  const category =
-    getSelectedCategory();
-
-  const confirmationCheckbox =
-    document.getElementById(
-      "confirm-category-deletion"
-    );
-
-  const deleteButton =
-    document.getElementById(
-      "delete-category-button"
-    );
-
-  if (!category) {
-    showCategoryMessage(
-      "Please select a category to delete.",
-      "error"
-    );
-
-    return;
-  }
-
-  if (
-    !confirmationCheckbox ||
-    !confirmationCheckbox.checked
-  ) {
-    showCategoryMessage(
-      "Confirm that you understand the deletion cannot be undone.",
-      "error"
-    );
-
-    return;
-  }
-
-  const assignedProductCount =
-    countProductsInCategory(
-      category
-    );
-
-  if (assignedProductCount > 0) {
-    showCategoryMessage(
-      `This category still has ${assignedProductCount} assigned product(s). Move the products to another category before deleting it.`,
-      "error"
-    );
-
-    return;
-  }
-
-  const confirmed =
-    window.confirm(
-      `Permanently delete the category "${category.name}"?`
-    );
-
-  if (!confirmed) {
-    return;
-  }
-
-  try {
-    if (deleteButton) {
-      deleteButton.disabled = true;
-
-      deleteButton.textContent =
-        "Deleting Category...";
+      setDeleteButtonState();
     }
+  }
 
-    const response = await fetch(
-      `${CATEGORIES_API}/${encodeURIComponent(category.id)}`,
-      {
-        method: "DELETE",
-        headers:
-          getAdminHeaders(false)
+  // ==========================================================
+  // LOGOUT BUTTONS
+  // ==========================================================
+
+  function connectLogoutButtons() {
+    [
+      "admin-logout-button",
+      "admin-navigation-logout-button"
+    ].forEach(
+      function (elementId) {
+        var button =
+          getElement(
+            elementId
+          );
+
+        if (button) {
+          button.addEventListener(
+            "click",
+            logoutAdmin
+          );
+        }
       }
     );
-
-    const data =
-      await readApiResponse(
-        response
-      );
-
-    showCategoryMessage(
-      data.message ||
-      `The category "${category.name}" was deleted successfully.`,
-      "success"
-    );
-
-    if (confirmationCheckbox) {
-      confirmationCheckbox.checked =
-        false;
-    }
-
-    clearCategoryDetails();
-
-    const detailsSection =
-      document.getElementById(
-        "selected-category-details"
-      );
-
-    if (detailsSection) {
-      detailsSection.hidden = true;
-    }
-
-    await loadCategories();
-  } catch (error) {
-    console.error(
-      "Category deletion failed:",
-      error
-    );
-
-    showCategoryMessage(
-      error.message ||
-      "The category could not be deleted.",
-      "error"
-    );
-  } finally {
-    if (deleteButton) {
-      deleteButton.textContent =
-        "Delete Selected Category";
-
-      updateDeleteButtonState();
-    }
   }
-}
 
-// ============================================================
-// INITIAL PAGE LOAD
-// ============================================================
+  // ==========================================================
+  // PAGE INITIALIZATION
+  // ==========================================================
 
-document.addEventListener(
-  "DOMContentLoaded",
-  async () => {
-    const validSession =
+  async function initializePage() {
+    connectLogoutButtons();
+
+    var validSession =
       await verifyAdminSession();
 
     if (!validSession) {
       return;
     }
 
-    const categorySelect =
-      document.getElementById(
-        "category-to-delete"
-      );
-
-    const confirmationCheckbox =
-      document.getElementById(
-        "confirm-category-deletion"
-      );
-
-    const deleteForm =
-      document.getElementById(
+    var deleteForm =
+      getElement(
         "delete-category-form"
       );
 
-    const logoutButton =
-      document.getElementById(
-        "admin-logout-button"
+    var categorySelect =
+      getElement(
+        "category-select"
       );
 
-    if (categorySelect) {
-      categorySelect.addEventListener(
-        "change",
-        displaySelectedCategory
+    var confirmationInput =
+      getElement(
+        "category-confirmation"
       );
-    }
 
-    if (confirmationCheckbox) {
-      confirmationCheckbox.addEventListener(
-        "change",
-        updateDeleteButtonState
+    var refreshButton =
+      getElement(
+        "refresh-categories-button"
       );
-    }
 
     if (deleteForm) {
       deleteForm.addEventListener(
         "submit",
-        deleteSelectedCategory
+        deleteCategory
       );
     }
 
-    if (logoutButton) {
-      logoutButton.addEventListener(
+    if (categorySelect) {
+      categorySelect.addEventListener(
+        "change",
+        handleCategorySelection
+      );
+    }
+
+    if (confirmationInput) {
+      confirmationInput.addEventListener(
+        "input",
+        setDeleteButtonState
+      );
+    }
+
+    if (refreshButton) {
+      refreshButton.addEventListener(
         "click",
-        logoutAdmin
+        async function () {
+          await Promise.all([
+            loadProducts(),
+            loadCategories()
+          ]);
+        }
       );
     }
 
-    try {
-      showCategoryMessage(
-        "Loading categories...",
-        "information"
-      );
+    setDeleteButtonState();
 
-      await Promise.all([
-        loadCategories(),
-        loadProducts()
-      ]);
+    await Promise.all([
+      loadProducts(),
+      loadCategories()
+    ]);
 
-      clearCategoryMessage();
-    } catch (error) {
-      console.error(
-        "Category page startup failed:",
-        error
-      );
-
-      showCategoryMessage(
-        error.message ||
-        "The categories could not be loaded.",
-        "error"
-      );
-    }
+    console.log(
+      "MMC Delete Category page initialized."
+    );
   }
-);
 
-// ============================================================
-// SUPPORT EXISTING INLINE HTML
-// ============================================================
+  // ==========================================================
+  // STARTUP
+  // ==========================================================
 
-window.deleteSelectedCategory =
-  deleteSelectedCategory;
+  if (
+    document.readyState ===
+    "loading"
+  ) {
+    document.addEventListener(
+      "DOMContentLoaded",
+      initializePage
+    );
+  } else {
+    initializePage();
+  }
 
-window.loadCategories =
-  loadCategories;
+  // ==========================================================
+  // GLOBAL SUPPORT
+  // ==========================================================
 
-window.logoutAdmin =
-  logoutAdmin;
+  window.deleteCategory =
+    deleteCategory;
+
+  window.deleteSelectedCategory =
+    deleteCategory;
+
+  window.loadCategories =
+    loadCategories;
+
+  window.logoutAdmin =
+    logoutAdmin;
+}());

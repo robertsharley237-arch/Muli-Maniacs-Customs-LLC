@@ -10,7 +10,17 @@
 
   <meta
     name="description"
-    content="Delete a product category from Multi-Maniacs Customs."
+    content="Permanently delete a product category from the Multi-Maniacs Customs administrator system."
+  >
+
+  <meta
+    name="theme-color"
+    content="#000000"
+  >
+
+  <meta
+    name="robots"
+    content="noindex, nofollow"
   >
 
   <title>
@@ -28,63 +38,48 @@
   >
 
   <style>
-    :root {
-      --delete-page-background: #111111;
-      --delete-panel-background: #222222;
-      --delete-panel-border: #444444;
-      --delete-text: #ffffff;
-      --delete-muted-text: #cccccc;
-      --delete-input-background: #ffffff;
-      --delete-input-text: #111111;
-      --delete-button: #e53935;
-      --delete-button-hover: #c62828;
-      --delete-button-disabled: #7a3b39;
-      --delete-warning-background: #3b2020;
-      --delete-warning-border: #b94a48;
-      --delete-error: #ff7676;
-      --delete-success: #79d77c;
-      --delete-focus: #ff8a80;
-    }
-
-    * {
-      box-sizing: border-box;
-    }
-
-    body {
-      min-height: 100vh;
-      margin: 0;
-      padding: 24px;
-      color: var(--delete-text);
-      background: var(--delete-page-background);
-      font-family: Arial, Helvetica, sans-serif;
-    }
+    /* ========================================================
+       MULTI-MANIACS CUSTOMS LLC
+       DELETE CATEGORY PAGE
+       ======================================================== */
 
     .delete-category-page {
-      width: 100%;
-      max-width: 620px;
-      margin: 40px auto;
+      width: calc(100% - 32px);
+      max-width: 860px;
+      margin: 34px auto;
     }
 
     .delete-category-container {
+      position: relative;
+      overflow: hidden;
       padding: 30px;
-      background: var(--delete-panel-background);
-      border: 1px solid var(--delete-panel-border);
-      border-radius: 12px;
-      box-shadow: 0 16px 45px rgba(0, 0, 0, 0.4);
+      color: var(--admin-black, #000000);
+      background:
+        var(
+          --admin-panel,
+          rgba(255, 255, 255, 0.96)
+        );
+      border: 3px solid var(--admin-black, #000000);
+      border-radius: 16px;
+      box-shadow:
+        0 14px 34px rgba(0, 0, 0, 0.38),
+        0 0 0 4px rgba(255, 255, 255, 0.22);
     }
 
     .delete-category-heading {
       margin: 0 0 10px;
+      color: var(--admin-black, #000000);
+      font-size: clamp(32px, 6vw, 46px);
+      line-height: 1.15;
       text-align: center;
-      font-size: 28px;
-      line-height: 1.2;
     }
 
     .delete-category-description {
-      margin: 0 0 24px;
-      color: var(--delete-muted-text);
+      max-width: 690px;
+      margin: 0 auto 24px;
+      color: var(--admin-muted, #333333);
+      line-height: 1.65;
       text-align: center;
-      line-height: 1.5;
     }
 
     .admin-account-bar {
@@ -92,51 +87,94 @@
       flex-wrap: wrap;
       align-items: center;
       justify-content: space-between;
-      gap: 12px;
+      gap: 14px;
       margin-bottom: 24px;
-      padding: 14px;
-      background: #191919;
-      border: 1px solid var(--delete-panel-border);
-      border-radius: 8px;
+      padding: 16px;
+      color: var(--admin-white, #ffffff);
+      background: var(--admin-black, #000000);
+      border: 3px solid var(--admin-black, #000000);
+      border-radius: 10px;
     }
 
     .admin-account-bar p {
-      margin: 0;
+      margin: 4px 0;
+      color: var(--admin-white, #ffffff);
+    }
+
+    .admin-account-bar strong {
+      color: var(--admin-cyan, #00eaff);
     }
 
     .admin-account-actions {
       display: flex;
       flex-wrap: wrap;
-      gap: 8px;
+      gap: 9px;
     }
 
-    .small-action-button,
-    .return-button {
-      display: inline-block;
-      width: auto;
-      margin: 0;
+    .small-action-button {
+      display: inline-flex;
+      min-height: 42px;
+      align-items: center;
+      justify-content: center;
       padding: 9px 13px;
-      color: #ffffff;
-      background: #444444;
-      border: none;
-      border-radius: 6px;
+      color: var(--admin-white, #ffffff);
+      background: var(--admin-dark-gray, #222222);
+      border: 2px solid var(--admin-white, #ffffff);
+      border-radius: 7px;
       font: inherit;
       font-size: 14px;
+      font-weight: 800;
+      text-align: center;
       text-decoration: none;
       cursor: pointer;
+      transition:
+        color 0.2s ease,
+        background 0.2s ease,
+        transform 0.2s ease;
     }
 
     .small-action-button:hover,
-    .small-action-button:focus,
-    .return-button:hover,
-    .return-button:focus {
-      background: #5b5b5b;
+    .small-action-button:focus {
+      color: var(--admin-black, #000000);
+      background: var(--admin-cyan, #00eaff);
+      transform: translateY(-2px);
+    }
+
+    .logout-action-button {
+      color: var(--admin-white, #ffffff);
+      background: var(--admin-red, #c40028);
+    }
+
+    .logout-action-button:hover,
+    .logout-action-button:focus {
+      color: var(--admin-white, #ffffff);
+      background: #96001e;
+    }
+
+    .delete-warning {
+      margin-bottom: 22px;
+      padding: 18px;
+      color: #7b0018;
+      background: #fff0f3;
+      border: 3px solid #c40028;
+      border-radius: 10px;
+      line-height: 1.6;
+    }
+
+    .delete-warning h2 {
+      margin: 0 0 8px;
+      color: #9a001f;
+      font-size: 21px;
+    }
+
+    .delete-warning p {
+      margin: 0;
     }
 
     .delete-category-form {
       display: flex;
       flex-direction: column;
-      gap: 18px;
+      gap: 20px;
     }
 
     .form-field {
@@ -146,155 +184,240 @@
     }
 
     .form-field label {
+      color: var(--admin-black, #000000);
       font-size: 15px;
-      font-weight: 700;
+      font-weight: 800;
     }
 
-    .form-field select {
+    .form-field select,
+    .form-field input {
       width: 100%;
       min-height: 48px;
       padding: 11px 12px;
-      color: var(--delete-input-text);
-      background: var(--delete-input-background);
-      border: 2px solid transparent;
-      border-radius: 7px;
+      color: var(--admin-black, #000000);
+      background: var(--admin-white, #ffffff);
+      border: 2px solid var(--admin-black, #000000);
+      border-radius: 8px;
       font: inherit;
-      cursor: pointer;
+    }
+
+    .form-field select:focus,
+    .form-field input:focus {
       outline: none;
+      border-color: var(--admin-purple, #8a00ff);
+      box-shadow:
+        0 0 0 4px rgba(138, 0, 255, 0.2),
+        0 0 12px rgba(0, 234, 255, 0.35);
     }
 
-    .form-field select:focus {
-      border-color: var(--delete-focus);
-      box-shadow: 0 0 0 3px rgba(255, 138, 128, 0.18);
+    .form-field select:disabled,
+    .form-field input:disabled {
+      color: #666666;
+      background: #eeeeee;
+      cursor: not-allowed;
+      opacity: 0.75;
     }
 
-    .form-field select:disabled {
-      cursor: wait;
-      opacity: 0.7;
-    }
-
-    .category-details {
-      padding: 16px;
-      color: var(--delete-muted-text);
-      background: #191919;
-      border: 1px solid var(--delete-panel-border);
-      border-radius: 8px;
-    }
-
-    .category-details[hidden] {
-      display: none;
-    }
-
-    .category-details h2 {
-      margin: 0 0 12px;
-      color: var(--delete-text);
-      font-size: 18px;
-    }
-
-    .category-details p {
-      margin: 8px 0;
-      line-height: 1.45;
-    }
-
-    .category-image {
-      display: block;
-      width: 100%;
-      max-width: 260px;
-      height: auto;
-      margin: 14px auto 0;
-      border-radius: 8px;
-      object-fit: cover;
-    }
-
-    .delete-warning {
-      padding: 16px;
-      color: #ffffff;
-      background: var(--delete-warning-background);
-      border: 1px solid var(--delete-warning-border);
-      border-radius: 8px;
+    .field-help {
+      margin: 0;
+      color: var(--admin-muted, #333333);
+      font-size: 13px;
       line-height: 1.5;
     }
 
-    .delete-warning strong {
-      display: block;
-      margin-bottom: 5px;
+    .field-help strong {
+      color: var(--admin-black, #000000);
     }
 
-    .confirmation-field {
-      display: flex;
-      align-items: flex-start;
-      gap: 10px;
+    .category-selection-row {
+      display: grid;
+      grid-template-columns:
+        minmax(0, 1fr)
+        auto;
+      gap: 12px;
+      align-items: end;
     }
 
-    .confirmation-field input {
-      width: 20px;
-      height: 20px;
-      margin: 1px 0 0;
-      accent-color: var(--delete-button);
+    .refresh-categories-button {
+      display: inline-flex;
+      min-height: 48px;
+      align-items: center;
+      justify-content: center;
+      padding: 11px 16px;
+      color: var(--admin-black, #000000);
+      background:
+        linear-gradient(
+          135deg,
+          var(--admin-yellow, #ffe600),
+          var(--admin-cyan, #00eaff)
+        );
+      border: 2px solid var(--admin-black, #000000);
+      border-radius: 8px;
+      font: inherit;
+      font-weight: 900;
       cursor: pointer;
+      transition:
+        filter 0.2s ease,
+        transform 0.2s ease;
     }
 
-    .confirmation-field label {
-      line-height: 1.4;
-      cursor: pointer;
+    .refresh-categories-button:hover,
+    .refresh-categories-button:focus {
+      filter: saturate(1.2) brightness(1.05);
+      transform: translateY(-2px);
+    }
+
+    .selected-category-details {
+      padding: 20px;
+      color: var(--admin-black, #000000);
+      background: var(--admin-off-white, #fffdf8);
+      border: 3px solid var(--admin-black, #000000);
+      border-radius: 12px;
+    }
+
+    .selected-category-details[hidden] {
+      display: none;
+    }
+
+    .selected-category-details h2 {
+      margin: 0 0 16px;
+      color: var(--admin-black, #000000);
+      font-size: 23px;
+    }
+
+    .category-detail-grid {
+      display: grid;
+      grid-template-columns:
+        repeat(2, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .category-detail {
+      min-width: 0;
+      padding: 14px;
+      background: var(--admin-white, #ffffff);
+      border: 2px solid var(--admin-black, #000000);
+      border-radius: 8px;
+    }
+
+    .category-detail-full {
+      grid-column: 1 / -1;
+    }
+
+    .category-detail h3 {
+      margin: 0 0 7px;
+      color: var(--admin-muted, #333333);
+      font-size: 13px;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+
+    .category-detail p {
+      margin: 0;
+      color: var(--admin-black, #000000);
+      line-height: 1.5;
+      overflow-wrap: anywhere;
+    }
+
+    .confirmation-section {
+      padding: 18px;
+      color: var(--admin-black, #000000);
+      background:
+        linear-gradient(
+          135deg,
+          rgba(255, 20, 147, 0.1),
+          rgba(255, 230, 0, 0.13),
+          rgba(0, 234, 255, 0.12)
+        );
+      border: 3px solid var(--admin-black, #000000);
+      border-radius: 10px;
+    }
+
+    .confirmation-section h2 {
+      margin: 0 0 10px;
+      font-size: 21px;
+    }
+
+    .confirmation-section > p {
+      margin: 0 0 14px;
+      color: var(--admin-muted, #333333);
+      line-height: 1.6;
+    }
+
+    .confirmation-category-name {
+      color: #9a001f;
+      font-weight: 900;
     }
 
     .delete-category-button {
+      display: inline-flex;
       width: 100%;
-      min-height: 50px;
-      padding: 12px;
-      color: #ffffff;
-      background: var(--delete-button);
-      border: none;
-      border-radius: 7px;
+      min-height: 54px;
+      align-items: center;
+      justify-content: center;
+      padding: 13px 18px;
+      color: var(--admin-white, #ffffff);
+      background: #c40028;
+      border: 3px solid var(--admin-black, #000000);
+      border-radius: 9px;
       font: inherit;
-      font-size: 16px;
-      font-weight: 700;
+      font-size: 17px;
+      font-weight: 900;
       cursor: pointer;
+      box-shadow:
+        0 6px 0 var(--admin-black, #000000);
       transition:
-        background-color 0.2s ease,
+        background 0.2s ease,
         transform 0.2s ease,
-        opacity 0.2s ease;
+        box-shadow 0.2s ease;
     }
 
-    .delete-category-button:hover:not(:disabled) {
-      background: var(--delete-button-hover);
-      transform: translateY(-1px);
-    }
-
-    .delete-category-button:focus-visible {
-      outline: 3px solid var(--delete-focus);
-      outline-offset: 3px;
+    .delete-category-button:hover:not(:disabled),
+    .delete-category-button:focus:not(:disabled) {
+      background: #96001e;
+      transform: translateY(-2px);
+      box-shadow:
+        0 8px 0 var(--admin-black, #000000),
+        0 0 16px rgba(196, 0, 40, 0.45);
     }
 
     .delete-category-button:disabled {
-      background: var(--delete-button-disabled);
       cursor: not-allowed;
-      opacity: 0.7;
+      filter: grayscale(0.75);
+      opacity: 0.55;
+      transform: none;
+      box-shadow:
+        0 4px 0 var(--admin-black, #000000);
     }
 
-    .category-message {
+    .delete-category-message {
       min-height: 24px;
-      margin: 18px 0 0;
-      text-align: center;
-      font-weight: 700;
+      margin: 20px 0 0;
+      padding: 0;
+      border-radius: 9px;
+      font-weight: 800;
       line-height: 1.5;
+      text-align: center;
     }
 
-    .category-message:empty {
-      display: none;
+    .delete-category-message:not(:empty) {
+      padding: 12px 14px;
+      border: 2px solid currentColor;
     }
 
-    .category-error {
-      color: var(--delete-error);
+    .delete-category-error {
+      color: var(--admin-error-text, #b00024);
+      background: #fff0f3;
     }
 
-    .category-success {
-      color: var(--delete-success);
+    .delete-category-success {
+      color: var(--admin-success-text, #126b17);
+      background: #effff2;
     }
 
-    .category-information {
-      color: var(--delete-muted-text);
+    .delete-category-information {
+      color: var(--admin-information-text, #003d9c);
+      background: #edf8ff;
     }
 
     .page-actions {
@@ -305,35 +428,52 @@
       margin-top: 24px;
     }
 
-    @media (max-width: 600px) {
-      body {
-        padding: 14px;
+    @media (max-width: 700px) {
+      .category-selection-row,
+      .category-detail-grid {
+        grid-template-columns: 1fr;
       }
 
+      .category-detail-full {
+        grid-column: auto;
+      }
+
+      .refresh-categories-button {
+        width: 100%;
+      }
+    }
+
+    @media (max-width: 520px) {
       .delete-category-page {
-        margin: 20px auto;
+        width: calc(100% - 24px);
+        margin: 22px auto;
       }
 
       .delete-category-container {
-        padding: 22px 18px;
+        padding: 22px 16px;
       }
 
       .admin-account-bar {
-        align-items: flex-start;
+        align-items: stretch;
         flex-direction: column;
       }
 
-      .admin-account-actions {
-        width: 100%;
+      .admin-account-actions,
+      .page-actions {
+        flex-direction: column;
       }
 
       .small-action-button,
-      .return-button {
-        flex: 1;
-        text-align: center;
+      .page-actions a {
+        width: 100%;
       }
     }
   </style>
+
+  <script
+    src="config.js"
+    defer
+  ></script>
 
   <script
     src="navigation.js"
@@ -343,12 +483,147 @@
   admin-delete-category.jsscript>
 </head>
 
-<body>
-  <main class="delete-category-page">
+<body class="admin-page">
+  #main-content
+    Skip to main content
+  </a>
+
+  <!-- ========================================================
+       ADMINISTRATOR HEADER
+       ======================================================== -->
+
+  <header class="admin-header">
+    <div class="admin-header-content">
+      <a
+        class="admin-logo-link"
+        href="admin-dashboard.html"
+        aria-label="Go to the MMC administrator dashboard"
+      >
+        images/mmc-logo.png
+
+        <div class="admin-branding">
+          <p class="admin-site-heading">
+            Multi-Maniacs Customs LLC
+          </p>
+
+          <p class="admin-site-tagline">
+            Administrator System
+          </p>
+        </div>
+      </a>
+
+      <div
+        class="admin-header-account"
+        aria-label="Administrator account"
+      >
+        <span>
+          Signed in as
+        </span>
+
+        <strong
+          id="admin-header-username"
+          class="admin-user-name"
+        >
+          Loading...
+        </strong>
+
+        <span
+          id="admin-header-role"
+          class="admin-user-role"
+        >
+          Loading...
+        </span>
+      </div>
+    </div>
+  </header>
+
+  <!-- ========================================================
+       ADMINISTRATOR NAVIGATION
+       ======================================================== -->
+
+  <nav
+    class="admin-navigation"
+    aria-label="Administrator navigation"
+  >
+    <div class="admin-navigation-content">
+      <a href="admin-dashboard.html">
+        Dashboard
+      </a>
+
+      <a href="admin-products.html">
+        Products
+      </a>
+
+      <a href="admin-add-product.html">
+        Add Product
+      </a>
+
+      admin-categories.html
+        Categories
+      </a>
+
+      <a href="admin-add-category.html">
+        Add Category
+      </a>
+
+      <a
+        href="admin-delete-category.html"
+        aria-current="page"
+      >
+        Delete Category
+      </a>
+
+      <a href="admin-inventory.html">
+        Inventory
+      </a>
+
+      <a href="admin-orders.html">
+        Orders
+      </a>
+
+      <a href="admin-intake.html">
+        Client Intake
+      </a>
+
+      <a href="admin-settings.html">
+        Settings
+      </a>
+
+      <a href="index.html">
+        View Website
+      </a>
+
+      <button
+        id="admin-navigation-logout-button"
+        class="admin-logout-button"
+        type="button"
+      >
+        Log Out
+      </button>
+    </div>
+  </nav>
+
+  <!-- ========================================================
+       DELETE CATEGORY PAGE
+       ======================================================== -->
+
+  <main
+    id="main-content"
+    class="delete-category-page"
+  >
     <section
       class="delete-category-container"
       aria-labelledby="delete-category-heading"
     >
+      <div
+        class="admin-tie-dye-color-bar"
+        aria-hidden="true"
+      ></div>
+
+      <p class="admin-section-eyebrow">
+        Category Management
+      </p>
+
       <h1
         id="delete-category-heading"
         class="delete-category-heading"
@@ -357,14 +632,19 @@
       </h1>
 
       <p class="delete-category-description">
-        Select a category from the list below. Review the category
-        information carefully before permanently deleting it.
+        Select a category, review its information, and confirm
+        the category name before permanently deleting it.
       </p>
+
+      <!-- ====================================================
+           ADMINISTRATOR ACCOUNT
+           ==================================================== -->
 
       <div class="admin-account-bar">
         <div>
           <p>
             Signed in as:
+
             <strong id="admin-username">
               Loading...
             </strong>
@@ -372,6 +652,7 @@
 
           <p>
             Role:
+
             <strong id="admin-role">
               Loading...
             </strong>
@@ -386,9 +667,13 @@
             Dashboard
           </a>
 
+          admin-categories.html
+            View Categories
+          </a>
+
           <button
             id="admin-logout-button"
-            class="small-action-button"
+            class="small-action-button logout-action-button"
             type="button"
           >
             Log Out
@@ -396,31 +681,73 @@
         </div>
       </div>
 
+      <!-- ====================================================
+           DELETION WARNING
+           ==================================================== -->
+
+      <section
+        class="delete-warning"
+        aria-labelledby="delete-warning-heading"
+      >
+        <h2 id="delete-warning-heading">
+          Permanent Action
+        </h2>
+
+        <p>
+          Deleting a category cannot be undone. Products assigned
+          to the category may need to be reassigned before the
+          server allows the category to be deleted.
+        </p>
+      </section>
+
+      <!-- ====================================================
+           DELETE CATEGORY FORM
+           ==================================================== -->
+
       <form
         id="delete-category-form"
         class="delete-category-form"
         novalidate
       >
-        <div class="form-field">
-          <label for="category-to-delete">
-            Category
-          </label>
+        <div class="category-selection-row">
+          <div class="form-field">
+            <label for="category-select">
+              Category to Delete
+            </label>
 
-          <select
-            id="category-to-delete"
-            name="categoryId"
-            required
-            disabled
+            <select
+              id="category-select"
+              name="categoryId"
+              disabled
+              required
+            >
+              <option value="">
+                Loading categories...
+              </option>
+            </select>
+
+            <p class="field-help">
+              Select the category you want to review and
+              permanently delete.
+            </p>
+          </div>
+
+          <button
+            id="refresh-categories-button"
+            class="refresh-categories-button"
+            type="button"
           >
-            <option value="">
-              Loading categories...
-            </option>
-          </select>
+            Refresh Categories
+          </button>
         </div>
+
+        <!-- ==================================================
+             SELECTED CATEGORY INFORMATION
+             ================================================== -->
 
         <section
           id="selected-category-details"
-          class="category-details"
+          class="selected-category-details"
           aria-labelledby="selected-category-heading"
           hidden
         >
@@ -428,58 +755,94 @@
             Selected Category
           </h2>
 
-          <p>
-            <strong>Name:</strong>
-            <span id="selected-category-name"></span>
-          </p>
+          <div class="category-detail-grid">
+            <div class="category-detail">
+              <h3>
+                Category Name
+              </h3>
 
-          <p>
-            <strong>Tag:</strong>
-            <span id="selected-category-slug"></span>
-          </p>
+              <p id="selected-category-name">
+                Not selected
+              </p>
+            </div>
 
-          <p>
-            <strong>Description:</strong>
-            <span id="selected-category-description"></span>
-          </p>
+            <div class="category-detail">
+              <h3>
+                Category Tag
+              </h3>
 
-          <p>
-            <strong>Products Assigned:</strong>
-            <span id="selected-category-product-count">0</span>
-          </p>
+              <p id="selected-category-slug">
+                Not selected
+              </p>
+            </div>
 
-          <p>
-            <strong>Status:</strong>
-            <span id="selected-category-status"></span>
-          </p>
+            <div class="category-detail">
+              <h3>
+                Status
+              </h3>
 
-          
+              <p id="selected-category-status">
+                Not selected
+              </p>
+            </div>
+
+            <div class="category-detail category-detail-full">
+              <h3>
+                Description
+              </h3>
+
+              <p id="selected-category-description">
+                No description provided.
+              </p>
+            </div>
+          </div>
         </section>
 
-        <div class="delete-warning">
-          <strong>
-            Warning
-          </strong>
+        <!-- ==================================================
+             DELETION CONFIRMATION
+             ================================================== -->
 
-          Deleting a category is permanent. Products assigned to
-          the deleted category must either be moved to another
-          category or left without a category, depending on the
-          backend deletion rules we add.
-        </div>
+        <section
+          class="confirmation-section"
+          aria-labelledby="confirmation-heading"
+        >
+          <h2 id="confirmation-heading">
+            Confirm Permanent Deletion
+          </h2>
 
-        <div class="confirmation-field">
-          <input
-            id="confirm-category-deletion"
-            name="confirmDeletion"
-            type="checkbox"
-            required
-          >
+          <p>
+            Type the exact category name
 
-          <label for="confirm-category-deletion">
-            I understand that this category deletion cannot be
-            undone.
-          </label>
-        </div>
+            <span
+              id="confirmation-category-name"
+              class="confirmation-category-name"
+            >
+              shown above
+            </span>
+
+            to enable the delete button.
+          </p>
+
+          <div class="form-field">
+            <label for="category-confirmation">
+              Enter the Exact Category Name
+            </label>
+
+            <input
+              id="category-confirmation"
+              name="confirmation"
+              type="text"
+              autocomplete="off"
+              placeholder="Type the category name exactly"
+              required
+            >
+
+            <p class="field-help">
+              The category name is case-sensitive and must match
+              exactly.
+            </p>
+          </div>
+        </section>
 
         <button
           id="delete-category-button"
@@ -487,43 +850,117 @@
           type="submit"
           disabled
         >
-          Delete Selected Category
+          Permanently Delete Category
         </button>
       </form>
 
+      <!-- ====================================================
+           STATUS MESSAGE
+           ==================================================== -->
+
       <p
-        id="category-message"
-        class="category-message"
-        role="status"
+        id="delete-category-message"
+        class="delete-category-message"
         aria-live="polite"
+        aria-atomic="true"
       ></p>
 
+      <!-- ====================================================
+           PAGE ACTIONS
+           ==================================================== -->
+
       <div class="page-actions">
+        admin-categories.html
+          Return to Categories
+        </a>
+
         <a
-          class="return-button"
+          class="small-action-button"
+          href="admin-add-category.html"
+        >
+          Add Category
+        </a>
+
+        <a
+          class="small-action-button"
           href="admin-dashboard.html"
         >
           Return to Dashboard
-        </a>
-
-        <a
-          class="return-button"
-          href="admin-edit-category.html"
-        >
-          Edit a Category Instead
-        </a>
-
-        index.html
-          View Website
         </a>
       </div>
     </section>
   </main>
 
-  <noscript>
+  <!-- ========================================================
+       ADMINISTRATOR FOOTER
+       ======================================================== -->
+
+  <footer class="admin-footer">
     <p>
-      JavaScript must be enabled to manage product categories.
+      <strong>
+        Multi-Maniacs Customs LLC Administrator System
+      </strong>
     </p>
+
+    <p>
+      Category and product-management tools are restricted to
+      authorized MMC administrators.
+    </p>
+
+    <nav
+      class="admin-footer-navigation"
+      aria-label="Administrator footer navigation"
+    >
+      <a href="admin-dashboard.html">
+        Dashboard
+      </a>
+
+      <a href="admin-products.html">
+        Products
+      </a>
+
+      admin-categories.html
+        Categories
+      </a>
+
+      <a href="admin-add-category.html">
+        Add Category
+      </a>
+
+      <a
+        href="admin-delete-category.html"
+        aria-current="page"
+      >
+        Delete Category
+      </a>
+
+      <a href="admin-inventory.html">
+        Inventory
+      </a>
+
+      <a href="admin-orders.html">
+        Orders
+      </a>
+
+      <a href="admin-settings.html">
+        Settings
+      </a>
+
+      <a href="index.html">
+        View Website
+      </a>
+    </nav>
+
+    <p>
+      &copy; 2026 Multi-Maniacs Customs LLC. All rights reserved.
+    </p>
+  </footer>
+
+  <noscript>
+    <div class="admin-noscript">
+      JavaScript must be enabled to load, review, and delete
+      product categories.
+    </div>
   </noscript>
 </body>
 </html>

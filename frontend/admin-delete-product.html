@@ -10,127 +10,76 @@
 
   <meta
     name="description"
-    content="Delete a product from Multi-Maniacs Customs LLC."
+    content="Permanently delete a product from the Multi-Maniacs Customs administrator system."
+  >
+
+  <meta
+    name="theme-color"
+    content="#000000"
+  >
+
+  <meta
+    name="robots"
+    content="noindex, nofollow"
   >
 
   <title>
     Delete Product | Multi-Maniacs Customs LLC
   </title>
 
-  <link rel="stylesheet" href="style.css">
-  <link rel="stylesheet" href="admin.css">
+  <link
+    rel="stylesheet"
+    href="style.css"
+  >
+
+  <link
+    rel="stylesheet"
+    href="admin.css"
+  >
 
   <style>
-    :root {
-      --delete-product-background: #111111;
-      --delete-product-panel: #222222;
-      --delete-product-inner: #191919;
-      --delete-product-border: #444444;
-      --delete-product-text: #ffffff;
-      --delete-product-muted: #cccccc;
-      --delete-product-input-background: #ffffff;
-      --delete-product-input-text: #111111;
-      --delete-product-danger: #e53935;
-      --delete-product-danger-hover: #c62828;
-      --delete-product-danger-disabled: #713b39;
-      --delete-product-focus: #ff8a80;
-      --delete-product-error: #ff7676;
-      --delete-product-success: #79d77c;
-      --delete-product-information: #90caf9;
-    }
-
-    * {
-      box-sizing: border-box;
-    }
-
-    html {
-      min-height: 100%;
-    }
-
-    body {
-      min-height: 100vh;
-      margin: 0;
-      color: var(--delete-product-text);
-      background: var(--delete-product-background);
-      font-family: Arial, Helvetica, sans-serif;
-    }
-
-    .top-header {
-      padding: 18px 20px;
-      background: #000000;
-      border-bottom: 1px solid var(--delete-product-border);
-    }
-
-    .header-content {
-      width: 100%;
-      max-width: 1200px;
-      margin: 0 auto;
-    }
-
-    .site-heading {
-      margin: 0 0 16px;
-      font-size: 26px;
-      line-height: 1.25;
-    }
-
-    .header-buttons {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-    }
-
-    .header-buttons a {
-      display: inline-flex;
-      min-height: 42px;
-      align-items: center;
-      justify-content: center;
-      gap: 7px;
-      padding: 9px 13px;
-      color: #ffffff;
-      background: #222222;
-      border: 1px solid #353535;
-      border-radius: 7px;
-      text-decoration: none;
-    }
-
-    .header-buttons a:hover,
-    .header-buttons a:focus {
-      background: #333333;
-    }
-
-    .header-buttons a[aria-current="page"] {
-      background: var(--delete-product-danger);
-      border-color: var(--delete-product-danger);
-    }
+    /* ========================================================
+       MULTI-MANIACS CUSTOMS LLC
+       DELETE PRODUCT PAGE
+       ======================================================== */
 
     .delete-product-page {
-      width: 100%;
-      max-width: 720px;
-      margin: 36px auto;
-      padding: 0 20px;
+      width: calc(100% - 32px);
+      max-width: 860px;
+      margin: 34px auto;
     }
 
     .delete-product-container {
+      position: relative;
+      overflow: hidden;
       padding: 30px;
-      background: var(--delete-product-panel);
-      border: 1px solid var(--delete-product-border);
-      border-radius: 14px;
+      color: var(--admin-black, #000000);
+      background:
+        var(
+          --admin-panel,
+          rgba(255, 255, 255, 0.96)
+        );
+      border: 3px solid var(--admin-black, #000000);
+      border-radius: 16px;
       box-shadow:
-        0 18px 50px rgba(0, 0, 0, 0.4);
+        0 14px 34px rgba(0, 0, 0, 0.38),
+        0 0 0 4px rgba(255, 255, 255, 0.22);
     }
 
     .page-heading {
       margin: 0 0 10px;
+      color: var(--admin-black, #000000);
+      font-size: clamp(32px, 6vw, 46px);
+      line-height: 1.15;
       text-align: center;
-      font-size: 30px;
     }
 
     .page-description {
-      max-width: 600px;
+      max-width: 690px;
       margin: 0 auto 24px;
-      color: var(--delete-product-muted);
+      color: var(--admin-muted, #333333);
+      line-height: 1.65;
       text-align: center;
-      line-height: 1.55;
     }
 
     .admin-account-bar {
@@ -138,47 +87,98 @@
       flex-wrap: wrap;
       align-items: center;
       justify-content: space-between;
-      gap: 12px;
+      gap: 14px;
       margin-bottom: 24px;
-      padding: 14px;
-      background: var(--delete-product-inner);
-      border: 1px solid var(--delete-product-border);
-      border-radius: 8px;
+      padding: 16px;
+      color: var(--admin-white, #ffffff);
+      background: var(--admin-black, #000000);
+      border: 3px solid var(--admin-black, #000000);
+      border-radius: 10px;
     }
 
     .admin-account-bar p {
       margin: 4px 0;
+      color: var(--admin-white, #ffffff);
+    }
+
+    .admin-account-bar strong {
+      color: var(--admin-cyan, #00eaff);
     }
 
     .admin-account-actions {
       display: flex;
       flex-wrap: wrap;
-      gap: 8px;
+      gap: 9px;
     }
 
     .small-action-button {
-      display: inline-block;
+      display: inline-flex;
+      min-height: 42px;
+      align-items: center;
+      justify-content: center;
       padding: 9px 13px;
-      color: #ffffff;
-      background: #444444;
-      border: none;
-      border-radius: 6px;
+      color: var(--admin-white, #ffffff);
+      background: var(--admin-dark-gray, #222222);
+      border: 2px solid var(--admin-white, #ffffff);
+      border-radius: 7px;
       font: inherit;
       font-size: 14px;
+      font-weight: 800;
+      line-height: 1.2;
       text-align: center;
       text-decoration: none;
       cursor: pointer;
+      transition:
+        color 0.2s ease,
+        background 0.2s ease,
+        transform 0.2s ease,
+        box-shadow 0.2s ease;
     }
 
     .small-action-button:hover,
     .small-action-button:focus {
-      background: #5a5a5a;
+      color: var(--admin-black, #000000);
+      background: var(--admin-cyan, #00eaff);
+      transform: translateY(-2px);
+      box-shadow:
+        0 0 12px rgba(0, 234, 255, 0.4);
+    }
+
+    .logout-action-button {
+      color: var(--admin-white, #ffffff);
+      background: var(--admin-red, #e53935);
+    }
+
+    .logout-action-button:hover,
+    .logout-action-button:focus {
+      color: var(--admin-white, #ffffff);
+      background: #b71c1c;
+    }
+
+    .delete-warning {
+      margin-bottom: 22px;
+      padding: 18px;
+      color: #7b0018;
+      background: #fff0f3;
+      border: 3px solid #c40028;
+      border-radius: 10px;
+      line-height: 1.6;
+    }
+
+    .delete-warning h2 {
+      margin: 0 0 8px;
+      color: #9a001f;
+      font-size: 21px;
+    }
+
+    .delete-warning p {
+      margin: 0;
     }
 
     .delete-product-form {
       display: flex;
       flex-direction: column;
-      gap: 18px;
+      gap: 20px;
     }
 
     .form-field {
@@ -188,39 +188,105 @@
     }
 
     .form-field label {
+      color: var(--admin-black, #000000);
       font-size: 15px;
-      font-weight: 700;
+      font-weight: 800;
+    }
+
+    .form-field select,
+    .form-field input {
+      width: 100%;
+      min-height: 48px;
+      padding: 11px 12px;
+      color: var(--admin-black, #000000);
+      background: var(--admin-white, #ffffff);
+      border: 2px solid var(--admin-black, #000000);
+      border-radius: 8px;
+      font: inherit;
     }
 
     .form-field select {
-      width: 100%;
-      min-height: 50px;
-      padding: 11px 12px;
-      color: var(--delete-product-input-text);
-      background: var(--delete-product-input-background);
-      border: 2px solid transparent;
-      border-radius: 7px;
-      font: inherit;
-      outline: none;
       cursor: pointer;
     }
 
-    .form-field select:focus {
-      border-color: var(--delete-product-focus);
+    .form-field select:focus,
+    .form-field input:focus {
+      outline: none;
+      border-color: var(--admin-purple, #8a00ff);
       box-shadow:
-        0 0 0 3px rgba(255, 138, 128, 0.2);
+        0 0 0 4px rgba(138, 0, 255, 0.2),
+        0 0 12px rgba(0, 234, 255, 0.35);
     }
 
-    .form-field select:disabled {
+    .form-field select:disabled,
+    .form-field input:disabled {
+      color: #666666;
+      background: #eeeeee;
+      cursor: not-allowed;
+      opacity: 0.75;
+    }
+
+    .field-help {
+      margin: 0;
+      color: var(--admin-muted, #333333);
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .product-selection-row {
+      display: grid;
+      grid-template-columns:
+        minmax(0, 1fr)
+        auto;
+      gap: 12px;
+      align-items: end;
+    }
+
+    .refresh-products-button {
+      display: inline-flex;
+      min-height: 48px;
+      align-items: center;
+      justify-content: center;
+      padding: 11px 16px;
+      color: var(--admin-black, #000000);
+      background:
+        linear-gradient(
+          135deg,
+          var(--admin-yellow, #ffe600),
+          var(--admin-cyan, #00eaff)
+        );
+      border: 2px solid var(--admin-black, #000000);
+      border-radius: 8px;
+      font: inherit;
+      font-weight: 900;
+      cursor: pointer;
+      transition:
+        filter 0.2s ease,
+        transform 0.2s ease,
+        box-shadow 0.2s ease;
+    }
+
+    .refresh-products-button:hover:not(:disabled),
+    .refresh-products-button:focus:not(:disabled) {
+      filter: saturate(1.2) brightness(1.05);
+      transform: translateY(-2px);
+      box-shadow:
+        0 0 14px rgba(0, 234, 255, 0.4);
+    }
+
+    .refresh-products-button:disabled {
       cursor: wait;
-      opacity: 0.7;
+      filter: grayscale(0.6);
+      opacity: 0.65;
+      transform: none;
     }
 
     .product-details {
-      padding: 18px;
-      background: var(--delete-product-inner);
-      border: 1px solid var(--delete-product-border);
-      border-radius: 9px;
+      padding: 20px;
+      color: var(--admin-black, #000000);
+      background: var(--admin-off-white, #fffdf8);
+      border: 3px solid var(--admin-black, #000000);
+      border-radius: 12px;
     }
 
     .product-details[hidden] {
@@ -228,134 +294,196 @@
     }
 
     .product-details h2 {
-      margin: 0 0 14px;
-      font-size: 21px;
+      margin: 0 0 16px;
+      color: var(--admin-black, #000000);
+      font-size: 23px;
     }
 
     .product-detail-grid {
       display: grid;
-      grid-template-columns: 180px 1fr;
-      gap: 18px;
+      grid-template-columns:
+        190px
+        minmax(0, 1fr);
+      gap: 20px;
       align-items: start;
+    }
+
+    .selected-product-image-container {
+      display: flex;
+      width: 190px;
+      height: 190px;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      background:
+        linear-gradient(
+          135deg,
+          rgba(255, 20, 147, 0.16),
+          rgba(255, 230, 0, 0.16),
+          rgba(52, 230, 0, 0.14),
+          rgba(0, 234, 255, 0.16)
+        );
+      border: 2px solid var(--admin-black, #000000);
+      border-radius: 10px;
     }
 
     .selected-product-image {
       display: block;
-      width: 180px;
-      height: 180px;
-      object-fit: cover;
-      background: #101010;
-      border: 1px solid var(--delete-product-border);
-      border-radius: 8px;
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
     }
 
     .selected-product-image[hidden] {
       display: none;
     }
 
+    .product-image-placeholder {
+      padding: 14px;
+      color: var(--admin-muted, #333333);
+      font-size: 13px;
+      font-weight: 800;
+      text-align: center;
+    }
+
+    .product-image-placeholder[hidden] {
+      display: none;
+    }
+
+    .product-information {
+      min-width: 0;
+    }
+
+    .product-information h3 {
+      margin: 0 0 12px;
+      color: var(--admin-black, #000000);
+      font-size: 24px;
+      overflow-wrap: anywhere;
+    }
+
     .product-information p {
-      margin: 7px 0;
-      color: var(--delete-product-muted);
-      line-height: 1.45;
+      margin: 8px 0;
+      color: var(--admin-muted, #333333);
+      line-height: 1.5;
+      overflow-wrap: anywhere;
     }
 
     .product-information strong {
-      color: var(--delete-product-text);
+      color: var(--admin-black, #000000);
     }
 
-    .delete-warning {
-      padding: 16px;
-      color: #ffffff;
-      background: #3b2020;
-      border: 1px solid #b94a48;
-      border-radius: 8px;
-      line-height: 1.55;
-    }
-
-    .delete-warning strong {
-      display: block;
-      margin-bottom: 6px;
-    }
-
-    .confirmation-field {
-      display: flex;
-      align-items: flex-start;
-      gap: 10px;
+    .product-description-box {
+      margin-top: 16px;
       padding: 14px;
-      background: var(--delete-product-inner);
-      border: 1px solid var(--delete-product-border);
+      color: var(--admin-black, #000000);
+      background: var(--admin-white, #ffffff);
+      border: 2px solid var(--admin-black, #000000);
       border-radius: 8px;
+      line-height: 1.6;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
     }
 
-    .confirmation-field input {
-      width: 20px;
-      height: 20px;
-      margin: 1px 0 0;
-      accent-color: var(--delete-product-danger);
-      cursor: pointer;
+    .confirmation-section {
+      padding: 18px;
+      color: var(--admin-black, #000000);
+      background:
+        linear-gradient(
+          135deg,
+          rgba(255, 20, 147, 0.1),
+          rgba(255, 230, 0, 0.13),
+          rgba(0, 234, 255, 0.12)
+        );
+      border: 3px solid var(--admin-black, #000000);
+      border-radius: 10px;
     }
 
-    .confirmation-field label {
-      line-height: 1.45;
-      cursor: pointer;
+    .confirmation-section h2 {
+      margin: 0 0 10px;
+      color: var(--admin-black, #000000);
+      font-size: 21px;
+    }
+
+    .confirmation-section > p {
+      margin: 0 0 14px;
+      color: var(--admin-muted, #333333);
+      line-height: 1.6;
+    }
+
+    .confirmation-product-name {
+      color: #9a001f;
+      font-weight: 900;
     }
 
     .delete-product-button {
+      display: inline-flex;
       width: 100%;
-      min-height: 52px;
-      padding: 13px;
-      color: #ffffff;
-      background: var(--delete-product-danger);
-      border: none;
-      border-radius: 8px;
+      min-height: 54px;
+      align-items: center;
+      justify-content: center;
+      padding: 13px 18px;
+      color: var(--admin-white, #ffffff);
+      background: #c40028;
+      border: 3px solid var(--admin-black, #000000);
+      border-radius: 9px;
       font: inherit;
       font-size: 17px;
-      font-weight: 700;
+      font-weight: 900;
       cursor: pointer;
+      box-shadow:
+        0 6px 0 var(--admin-black, #000000);
       transition:
-        background-color 0.2s ease,
+        background 0.2s ease,
         transform 0.2s ease,
-        opacity 0.2s ease;
+        box-shadow 0.2s ease;
     }
 
-    .delete-product-button:hover:not(:disabled) {
-      background: var(--delete-product-danger-hover);
-      transform: translateY(-1px);
-    }
-
-    .delete-product-button:focus-visible {
-      outline: 3px solid var(--delete-product-focus);
-      outline-offset: 3px;
+    .delete-product-button:hover:not(:disabled),
+    .delete-product-button:focus:not(:disabled) {
+      background: #96001e;
+      transform: translateY(-2px);
+      box-shadow:
+        0 8px 0 var(--admin-black, #000000),
+        0 0 16px rgba(196, 0, 40, 0.45);
     }
 
     .delete-product-button:disabled {
-      background: var(--delete-product-danger-disabled);
       cursor: not-allowed;
-      opacity: 0.7;
+      filter: grayscale(0.75);
+      opacity: 0.55;
+      transform: none;
+      box-shadow:
+        0 4px 0 var(--admin-black, #000000);
     }
 
     .product-message {
       min-height: 24px;
-      margin: 18px 0 0;
-      text-align: center;
-      font-weight: 700;
+      margin: 20px 0 0;
+      padding: 0;
+      border-radius: 9px;
+      font-weight: 800;
       line-height: 1.5;
+      text-align: center;
     }
 
-    .product-message:empty {
-      display: none;
+    .product-message:not(:empty) {
+      padding: 12px 14px;
+      border: 2px solid currentColor;
     }
 
     .product-error {
-      color: var(--delete-product-error);
+      color: var(--admin-error-text, #b00024);
+      background: #fff0f3;
     }
 
     .product-success {
-      color: var(--delete-product-success);
+      color: var(--admin-success-text, #126b17);
+      background: #effff2;
     }
 
     .product-information-message {
-      color: var(--delete-product-information);
+      color: var(--admin-information-text, #003d9c);
+      background: #edf8ff;
     }
 
     .page-actions {
@@ -366,44 +494,614 @@
       margin-top: 24px;
     }
 
-    @media (max-width: 650px) {
+    @media (max-width: 700px) {
+      .product-selection-row,
+      .product-detail-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .refresh-products-button {
+        width: 100%;
+      }
+
+      .selected-product-image-container {
+        width: 100%;
+        height: 260px;
+      }
+    }
+
+    @media (max-width: 520px) {
       .delete-product-page {
-        margin: 20px auto;
-        padding: 0 14px;
+        width: calc(100% - 24px);
+        margin: 22px auto;
       }
 
       .delete-product-container {
         padding: 22px 16px;
       }
 
-      .product-detail-grid {
-        grid-template-columns: 1fr;
-      }
-
-      .selected-product-image {
-        width: 100%;
-        height: 240px;
-      }
-
       .admin-account-bar {
-        align-items: flex-start;
+        align-items: stretch;
         flex-direction: column;
       }
 
-      .header-buttons {
+      .admin-account-actions,
+      .page-actions {
         flex-direction: column;
       }
 
-      .header-buttons a {
+      .small-action-button,
+      .page-actions a {
         width: 100%;
       }
     }
   </style>
 
-  <script src="navigation.js" defer></script>
-  <script src="delete-product.js" defer></script>
+  <script
+    src="config.js"
+    defer
+  ></script>
+
+  <script
+    src="navigation.js"
+    defer
+  ></script>
+
+  <script
+    src="delete-product.js"
+    defer
+  ></script>
 </head>
 
-<body>
-  <header class="top-header">
-    <div class="header-content">
+<body class="admin-page">
+  #main-content
+    Skip to main content
+  </a>
+
+  <!-- ========================================================
+       ADMINISTRATOR HEADER
+       ======================================================== -->
+
+  <header class="admin-header">
+    <div class="admin-header-content">
+      <a
+        class="admin-logo-link"
+        href="admin-dashboard.html"
+        aria-label="Go to the MMC administrator dashboard"
+      >
+        images/mmc-logo.png
+
+        <div class="admin-branding">
+          <p class="admin-site-heading">
+            Multi-Maniacs Customs LLC
+          </p>
+
+          <p class="admin-site-tagline">
+            Administrator System
+          </p>
+        </div>
+      </a>
+
+      <div
+        class="admin-header-account"
+        aria-label="Administrator account"
+      >
+        <span>
+          Signed in as
+        </span>
+
+        <strong
+          id="admin-header-username"
+          class="admin-user-name"
+        >
+          Loading...
+        </strong>
+
+        <span
+          id="admin-header-role"
+          class="admin-user-role"
+        >
+          Loading...
+        </span>
+      </div>
+    </div>
+  </header>
+
+  <!-- ========================================================
+       ADMINISTRATOR NAVIGATION
+       ======================================================== -->
+
+  <nav
+    class="admin-navigation"
+    aria-label="Administrator navigation"
+  >
+    <div class="admin-navigation-content">
+      <a href="admin-dashboard.html">
+        Dashboard
+      </a>
+
+      <a href="admin-products.html">
+        Products
+      </a>
+
+      <a href="admin-add-product.html">
+        Add Product
+      </a>
+
+      <a
+        href="delete-product.js">
+        Delete Product
+      </a>
+
+      admin-categories.html
+        Categories
+      </a>
+
+      <a href="admin-add-category.html">
+        Add Category
+      </a>
+
+      <a href="admin-delete-category.html">
+        Delete Category
+      </a>
+
+      <a href="admin-inventory.html">
+        Inventory
+      </a>
+
+      <a href="admin-orders.html">
+        Orders
+      </a>
+
+      <a href="admin-intake.html">
+        Client Intake
+      </a>
+
+      <a href="admin-settings.html">
+        Settings
+      </a>
+
+      <a href="shop.html">
+        View Shop
+      </a>
+
+      <button
+        id="admin-navigation-logout-button"
+        class="admin-logout-button"
+        type="button"
+      >
+        Log Out
+      </button>
+    </div>
+  </nav>
+
+  <!-- ========================================================
+       DELETE PRODUCT PAGE
+       ======================================================== -->
+
+  <main
+    id="main-content"
+    class="delete-product-page"
+  >
+    <section
+      class="delete-product-container"
+      aria-labelledby="delete-product-heading"
+    >
+      <div
+        class="admin-tie-dye-color-bar"
+        aria-hidden="true"
+      ></div>
+
+      <p class="admin-section-eyebrow">
+        Product Management
+      </p>
+
+      <h1
+        id="delete-product-heading"
+        class="page-heading"
+      >
+        Delete Product
+      </h1>
+
+      <p class="page-description">
+        Select a product, review its information, and type the
+        exact product name before permanently deleting it from
+        the MMC store.
+      </p>
+
+      <!-- ====================================================
+           ADMINISTRATOR ACCOUNT
+           ==================================================== -->
+
+      <div class="admin-account-bar">
+        <div>
+          <p>
+            Signed in as:
+
+            <strong id="admin-username">
+              Loading...
+            </strong>
+          </p>
+
+          <p>
+            Role:
+
+            <strong id="admin-role">
+              Loading...
+            </strong>
+          </p>
+        </div>
+
+        <div class="admin-account-actions">
+          <a
+            class="small-action-button"
+            href="admin-dashboard.html"
+          >
+            Dashboard
+          </a>
+
+          <a
+            class="small-action-button"
+            href="admin-products.html"
+          >
+            Manage Products
+          </a>
+
+          <button
+            id="admin-logout-button"
+            class="small-action-button logout-action-button"
+            type="button"
+          >
+            Log Out
+          </button>
+        </div>
+      </div>
+
+      <!-- ====================================================
+           PERMANENT DELETION WARNING
+           ==================================================== -->
+
+      <section
+        class="delete-warning"
+        aria-labelledby="product-delete-warning-heading"
+      >
+        <h2 id="product-delete-warning-heading">
+          Permanent Action
+        </h2>
+
+        <p>
+          Deleting a product cannot be undone. The product,
+          variants, inventory information, image references, and
+          public shop listing may be permanently removed.
+        </p>
+      </section>
+
+      <!-- ====================================================
+           DELETE PRODUCT FORM
+           ==================================================== -->
+
+      <form
+        id="delete-product-form"
+        class="delete-product-form"
+        novalidate
+      >
+        <div class="product-selection-row">
+          <div class="form-field">
+            <label for="product-to-delete">
+              Product to Delete
+            </label>
+
+            <select
+              id="product-to-delete"
+              name="productId"
+              disabled
+              required
+            >
+              <option value="">
+                Loading products...
+              </option>
+            </select>
+
+            <p class="field-help">
+              Select a product to review its information before
+              permanently deleting it.
+            </p>
+          </div>
+
+          <button
+            id="refresh-products-button"
+            class="refresh-products-button"
+            type="button"
+          >
+            Refresh Products
+          </button>
+        </div>
+
+        <!-- ==================================================
+             SELECTED PRODUCT DETAILS
+             ================================================== -->
+
+        <section
+          id="selected-product-details"
+          class="product-details"
+          aria-labelledby="selected-product-heading"
+          hidden
+        >
+          <h2 id="selected-product-heading">
+            Selected Product
+          </h2>
+
+          <div class="product-detail-grid">
+            <div class="selected-product-image-container">
+              <img
+                id="selected-product-image"
+                class="selected-product-image"
+                alt="Selected product"
+                hidden
+              >
+
+              <div
+                id="selected-product-image-placeholder"
+                class="product-image-placeholder"
+              >
+                No product image available
+              </div>
+            </div>
+
+            <div class="product-information">
+              <h3 id="selected-product-name">
+                No product selected
+              </h3>
+
+              <p>
+                <strong>
+                  SKU:
+                </strong>
+
+                <span id="selected-product-sku">
+                  Not available
+                </span>
+              </p>
+
+              <p>
+                <strong>
+                  Price:
+                </strong>
+
+                <span id="selected-product-price">
+                  $0.00
+                </span>
+              </p>
+
+              <p>
+                <strong>
+                  Category:
+                </strong>
+
+                <span id="selected-product-category">
+                  General
+                </span>
+              </p>
+
+              <p>
+                <strong>
+                  Stock:
+                </strong>
+
+                <span id="selected-product-stock">
+                  0
+                </span>
+              </p>
+
+              <p>
+                <strong>
+                  Variants:
+                </strong>
+
+                <span id="selected-product-variant-count">
+                  0
+                </span>
+              </p>
+
+              <p>
+                <strong>
+                  Status:
+                </strong>
+
+                <span id="selected-product-status">
+                  Unknown
+                </span>
+              </p>
+            </div>
+          </div>
+
+          <div
+            id="selected-product-description"
+            class="product-description-box"
+          >
+            No product description provided.
+          </div>
+        </section>
+
+        <!-- ==================================================
+             DELETION CONFIRMATION
+             ================================================== -->
+
+        <section
+          class="confirmation-section"
+          aria-labelledby="product-confirmation-heading"
+        >
+          <h2 id="product-confirmation-heading">
+            Confirm Permanent Deletion
+          </h2>
+
+          <p>
+            Type the exact product name
+
+            <span
+              id="confirmation-product-name"
+              class="confirmation-product-name"
+            >
+              shown above
+            </span>
+
+            to enable the delete button.
+          </p>
+
+          <div class="form-field">
+            <label for="product-confirmation">
+              Enter the Exact Product Name
+            </label>
+
+            <input
+              id="product-confirmation"
+              name="confirmation"
+              type="text"
+              autocomplete="off"
+              placeholder="Type the product name exactly"
+              required
+            >
+
+            <p class="field-help">
+              The product name is case-sensitive and must match
+              the selected product name exactly.
+            </p>
+          </div>
+        </section>
+
+        <button
+          id="delete-product-button"
+          class="delete-product-button"
+          type="submit"
+          disabled
+        >
+          Permanently Delete Product
+        </button>
+      </form>
+
+      <!-- ====================================================
+           STATUS MESSAGE
+           ==================================================== -->
+
+      <p
+        id="product-message"
+        class="product-message"
+        aria-live="polite"
+        aria-atomic="true"
+      ></p>
+
+      <!-- ====================================================
+           PAGE ACTIONS
+           ==================================================== -->
+
+      <div class="page-actions">
+        <a
+          class="small-action-button"
+          href="admin-products.html"
+        >
+          Return to Products
+        </a>
+
+        <a
+          class="small-action-button"
+          href="admin-add-product.html"
+        >
+          Add Product
+        </a>
+
+        <a
+          class="small-action-button"
+          href="admin-dashboard.html"
+        >
+          Return to Dashboard
+        </a>
+
+        <a
+          class="small-action-button"
+          href="shop.html"
+        >
+          View Shop
+        </a>
+      </div>
+    </section>
+  </main>
+
+  <!-- ========================================================
+       ADMINISTRATOR FOOTER
+       ======================================================== -->
+
+  <footer class="admin-footer">
+    <p>
+      <strong>
+        Multi-Maniacs Customs LLC Administrator System
+      </strong>
+    </p>
+
+    <p>
+      Product, category, inventory, and order-management tools
+      are restricted to authorized MMC administrators.
+    </p>
+
+    <nav
+      class="admin-footer-navigation"
+      aria-label="Administrator footer navigation"
+    >
+      <a href="admin-dashboard.html">
+        Dashboard
+      </a>
+
+      <a href="admin-products.html">
+        Products
+      </a>
+
+      <a href="admin-add-product.html">
+        Add Product
+      </a>
+
+      <a
+        href="delete-product.js">
+        Delete Product
+      </a>
+
+      admin-categories.html
+        Categories
+      </a>
+
+      <a href="admin-add-category.html">
+        Add Category
+      </a>
+
+      <a href="admin-delete-category.html">
+        Delete Category
+      </a>
+
+      <a href="admin-inventory.html">
+        Inventory
+      </a>
+
+      <a href="admin-orders.html">
+        Orders
+      </a>
+
+      <a href="admin-settings.html">
+        Settings
+      </a>
+
+      <a href="shop.html">
+        View Shop
+      </a>
+    </nav>
+
+    <p>
+      &copy; 2026 Multi-Maniacs Customs LLC. All rights reserved.
+    </p>
+  </footer>
+
+  <noscript>
+    <div class="admin-noscript">
+      JavaScript must be enabled to load, review, and delete
+      products from the MMC administrator system.
+    </div>
+  </noscript>
+</body>
+</html>

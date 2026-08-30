@@ -1,5 +1,6 @@
 // ============================================================
 // MULTI-MANIACS CUSTOMS LLC
+// FILE: admin-delete-product.js
 // DELETE PRODUCT ADMIN PAGE
 //
 // Hosting: Vercel
@@ -10,25 +11,27 @@
 (function () {
   "use strict";
 
-  var DELETE_PRODUCT_BACKEND_URL =
-    window.MMC_BACKEND_URL ||
-    window.location.origin;
+  // ==========================================================
+  // CONFIGURATION
+  // ==========================================================
 
-  var DELETE_PRODUCT_ADMIN_API =
-    DELETE_PRODUCT_BACKEND_URL +
-    "/admin/products";
+  var REQUEST_TIMEOUT_MS =
+    15000;
 
-  var DELETE_PRODUCT_API =
-    DELETE_PRODUCT_BACKEND_URL +
-    "/products";
+  var availableProducts =
+    [];
 
-  var availableProducts = [];
+  var selectedProduct =
+    null;
+
+  var deleteInProgress =
+    false;
 
   // ==========================================================
   // ELEMENT HELPERS
   // ==========================================================
 
-  function getDeleteProductElement(
+  function getElement(
     elementId
   ) {
     return document.getElementById(
@@ -36,47 +39,114 @@
     );
   }
 
-  function setDeleteProductText(
+  function setText(
     elementId,
     value
   ) {
     var element =
-      getDeleteProductElement(
+      getElement(
         elementId
       );
 
-    if (element) {
-      element.textContent =
-        String(
-          value !== undefined &&
-          value !== null
-            ? value
-            : ""
-        );
+    if (!element) {
+      return;
     }
+
+    element.textContent =
+      String(
+        value === undefined ||
+        value === null
+          ? ""
+          : value
+      );
   }
+
+  // ==========================================================
+  // BACKEND URL
+  // ==========================================================
+
+  function removeTrailingSlashes(
+    value
+  ) {
+    return String(value || "")
+      .trim()
+      .replace(
+        /\/+$/,
+        ""
+      );
+  }
+
+  function getBackendUrl() {
+    if (
+      typeof window.MMC_BACKEND_URL ===
+        "string" &&
+      window.MMC_BACKEND_URL.trim()
+    ) {
+      return removeTrailingSlashes(
+        window.MMC_BACKEND_URL
+      );
+    }
+
+    if (
+      window.location.hostname ===
+        "localhost" ||
+      window.location.hostname ===
+        "127.0.0.1"
+    ) {
+      return "http://localhost:10000";
+    }
+
+    return removeTrailingSlashes(
+      window.location.origin
+    );
+  }
+
+  var BACKEND_URL =
+    getBackendUrl();
+
+  var ADMIN_PRODUCTS_URL =
+    BACKEND_URL +
+    "/admin/products";
+
+  var PRODUCTS_URL =
+    BACKEND_URL +
+    "/products";
+
+  var ADMIN_SESSION_URL =
+    BACKEND_URL +
+    "/admin/me";
 
   // ==========================================================
   // ADMIN AUTHENTICATION
   // ==========================================================
 
   function getAdminToken() {
-    return localStorage.getItem(
-      "adminToken"
-    );
+    return String(
+      localStorage.getItem(
+        "adminToken"
+      ) ||
+      localStorage.getItem(
+        "MMC_ADMIN_TOKEN"
+      ) ||
+      ""
+    ).trim();
   }
 
   function getAdminHeaders(
     includeContentType
   ) {
     var headers = {
+      Accept:
+        "application/json",
+
       Authorization:
         "Bearer " +
         getAdminToken()
     };
 
     if (
-      includeContentType !== false
+      includeContentType !==
+      false
     ) {
       headers["Content-Type"] =
         "application/json";
@@ -91,105 +161,211 @@
     );
 
     localStorage.removeItem(
-      "adminUser"
+      "MMC_ADMIN_TOKEN"
     );
 
     localStorage.removeItem(
-      "MMC_ADMIN_TOKEN"
+      "adminUser"
     );
   }
 
   function redirectToAdminLogin() {
     clearSavedAdminLogin();
 
-    window.location.href =
-      "admin-login.html";
+    window.location.replace(
+      "admin-login.html?return=" +
+      encodeURIComponent(
+        "admin-delete-product.html"
+      )
+    );
   }
 
   function logoutAdmin() {
     redirectToAdminLogin();
   }
 
-  async function verifyAdminSession() {
-    var token =
-      getAdminToken();
+  // ==========================================================
+  // FETCH WITH TIMEOUT
+  // ==========================================================
 
-    if (!token) {
-      redirectToAdminLogin();
-      return false;
+  async function fetchWithTimeout(
+    url,
+    options
+  ) {
+    var controller =
+      new AbortController();
+
+    var timeoutIdentifier =
+      window.setTimeout(
+        function () {
+          controller.abort();
+        },
+        REQUEST_TIMEOUT_MS
+      );
+
+    try {
+      return await fetch(
+        url,
+        Object.assign(
+          {},
+          options || {},
+          {
+            signal:
+              controller.signal
+          }
+        )
+      );
+    } finally {
+      window.clearTimeout(
+        timeoutIdentifier
+      );
+    }
+  }
+
+  // ==========================================================
+  // SERVER RESPONSE
+  // ==========================================================
+
+  async function readResponse(
+    response
+  ) {
+    var responseText =
+      "";
+
+    try {
+      responseText =
+        await response.text();
+    } catch (error) {
+      return {
+        error:
+          "The server response could not be read."
+      };
+    }
+
+    if (!responseText) {
+      return {};
     }
 
     try {
-      var response = await fetch(
-        DELETE_PRODUCT_BACKEND_URL +
-        "/admin/me",
-        {
-          method: "GET",
-          headers:
-            getAdminHeaders(false)
-        }
+      return JSON.parse(
+        responseText
+      );
+    } catch (error) {
+      return {
+        error:
+          responseText
+      };
+    }
+  }
+
+  function getErrorMessage(
+    value,
+    fallbackMessage
+  ) {
+    if (
+      typeof value ===
+        "string" &&
+      value.trim()
+    ) {
+      return value.trim();
+    }
+
+    if (
+      value &&
+      typeof value ===
+        "object"
+    ) {
+      if (
+        typeof value.message ===
+          "string" &&
+        value.message.trim()
+      ) {
+        return value.message.trim();
+      }
+
+      if (
+        value.error !==
+        undefined
+      ) {
+        return getErrorMessage(
+          value.error,
+          fallbackMessage
+        );
+      }
+    }
+
+    return fallbackMessage;
+  }
+
+  async function requestJson(
+    url,
+    options
+  ) {
+    var response =
+      await fetchWithTimeout(
+        url,
+        options
       );
 
-      var data =
-        await readDeleteProductResponse(
-          response
-        );
+    var responseData =
+      await readResponse(
+        response
+      );
 
-      localStorage.setItem(
-        "adminUser",
-        JSON.stringify(
-          data.admin || {}
+    if (
+      response.status ===
+      401
+    ) {
+      redirectToAdminLogin();
+
+      throw new Error(
+        "Your administrator session expired."
+      );
+    }
+
+    if (
+      response.status ===
+      403
+    ) {
+      throw new Error(
+        getErrorMessage(
+          responseData,
+          "You do not have permission to delete products."
         )
       );
-
-      displayAdminInformation(
-        data.admin || {}
-      );
-
-      return true;
-    } catch (error) {
-      console.error(
-        "Admin session verification failed:",
-        error
-      );
-
-      showDeleteProductMessage(
-        error.message ||
-        "Your administrator session could not be verified.",
-        "error"
-      );
-
-      return false;
     }
+
+    if (!response.ok) {
+      throw new Error(
+        getErrorMessage(
+          responseData,
+          (
+            "The request failed with status " +
+            response.status +
+            "."
+          )
+        )
+      );
+    }
+
+    return responseData;
   }
 
   // ==========================================================
-  // ADMIN INFORMATION
+  // ADMINISTRATOR INFORMATION
   // ==========================================================
 
-  function displayAdminInformation(
-    admin
+  function formatAdminRole(
+    role
   ) {
-    setDeleteProductText(
-      "admin-username",
-      admin.username || ""
-    );
-
-    setDeleteProductText(
-      "admin-role",
-      formatAdminRole(
-        admin.role
+    return String(
+      role ||
+      "Administrator"
+    )
+      .replace(
+        /_/g,
+        " "
       )
-    );
-  }
-
-  function formatAdminRole(role) {
-    if (!role) {
-      return "";
-    }
-
-    return String(role)
-      .replace(/_/g, " ")
       .replace(
         /\b\w/g,
         function (letter) {
@@ -198,79 +374,137 @@
       );
   }
 
-  // ==========================================================
-  // SERVER RESPONSE
-  // ==========================================================
-
-  async function readDeleteProductResponse(
-    response
+  function displayAdminInformation(
+    administrator
   ) {
-    var data;
+    var username =
+      String(
+        administrator.username ||
+        administrator.name ||
+        administrator.email ||
+        "Administrator"
+      );
 
-    try {
-      data =
-        await response.json();
-    } catch (error) {
-      data = {
-        error:
-          "The server returned an unexpected response."
-      };
-    }
+    var role =
+      formatAdminRole(
+        administrator.role
+      );
 
-    if (response.status === 401) {
+    [
+      "admin-username",
+      "admin-header-username"
+    ].forEach(
+      function (elementId) {
+        setText(
+          elementId,
+          username
+        );
+      }
+    );
+
+    [
+      "admin-role",
+      "admin-header-role"
+    ].forEach(
+      function (elementId) {
+        setText(
+          elementId,
+          role
+        );
+      }
+    );
+  }
+
+  async function verifyAdminSession() {
+    if (!getAdminToken()) {
       redirectToAdminLogin();
 
-      throw new Error(
-        data.error ||
-        "Your administrator session expired."
-      );
+      return false;
     }
 
-    if (response.status === 403) {
-      throw new Error(
-        data.error ||
-        "You do not have permission to delete products."
-      );
-    }
+    try {
+      var responseData =
+        await requestJson(
+          ADMIN_SESSION_URL,
+          {
+            method:
+              "GET",
 
-    if (!response.ok) {
-      throw new Error(
-        data.error ||
-        data.message ||
-        (
-          "The request failed with status " +
-          response.status +
-          "."
+            headers:
+              getAdminHeaders(
+                false
+              )
+          }
+        );
+
+      var administrator =
+        responseData.admin ||
+        responseData.user ||
+        responseData;
+
+      localStorage.setItem(
+        "adminUser",
+        JSON.stringify(
+          administrator
         )
       );
-    }
 
-    return data;
+      displayAdminInformation(
+        administrator
+      );
+
+      return true;
+    } catch (error) {
+      console.error(
+        "Administrator session verification failed.",
+        error
+      );
+
+      var errorMessage;
+
+      if (
+        error &&
+        error.name ===
+          "AbortError"
+      ) {
+        errorMessage =
+          "The administrator session check took too long. Please reload the page.";
+      } else {
+        errorMessage =
+          getErrorMessage(
+            error,
+            "Your administrator session could not be verified."
+          );
+      }
+
+      showProductMessage(
+        errorMessage,
+        "error"
+      );
+
+      return false;
+    }
   }
 
   // ==========================================================
   // MESSAGE DISPLAY
   // ==========================================================
 
-  function showDeleteProductMessage(
+  function showProductMessage(
     message,
     messageType
   ) {
     var messageElement =
-      getDeleteProductElement(
+      getElement(
         "product-message"
       );
 
     if (!messageElement) {
-      if (messageType === "error") {
-        alert(message);
-      }
-
       return;
     }
 
     messageElement.textContent =
-      message;
+      String(message || "");
 
     messageElement.classList.remove(
       "product-error",
@@ -278,106 +512,206 @@
       "product-information-message"
     );
 
-    if (messageType === "error") {
-      messageElement.classList.add(
-        "product-error"
-      );
-    } else if (
-      messageType === "success"
+    messageElement.removeAttribute(
+      "role"
+    );
+
+    if (!message) {
+      return;
+    }
+
+    if (
+      messageType ===
+      "success"
     ) {
       messageElement.classList.add(
         "product-success"
       );
-    } else {
+
+      messageElement.setAttribute(
+        "role",
+        "status"
+      );
+    } else if (
+      messageType ===
+      "information"
+    ) {
       messageElement.classList.add(
         "product-information-message"
+      );
+
+      messageElement.setAttribute(
+        "role",
+        "status"
+      );
+    } else {
+      messageElement.classList.add(
+        "product-error"
+      );
+
+      messageElement.setAttribute(
+        "role",
+        "alert"
       );
     }
   }
 
-  function clearDeleteProductMessage() {
-    var messageElement =
-      getDeleteProductElement(
-        "product-message"
-      );
+  // ==========================================================
+  // PRODUCT NORMALIZATION
+  // ==========================================================
 
-    if (!messageElement) {
-      return;
+  function normalizeProduct(
+    product
+  ) {
+    var source =
+      product &&
+      typeof product ===
+        "object"
+        ? product
+        : {};
+
+    var variants =
+      Array.isArray(
+        source.variants
+      )
+        ? source.variants
+        : [];
+
+    return {
+      id:
+        String(
+          source.id ||
+          source._id ||
+          ""
+        ),
+
+      name:
+        String(
+          source.name ||
+          "Unnamed Product"
+        ),
+
+      sku:
+        String(
+          source.sku ||
+          ""
+        ),
+
+      price:
+        Math.max(
+          0,
+          Number(
+            source.price
+          ) ||
+          0
+        ),
+
+      image:
+        String(
+          source.image ||
+          ""
+        ),
+
+      category:
+        String(
+          source.category ||
+          source.categoryName ||
+          "General"
+        ),
+
+      description:
+        String(
+          source.description ||
+          ""
+        ),
+
+      stock:
+        Math.max(
+          0,
+          Number(
+            source.stock
+          ) ||
+          0
+        ),
+
+      variants:
+        variants,
+
+      active:
+        source.active !==
+        false
+    };
+  }
+
+  function getProductList(
+    responseData
+  ) {
+    if (
+      Array.isArray(
+        responseData
+      )
+    ) {
+      return responseData;
     }
 
-    messageElement.textContent = "";
+    if (
+      responseData &&
+      Array.isArray(
+        responseData.products
+      )
+    ) {
+      return responseData.products;
+    }
 
-    messageElement.classList.remove(
-      "product-error",
-      "product-success",
-      "product-information-message"
+    if (
+      responseData &&
+      responseData.data &&
+      Array.isArray(
+        responseData.data.products
+      )
+    ) {
+      return responseData.data.products;
+    }
+
+    return [];
+  }
+
+  // ==========================================================
+  // CURRENCY
+  // ==========================================================
+
+  function formatCurrency(
+    value
+  ) {
+    return new Intl.NumberFormat(
+      "en-US",
+      {
+        style:
+          "currency",
+
+        currency:
+          "USD"
+      }
+    ).format(
+      Number(value) ||
+      0
     );
   }
 
   // ==========================================================
-  // PRODUCT HELPERS
+  // SELECTED PRODUCT
   // ==========================================================
-
-  function normalizeProduct(product) {
-    var variants =
-      Array.isArray(
-        product.variants
-      )
-        ? product.variants
-        : [];
-
-    return {
-      id: String(
-        product.id ||
-        product._id ||
-        ""
-      ),
-
-      name: String(
-        product.name ||
-        "Unnamed Product"
-      ),
-
-      sku: String(
-        product.sku || ""
-      ),
-
-      price: Number(
-        product.price || 0
-      ),
-
-      image: String(
-        product.image || ""
-      ),
-
-      category: String(
-        product.category ||
-        "General"
-      ),
-
-      stock: Number(
-        product.stock || 0
-      ),
-
-      variants: variants,
-
-      active:
-        product.active !== false
-    };
-  }
 
   function getSelectedProduct() {
     var productSelect =
-      getDeleteProductElement(
-        "productSelect"
+      getElement(
+        "product-to-delete"
       );
 
-    if (!productSelect) {
-      return null;
-    }
-
     var selectedProductId =
-      productSelect.value;
+      productSelect
+        ? productSelect.value
+        : "";
 
     return (
       availableProducts.find(
@@ -392,23 +726,372 @@
     );
   }
 
-  function formatProductCurrency(
-    value
-  ) {
-    var amount =
-      Number(value);
+  // ==========================================================
+  // DELETE BUTTON STATE
+  // ==========================================================
 
-    if (!Number.isFinite(amount)) {
-      amount = 0;
+  function setDeleteButtonState() {
+    var deleteButton =
+      getElement(
+        "delete-product-button"
+      );
+
+    var confirmationInput =
+      getElement(
+        "product-confirmation"
+      );
+
+    var confirmationMatches =
+      Boolean(
+        selectedProduct &&
+        confirmationInput &&
+        confirmationInput.value.trim() ===
+          selectedProduct.name.trim()
+      );
+
+    if (!deleteButton) {
+      return;
     }
 
-    return new Intl.NumberFormat(
-      "en-US",
-      {
-        style: "currency",
-        currency: "USD"
+    deleteButton.disabled =
+      deleteInProgress ||
+      !selectedProduct ||
+      !confirmationMatches;
+
+    deleteButton.textContent =
+      deleteInProgress
+        ? "Deleting Product..."
+        : "Permanently Delete Product";
+
+    deleteButton.setAttribute(
+      "aria-busy",
+      deleteInProgress
+        ? "true"
+        : "false"
+    );
+  }
+
+  // ==========================================================
+  // PRODUCT IMAGE
+  // ==========================================================
+
+  function clearProductImage() {
+    var productImage =
+      getElement(
+        "selected-product-image"
+      );
+
+    var placeholder =
+      getElement(
+        "selected-product-image-placeholder"
+      );
+
+    if (productImage) {
+      productImage.hidden =
+        true;
+
+      productImage.removeAttribute(
+        "src"
+      );
+    }
+
+    if (placeholder) {
+      placeholder.hidden =
+        false;
+    }
+  }
+
+  function displayProductImage(
+    product
+  ) {
+    var productImage =
+      getElement(
+        "selected-product-image"
+      );
+
+    var placeholder =
+      getElement(
+        "selected-product-image-placeholder"
+      );
+
+    if (
+      !productImage ||
+      !product.image
+    ) {
+      clearProductImage();
+
+      return;
+    }
+
+    productImage.onload =
+      function () {
+        productImage.hidden =
+          false;
+
+        if (placeholder) {
+          placeholder.hidden =
+            true;
+        }
+      };
+
+    productImage.onerror =
+      function () {
+        clearProductImage();
+      };
+
+    productImage.alt =
+      product.name +
+      " product image";
+
+    productImage.src =
+      product.image;
+  }
+
+  // ==========================================================
+  // PRODUCT DETAILS
+  // ==========================================================
+
+  function clearProductDetails() {
+    selectedProduct =
+      null;
+
+    var detailsSection =
+      getElement(
+        "selected-product-details"
+      );
+
+    var confirmationInput =
+      getElement(
+        "product-confirmation"
+      );
+
+    if (detailsSection) {
+      detailsSection.hidden =
+        true;
+    }
+
+    if (confirmationInput) {
+      confirmationInput.value =
+        "";
+    }
+
+    setText(
+      "selected-product-name",
+      "No product selected"
+    );
+
+    setText(
+      "selected-product-sku",
+      "Not available"
+    );
+
+    setText(
+      "selected-product-price",
+      "$0.00"
+    );
+
+    setText(
+      "selected-product-category",
+      "General"
+    );
+
+    setText(
+      "selected-product-stock",
+      "0"
+    );
+
+    setText(
+      "selected-product-variant-count",
+      "0"
+    );
+
+    setText(
+      "selected-product-status",
+      "Unknown"
+    );
+
+    setText(
+      "selected-product-description",
+      "No product description provided."
+    );
+
+    setText(
+      "confirmation-product-name",
+      "shown above"
+    );
+
+    clearProductImage();
+    setDeleteButtonState();
+  }
+
+  function displaySelectedProduct() {
+    selectedProduct =
+      getSelectedProduct();
+
+    showProductMessage(
+      "",
+      "information"
+    );
+
+    if (!selectedProduct) {
+      clearProductDetails();
+
+      return;
+    }
+
+    var detailsSection =
+      getElement(
+        "selected-product-details"
+      );
+
+    var confirmationInput =
+      getElement(
+        "product-confirmation"
+      );
+
+    setText(
+      "selected-product-name",
+      selectedProduct.name
+    );
+
+    setText(
+      "selected-product-sku",
+      selectedProduct.sku ||
+      "No SKU"
+    );
+
+    setText(
+      "selected-product-price",
+      formatCurrency(
+        selectedProduct.price
+      )
+    );
+
+    setText(
+      "selected-product-category",
+      selectedProduct.category ||
+      "General"
+    );
+
+    setText(
+      "selected-product-stock",
+      selectedProduct.stock
+    );
+
+    setText(
+      "selected-product-variant-count",
+      selectedProduct.variants.length
+    );
+
+    setText(
+      "selected-product-status",
+      selectedProduct.active
+        ? "Active"
+        : "Inactive"
+    );
+
+    setText(
+      "selected-product-description",
+      selectedProduct.description ||
+      "No product description provided."
+    );
+
+    setText(
+      "confirmation-product-name",
+      selectedProduct.name
+    );
+
+    displayProductImage(
+      selectedProduct
+    );
+
+    if (confirmationInput) {
+      confirmationInput.value =
+        "";
+
+      confirmationInput.focus();
+    }
+
+    if (detailsSection) {
+      detailsSection.hidden =
+        false;
+    }
+
+    showProductMessage(
+      "Type the exact product name to enable permanent deletion.",
+      "information"
+    );
+
+    setDeleteButtonState();
+  }
+
+  // ==========================================================
+  // PRODUCT DROPDOWN
+  // ==========================================================
+
+  function populateProductSelect() {
+    var productSelect =
+      getElement(
+        "product-to-delete"
+      );
+
+    if (!productSelect) {
+      return;
+    }
+
+    productSelect.replaceChildren();
+
+    var defaultOption =
+      document.createElement(
+        "option"
+      );
+
+    defaultOption.value =
+      "";
+
+    defaultOption.textContent =
+      availableProducts.length > 0
+        ? "Select a product to delete"
+        : "No products available";
+
+    productSelect.appendChild(
+      defaultOption
+    );
+
+    availableProducts.forEach(
+      function (product) {
+        var option =
+          document.createElement(
+            "option"
+          );
+
+        option.value =
+          product.id;
+
+        option.textContent =
+          product.name +
+          (
+            product.sku
+              ? (
+                  " | " +
+                  product.sku
+                )
+              : ""
+          ) +
+          " | " +
+          formatCurrency(
+            product.price
+          );
+
+        productSelect.appendChild(
+          option
+        );
       }
-    ).format(amount);
+    );
+
+    productSelect.disabled =
+      availableProducts.length ===
+      0;
   }
 
   // ==========================================================
@@ -417,73 +1100,74 @@
 
   async function loadProducts() {
     var productSelect =
-      getDeleteProductElement(
-        "productSelect"
+      getElement(
+        "product-to-delete"
       );
 
-    var deleteButton =
-      getDeleteProductElement(
-        "delete-product-button"
+    var refreshButton =
+      getElement(
+        "refresh-products-button"
       );
 
-    if (!productSelect) {
-      showDeleteProductMessage(
-        "The product-selection dropdown could not be found.",
-        "error"
-      );
+    if (productSelect) {
+      productSelect.disabled =
+        true;
 
-      return;
+      productSelect.replaceChildren();
+
+      var loadingOption =
+        document.createElement(
+          "option"
+        );
+
+      loadingOption.value =
+        "";
+
+      loadingOption.textContent =
+        "Loading products...";
+
+      productSelect.appendChild(
+        loadingOption
+      );
     }
 
-    productSelect.disabled = true;
+    if (refreshButton) {
+      refreshButton.disabled =
+        true;
 
-    if (deleteButton) {
-      deleteButton.disabled = true;
+      refreshButton.textContent =
+        "Loading Products...";
     }
 
-    productSelect.replaceChildren();
+    clearProductDetails();
 
-    var loadingOption =
-      document.createElement(
-        "option"
-      );
-
-    loadingOption.value = "";
-
-    loadingOption.textContent =
-      "Loading products...";
-
-    productSelect.appendChild(
-      loadingOption
+    showProductMessage(
+      "Loading products...",
+      "information"
     );
 
     try {
-      var response = await fetch(
-        DELETE_PRODUCT_ADMIN_API,
-        {
-          method: "GET",
-          headers:
-            getAdminHeaders(false)
-        }
-      );
+      var responseData =
+        await requestJson(
+          ADMIN_PRODUCTS_URL,
+          {
+            method:
+              "GET",
 
-      var data =
-        await readDeleteProductResponse(
-          response
+            headers:
+              getAdminHeaders(
+                false
+              )
+          }
         );
 
-      var productList =
-        Array.isArray(data)
-          ? data
-          : Array.isArray(
-              data.products
-            )
-            ? data.products
-            : [];
-
       availableProducts =
-        productList
-          .map(normalizeProduct)
+        getProductList(
+          responseData
+        )
+          .map(
+            normalizeProduct
+          )
           .filter(
             function (product) {
               return Boolean(
@@ -496,338 +1180,68 @@
               firstProduct,
               secondProduct
             ) {
-              return firstProduct.name.localeCompare(
-                secondProduct.name
-              );
+              return firstProduct.name
+                .localeCompare(
+                  secondProduct.name
+                );
             }
           );
 
-      productSelect.replaceChildren();
+      populateProductSelect();
 
-      var defaultOption =
-        document.createElement(
-          "option"
-        );
-
-      defaultOption.value = "";
-
-      defaultOption.textContent =
+      showProductMessage(
         availableProducts.length > 0
-          ? "Select a product..."
-          : "No products are available";
-
-      productSelect.appendChild(
-        defaultOption
+          ? "Select the product you want to delete."
+          : "No products are available to delete.",
+        "information"
       );
-
-      availableProducts.forEach(
-        function (product) {
-          var option =
-            document.createElement(
-              "option"
-            );
-
-          option.value =
-            product.id;
-
-          option.textContent =
-            product.name +
-            " | " +
-            product.sku +
-            " | " +
-            formatProductCurrency(
-              product.price
-            );
-
-          productSelect.appendChild(
-            option
-          );
-        }
-      );
-
-      productSelect.disabled =
-        availableProducts.length === 0;
-
-      hideSelectedProductDetails();
-
-      if (
-        availableProducts.length === 0
-      ) {
-        showDeleteProductMessage(
-          "No products are currently available to delete.",
-          "information"
-        );
-      } else {
-        clearDeleteProductMessage();
-      }
     } catch (error) {
       console.error(
-        "Products could not be loaded:",
+        "Products could not be loaded.",
         error
       );
 
-      availableProducts = [];
+      availableProducts =
+        [];
 
-      productSelect.replaceChildren();
+      populateProductSelect();
 
-      var errorOption =
-        document.createElement(
-          "option"
-        );
+      var errorMessage;
 
-      errorOption.value = "";
+      if (
+        error &&
+        error.name ===
+          "AbortError"
+      ) {
+        errorMessage =
+          "The product request took too long. Please try again.";
+      } else if (
+        error instanceof
+        TypeError
+      ) {
+        errorMessage =
+          "The product server could not be reached. " +
+          "Check the backend URL and try again.";
+      } else {
+        errorMessage =
+          getErrorMessage(
+            error,
+            "The products could not be loaded."
+          );
+      }
 
-      errorOption.textContent =
-        "Products unavailable";
-
-      productSelect.appendChild(
-        errorOption
-      );
-
-      productSelect.disabled = true;
-
-      showDeleteProductMessage(
-        error.message ||
-        "The products could not be loaded.",
+      showProductMessage(
+        errorMessage,
         "error"
       );
-    }
-  }
+    } finally {
+      if (refreshButton) {
+        refreshButton.disabled =
+          false;
 
-  // ==========================================================
-  // SELECTED PRODUCT DETAILS
-  // ==========================================================
-
-  function displaySelectedProduct() {
-    clearDeleteProductMessage();
-
-    var product =
-      getSelectedProduct();
-
-    var confirmationCheckbox =
-      getDeleteProductElement(
-        "confirm-product-deletion"
-      );
-
-    if (confirmationCheckbox) {
-      confirmationCheckbox.checked =
-        false;
-    }
-
-    if (!product) {
-      hideSelectedProductDetails();
-      updateDeleteButtonState();
-      return;
-    }
-
-    setDeleteProductText(
-      "selected-product-name",
-      product.name
-    );
-
-    setDeleteProductText(
-      "selected-product-sku",
-      product.sku ||
-      "No SKU"
-    );
-
-    setDeleteProductText(
-      "selected-product-price",
-      formatProductCurrency(
-        product.price
-      )
-    );
-
-    setDeleteProductText(
-      "selected-product-category",
-      product.category ||
-      "General"
-    );
-
-    setDeleteProductText(
-      "selected-product-stock",
-      product.stock
-    );
-
-    setDeleteProductText(
-      "selected-product-variants",
-      product.variants.length
-    );
-
-    setDeleteProductText(
-      "selected-product-status",
-      product.active
-        ? "Active"
-        : "Hidden"
-    );
-
-    displaySelectedProductImage(
-      product
-    );
-
-    var detailsSection =
-      getDeleteProductElement(
-        "selected-product-details"
-      );
-
-    if (detailsSection) {
-      detailsSection.hidden =
-        false;
-    }
-
-    updateDeleteButtonState();
-  }
-
-  function displaySelectedProductImage(
-    product
-  ) {
-    var productImage =
-      getDeleteProductElement(
-        "selected-product-image"
-      );
-
-    if (!productImage) {
-      return;
-    }
-
-    if (!product.image) {
-      productImage.hidden = true;
-
-      productImage.removeAttribute(
-        "src"
-      );
-
-      return;
-    }
-
-    productImage.src =
-      product.image;
-
-    productImage.alt =
-      product.name +
-      " product image";
-
-    productImage.hidden = false;
-
-    productImage.onerror =
-      function () {
-        productImage.hidden = true;
-
-        productImage.removeAttribute(
-          "src"
-        );
-      };
-  }
-
-  function hideSelectedProductDetails() {
-    var detailsSection =
-      getDeleteProductElement(
-        "selected-product-details"
-      );
-
-    var productImage =
-      getDeleteProductElement(
-        "selected-product-image"
-      );
-
-    if (detailsSection) {
-      detailsSection.hidden = true;
-    }
-
-    if (productImage) {
-      productImage.hidden = true;
-
-      productImage.removeAttribute(
-        "src"
-      );
-    }
-
-    setDeleteProductText(
-      "selected-product-name",
-      ""
-    );
-
-    setDeleteProductText(
-      "selected-product-sku",
-      ""
-    );
-
-    setDeleteProductText(
-      "selected-product-price",
-      ""
-    );
-
-    setDeleteProductText(
-      "selected-product-category",
-      ""
-    );
-
-    setDeleteProductText(
-      "selected-product-stock",
-      ""
-    );
-
-    setDeleteProductText(
-      "selected-product-variants",
-      ""
-    );
-
-    setDeleteProductText(
-      "selected-product-status",
-      ""
-    );
-  }
-
-  // ==========================================================
-  // DELETE BUTTON STATE
-  // ==========================================================
-
-  function updateDeleteButtonState() {
-    var selectedProduct =
-      getSelectedProduct();
-
-    var confirmationCheckbox =
-      getDeleteProductElement(
-        "confirm-product-deletion"
-      );
-
-    var deleteButton =
-      getDeleteProductElement(
-        "delete-product-button"
-      );
-
-    if (!deleteButton) {
-      return;
-    }
-
-    deleteButton.disabled =
-      !selectedProduct ||
-      !confirmationCheckbox ||
-      !confirmationCheckbox.checked;
-  }
-
-  function setDeleteProductLoading(
-    isLoading
-  ) {
-    var deleteButton =
-      getDeleteProductElement(
-        "delete-product-button"
-      );
-
-    if (!deleteButton) {
-      return;
-    }
-
-    if (isLoading) {
-      deleteButton.disabled = true;
-
-      deleteButton.textContent =
-        "Deleting Product...";
-    } else {
-      deleteButton.textContent =
-        "Delete Selected Product";
-
-      updateDeleteButtonState();
+        refreshButton.textContent =
+          "Refresh Products";
+      }
     }
   }
 
@@ -842,41 +1256,43 @@
       event.preventDefault();
     }
 
-    clearDeleteProductMessage();
-
-    var product =
-      getSelectedProduct();
-
-    var confirmationCheckbox =
-      getDeleteProductElement(
-        "confirm-product-deletion"
-      );
-
-    if (!product) {
-      showDeleteProductMessage(
-        "Select a product before deleting.",
-        "error"
-      );
-
+    if (
+      deleteInProgress ||
+      !selectedProduct
+    ) {
       return;
     }
 
+    var confirmationInput =
+      getElement(
+        "product-confirmation"
+      );
+
+    var productId =
+      selectedProduct.id;
+
+    var productName =
+      selectedProduct.name.trim();
+
     if (
-      !confirmationCheckbox ||
-      !confirmationCheckbox.checked
+      !confirmationInput ||
+      confirmationInput.value.trim() !==
+        productName
     ) {
-      showDeleteProductMessage(
-        "Confirm that you understand the product deletion is permanent.",
+      showProductMessage(
+        "Type the product name exactly before deleting it.",
         "error"
       );
+
+      setDeleteButtonState();
 
       return;
     }
 
     var confirmed =
       window.confirm(
-        'Permanently delete "' +
-        product.name +
+        'Permanently delete the product "' +
+        productName +
         '"?'
       );
 
@@ -884,138 +1300,215 @@
       return;
     }
 
+    deleteInProgress =
+      true;
+
+    setDeleteButtonState();
+
+    showProductMessage(
+      "Deleting product...",
+      "information"
+    );
+
     try {
-      setDeleteProductLoading(
-        true
-      );
+      var responseData =
+        await requestJson(
+          PRODUCTS_URL +
+          "/" +
+          encodeURIComponent(
+            productId
+          ),
+          {
+            method:
+              "DELETE",
 
-      showDeleteProductMessage(
-        "Deleting product...",
-        "information"
-      );
-
-      var response = await fetch(
-        DELETE_PRODUCT_API +
-        "/" +
-        encodeURIComponent(
-          product.id
-        ),
-        {
-          method: "DELETE",
-          headers:
-            getAdminHeaders(false)
-        }
-      );
-
-      var data =
-        await readDeleteProductResponse(
-          response
+            headers:
+              getAdminHeaders(
+                false
+              )
+          }
         );
 
-      showDeleteProductMessage(
-        data.message ||
-        (
-          'The product "' +
-          product.name +
-          '" was deleted successfully.'
+      availableProducts =
+        availableProducts.filter(
+          function (product) {
+            return (
+              product.id !==
+              productId
+            );
+          }
+        );
+
+      populateProductSelect();
+      clearProductDetails();
+
+      showProductMessage(
+        getErrorMessage(
+          responseData.message,
+          (
+            'The product "' +
+            productName +
+            '" was deleted successfully.'
+          )
         ),
         "success"
       );
-
-      if (confirmationCheckbox) {
-        confirmationCheckbox.checked =
-          false;
-      }
-
-      hideSelectedProductDetails();
-
-      await loadProducts();
     } catch (error) {
       console.error(
-        "Product deletion failed:",
+        "Product deletion failed.",
         error
       );
 
-      showDeleteProductMessage(
-        error.message ||
-        "The product could not be deleted.",
+      var errorMessage;
+
+      if (
+        error &&
+        error.name ===
+          "AbortError"
+      ) {
+        errorMessage =
+          "The delete request took too long. Please try again.";
+      } else if (
+        error instanceof
+        TypeError
+      ) {
+        errorMessage =
+          "The product server could not be reached. " +
+          "Check the backend URL and try again.";
+      } else {
+        errorMessage =
+          getErrorMessage(
+            error,
+            "The product could not be deleted."
+          );
+      }
+
+      showProductMessage(
+        errorMessage,
         "error"
       );
     } finally {
-      setDeleteProductLoading(
-        false
-      );
+      deleteInProgress =
+        false;
+
+      setDeleteButtonState();
     }
   }
 
   // ==========================================================
-  // PAGE STARTUP
+  // LOGOUT BUTTONS
   // ==========================================================
 
-  document.addEventListener(
-    "DOMContentLoaded",
-    async function () {
-      var validSession =
-        await verifyAdminSession();
+  function connectLogoutButtons() {
+    [
+      "admin-logout-button",
+      "admin-navigation-logout-button"
+    ].forEach(
+      function (elementId) {
+        var button =
+          getElement(
+            elementId
+          );
 
-      if (!validSession) {
-        return;
+        if (button) {
+          button.addEventListener(
+            "click",
+            logoutAdmin
+          );
+        }
       }
+    );
+  }
 
-      var productSelect =
-        getDeleteProductElement(
-          "productSelect"
-        );
+  // ==========================================================
+  // PAGE INITIALIZATION
+  // ==========================================================
 
-      var confirmationCheckbox =
-        getDeleteProductElement(
-          "confirm-product-deletion"
-        );
+  async function initializePage() {
+    connectLogoutButtons();
 
-      var deleteForm =
-        getDeleteProductElement(
-          "delete-product-form"
-        );
+    var validSession =
+      await verifyAdminSession();
 
-      var logoutButton =
-        getDeleteProductElement(
-          "admin-logout-button"
-        );
-
-      if (productSelect) {
-        productSelect.addEventListener(
-          "change",
-          displaySelectedProduct
-        );
-      }
-
-      if (confirmationCheckbox) {
-        confirmationCheckbox.addEventListener(
-          "change",
-          updateDeleteButtonState
-        );
-      }
-
-      if (deleteForm) {
-        deleteForm.addEventListener(
-          "submit",
-          deleteProduct
-        );
-      }
-
-      if (logoutButton) {
-        logoutButton.addEventListener(
-          "click",
-          logoutAdmin
-        );
-      }
-
-      await loadProducts();
+    if (!validSession) {
+      return;
     }
-  );
+
+    var deleteForm =
+      getElement(
+        "delete-product-form"
+      );
+
+    var productSelect =
+      getElement(
+        "product-to-delete"
+      );
+
+    var confirmationInput =
+      getElement(
+        "product-confirmation"
+      );
+
+    var refreshButton =
+      getElement(
+        "refresh-products-button"
+      );
+
+    if (deleteForm) {
+      deleteForm.addEventListener(
+        "submit",
+        deleteProduct
+      );
+    }
+
+    if (productSelect) {
+      productSelect.addEventListener(
+        "change",
+        displaySelectedProduct
+      );
+    }
+
+    if (confirmationInput) {
+      confirmationInput.addEventListener(
+        "input",
+        setDeleteButtonState
+      );
+    }
+
+    if (refreshButton) {
+      refreshButton.addEventListener(
+        "click",
+        loadProducts
+      );
+    }
+
+    setDeleteButtonState();
+
+    await loadProducts();
+
+    console.log(
+      "MMC Delete Product page initialized."
+    );
+  }
 
   // ==========================================================
-  // OPTIONAL INLINE HTML SUPPORT
+  // STARTUP
+  // ==========================================================
+
+  if (
+    document.readyState ===
+    "loading"
+  ) {
+    document.addEventListener(
+      "DOMContentLoaded",
+      initializePage
+    );
+  } else {
+    initializePage();
+  }
+
+  // ==========================================================
+  // GLOBAL SUPPORT
   // ==========================================================
 
   window.loadProducts =
@@ -1026,4 +1519,4 @@
 
   window.logoutAdmin =
     logoutAdmin;
-})();
+}());

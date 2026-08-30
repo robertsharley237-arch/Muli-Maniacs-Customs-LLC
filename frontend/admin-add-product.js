@@ -1,55 +1,54 @@
 // ============================================================
 // MULTI-MANIACS CUSTOMS LLC
+// FILE: admin-add-product.js
 // ADD PRODUCT ADMIN PAGE
 //
 // Hosting: Vercel
 // Database: Neon PostgreSQL
 // Authentication: JWT multi-admin system
-// Uploads: Multer + Cloudinary
+// Uploads: Multer and Cloudinary
 // ============================================================
 
 (function () {
   "use strict";
 
-  var ADD_PRODUCT_BACKEND_URL =
-    window.MMC_BACKEND_URL ||
-    window.location.origin;
+  // ==========================================================
+  // CONFIGURATION
+  // ==========================================================
 
-  var ADD_PRODUCT_API =
-    ADD_PRODUCT_BACKEND_URL +
-    "/products";
-
-  var ADD_PRODUCT_UPLOAD_API =
-    ADD_PRODUCT_BACKEND_URL +
-    "/upload/image";
-
-  var ADD_PRODUCT_CATEGORIES_API =
-    ADD_PRODUCT_BACKEND_URL +
-    "/categories";
-
-  var ADD_PRODUCT_MAX_IMAGE_SIZE =
+  var MAX_IMAGE_SIZE =
     10 * 1024 * 1024;
 
-  var ADD_PRODUCT_ALLOWED_IMAGE_TYPES = [
+  var ALLOWED_IMAGE_TYPES = [
     "image/jpeg",
     "image/png",
     "image/webp",
     "image/gif"
   ];
 
-  var productVariants = [];
+  var REQUEST_TIMEOUT_MS =
+    15000;
 
-  var uploadedProductImagePublicId =
+  var productVariants =
+    [];
+
+  var uploadedImagePublicId =
     "";
 
-  var localProductPreviewUrl =
+  var localPreviewUrl =
     null;
+
+  var savingProduct =
+    false;
+
+  var uploadingImage =
+    false;
 
   // ==========================================================
   // ELEMENT HELPERS
   // ==========================================================
 
-  function getProductElement(
+  function getElement(
     elementId
   ) {
     return document.getElementById(
@@ -57,11 +56,11 @@
     );
   }
 
-  function getProductValue(
+  function getValue(
     elementId
   ) {
     var element =
-      getProductElement(
+      getElement(
         elementId
       );
 
@@ -70,31 +69,101 @@
     }
 
     return String(
-      element.value || ""
+      element.value ||
+      ""
     ).trim();
   }
+
+  // ==========================================================
+  // BACKEND URL
+  // ==========================================================
+
+  function removeTrailingSlashes(
+    value
+  ) {
+    return String(value || "")
+      .trim()
+      .replace(
+        /\/+$/,
+        ""
+      );
+  }
+
+  function getBackendUrl() {
+    if (
+      typeof window.MMC_BACKEND_URL ===
+        "string" &&
+      window.MMC_BACKEND_URL.trim()
+    ) {
+      return removeTrailingSlashes(
+        window.MMC_BACKEND_URL
+      );
+    }
+
+    if (
+      window.location.hostname ===
+        "localhost" ||
+      window.location.hostname ===
+        "127.0.0.1"
+    ) {
+      return "http://localhost:10000";
+    }
+
+    return removeTrailingSlashes(
+      window.location.origin
+    );
+  }
+
+  var BACKEND_URL =
+    getBackendUrl();
+
+  var PRODUCTS_URL =
+    BACKEND_URL +
+    "/products";
+
+  var UPLOAD_URL =
+    BACKEND_URL +
+    "/upload/image";
+
+  var CATEGORIES_URL =
+    BACKEND_URL +
+    "/categories";
+
+  var ADMIN_SESSION_URL =
+    BACKEND_URL +
+    "/admin/me";
 
   // ==========================================================
   // ADMIN AUTHENTICATION
   // ==========================================================
 
   function getAdminToken() {
-    return localStorage.getItem(
-      "adminToken"
-    );
+    return String(
+      localStorage.getItem(
+        "adminToken"
+      ) ||
+      localStorage.getItem(
+        "MMC_ADMIN_TOKEN"
+      ) ||
+      ""
+    ).trim();
   }
 
   function getAdminHeaders(
     includeContentType
   ) {
     var headers = {
+      Accept:
+        "application/json",
+
       Authorization:
         "Bearer " +
         getAdminToken()
     };
 
     if (
-      includeContentType !== false
+      includeContentType !==
+      false
     ) {
       headers["Content-Type"] =
         "application/json";
@@ -109,171 +178,198 @@
     );
 
     localStorage.removeItem(
-      "adminUser"
+      "MMC_ADMIN_TOKEN"
     );
 
     localStorage.removeItem(
-      "MMC_ADMIN_TOKEN"
+      "adminUser"
     );
   }
 
   function redirectToAdminLogin() {
     clearSavedAdminLogin();
 
-    window.location.href =
-      "admin-login.html";
+    var returnPage =
+      encodeURIComponent(
+        "admin-add-product.html"
+      );
+
+    window.location.replace(
+      "admin-login.html?return=" +
+      returnPage
+    );
   }
 
   function logoutAdmin() {
     redirectToAdminLogin();
   }
 
-  async function verifyAdminSession() {
-    var token =
-      getAdminToken();
+  // ==========================================================
+  // FETCH WITH TIMEOUT
+  // ==========================================================
 
-    if (!token) {
-      redirectToAdminLogin();
-      return false;
-    }
+  async function fetchWithTimeout(
+    url,
+    options
+  ) {
+    var controller =
+      new AbortController();
 
-    try {
-      var response = await fetch(
-        ADD_PRODUCT_BACKEND_URL +
-        "/admin/me",
-        {
-          method: "GET",
-          headers:
-            getAdminHeaders(false)
-        }
+    var timeoutIdentifier =
+      window.setTimeout(
+        function () {
+          controller.abort();
+        },
+        REQUEST_TIMEOUT_MS
       );
 
-      var data =
-        await readProductResponse(
-          response
-        );
-
-      localStorage.setItem(
-        "adminUser",
-        JSON.stringify(
-          data.admin || {}
+    try {
+      return await fetch(
+        url,
+        Object.assign(
+          {},
+          options ||
+          {},
+          {
+            signal:
+              controller.signal
+          }
         )
       );
-
-      displayAdminInformation(
-        data.admin || {}
+    } finally {
+      window.clearTimeout(
+        timeoutIdentifier
       );
-
-      return true;
-    } catch (error) {
-      console.error(
-        "Admin session verification failed:",
-        error
-      );
-
-      showProductMessage(
-        error.message ||
-        "Your administrator session could not be verified.",
-        "error"
-      );
-
-      return false;
     }
   }
 
   // ==========================================================
-  // ADMIN INFORMATION
+  // SERVER RESPONSE
   // ==========================================================
 
-  function displayAdminInformation(
-    admin
-  ) {
-    var usernameElement =
-      getProductElement(
-        "admin-username"
-      );
-
-    var roleElement =
-      getProductElement(
-        "admin-role"
-      );
-
-    if (usernameElement) {
-      usernameElement.textContent =
-        admin.username || "";
-    }
-
-    if (roleElement) {
-      roleElement.textContent =
-        formatAdminRole(
-          admin.role
-        );
-    }
-  }
-
-  function formatAdminRole(role) {
-    if (!role) {
-      return "";
-    }
-
-    return String(role)
-      .replace(/_/g, " ")
-      .replace(
-        /\b\w/g,
-        function (letter) {
-          return letter.toUpperCase();
-        }
-      );
-  }
-
-  // ==========================================================
-  // RESPONSE HANDLING
-  // ==========================================================
-
-  async function readProductResponse(
+  async function readResponse(
     response
   ) {
-    var data;
+    var responseText =
+      "";
 
     try {
-      data =
-        await response.json();
+      responseText =
+        await response.text();
     } catch (error) {
-      data = {
+      return {
         error:
-          "The server returned an unexpected response."
+          "The server response could not be read."
       };
     }
 
-    if (response.status === 401) {
+    if (!responseText) {
+      return {};
+    }
+
+    try {
+      return JSON.parse(
+        responseText
+      );
+    } catch (error) {
+      return {
+        error:
+          responseText
+      };
+    }
+  }
+
+  function getErrorMessage(
+    value,
+    fallbackMessage
+  ) {
+    if (
+      typeof value ===
+        "string" &&
+      value.trim()
+    ) {
+      return value.trim();
+    }
+
+    if (
+      value &&
+      typeof value ===
+        "object"
+    ) {
+      if (
+        typeof value.message ===
+          "string" &&
+        value.message.trim()
+      ) {
+        return value.message.trim();
+      }
+
+      if (
+        value.error !==
+        undefined
+      ) {
+        return getErrorMessage(
+          value.error,
+          fallbackMessage
+        );
+      }
+    }
+
+    return fallbackMessage;
+  }
+
+  async function requestJson(
+    url,
+    options
+  ) {
+    var response =
+      await fetchWithTimeout(
+        url,
+        options
+      );
+
+    var responseData =
+      await readResponse(
+        response
+      );
+
+    if (
+      response.status ===
+      401
+    ) {
       redirectToAdminLogin();
 
       throw new Error(
-        data.error ||
         "Your administrator session expired."
       );
     }
 
-    if (response.status === 403) {
+    if (
+      response.status ===
+      403
+    ) {
       throw new Error(
-        data.error ||
-        "You do not have permission to perform this action."
+        getErrorMessage(
+          responseData,
+          "You do not have permission to perform this action."
+        )
       );
     }
 
     if (!response.ok) {
       throw new Error(
-        data.error ||
-        data.message ||
-        (
-          "The request failed with status " +
-          response.status +
-          "."
+        getErrorMessage(
+          responseData,
+          (
+            "The request failed with status " +
+            response.status +
+            "."
+          )
         )
       );
     }
 
-    return data;
+    return responseData;
   }
 
   // ==========================================================
@@ -285,20 +381,16 @@
     messageType
   ) {
     var messageElement =
-      getProductElement(
+      getElement(
         "product-message"
       );
 
     if (!messageElement) {
-      if (messageType === "error") {
-        alert(message);
-      }
-
       return;
     }
 
     messageElement.textContent =
-      message;
+      String(message || "");
 
     messageElement.classList.remove(
       "product-error",
@@ -306,86 +398,223 @@
       "product-information"
     );
 
-    if (messageType === "error") {
-      messageElement.classList.add(
-        "product-error"
-      );
-    } else if (
-      messageType === "success"
+    messageElement.removeAttribute(
+      "role"
+    );
+
+    if (!message) {
+      return;
+    }
+
+    if (
+      messageType ===
+      "success"
     ) {
       messageElement.classList.add(
         "product-success"
       );
-    } else {
+
+      messageElement.setAttribute(
+        "role",
+        "status"
+      );
+    } else if (
+      messageType ===
+      "information"
+    ) {
       messageElement.classList.add(
         "product-information"
       );
+
+      messageElement.setAttribute(
+        "role",
+        "status"
+      );
+    } else {
+      messageElement.classList.add(
+        "product-error"
+      );
+
+      messageElement.setAttribute(
+        "role",
+        "alert"
+      );
     }
   }
 
-  function clearProductMessage() {
-    var messageElement =
-      getProductElement(
-        "product-message"
+  // ==========================================================
+  // BUTTON STATES
+  // ==========================================================
+
+  function setButtonLoading(
+    elementId,
+    isLoading,
+    loadingText,
+    normalText
+  ) {
+    var button =
+      getElement(
+        elementId
       );
 
-    if (!messageElement) {
+    if (!button) {
       return;
     }
 
-    messageElement.textContent = "";
+    button.disabled =
+      Boolean(
+        isLoading
+      );
 
-    messageElement.classList.remove(
-      "product-error",
-      "product-success",
-      "product-information"
+    button.setAttribute(
+      "aria-busy",
+      isLoading
+        ? "true"
+        : "false"
+    );
+
+    button.textContent =
+      isLoading
+        ? loadingText
+        : normalText;
+  }
+
+  // ==========================================================
+  // ADMIN INFORMATION
+  // ==========================================================
+
+  function formatAdminRole(
+    role
+  ) {
+    return String(
+      role ||
+      "Administrator"
+    )
+      .replace(
+        /_/g,
+        " "
+      )
+      .replace(
+        /\b\w/g,
+        function (letter) {
+          return letter.toUpperCase();
+        }
+      );
+  }
+
+  function displayAdminInformation(
+    admin
+  ) {
+    var username =
+      String(
+        admin.username ||
+        admin.name ||
+        admin.email ||
+        "Administrator"
+      );
+
+    var role =
+      formatAdminRole(
+        admin.role
+      );
+
+    [
+      "admin-username",
+      "admin-header-username"
+    ].forEach(
+      function (elementId) {
+        var element =
+          getElement(
+            elementId
+          );
+
+        if (element) {
+          element.textContent =
+            username;
+        }
+      }
+    );
+
+    [
+      "admin-role",
+      "admin-header-role"
+    ].forEach(
+      function (elementId) {
+        var element =
+          getElement(
+            elementId
+          );
+
+        if (element) {
+          element.textContent =
+            role;
+        }
+      }
     );
   }
 
-  // ==========================================================
-  // BUTTON STATUS
-  // ==========================================================
+  async function verifyAdminSession() {
+    if (!getAdminToken()) {
+      redirectToAdminLogin();
 
-  function setImageUploadLoading(
-    isLoading
-  ) {
-    var uploadButton =
-      getProductElement(
-        "upload-product-image-button"
-      );
-
-    if (!uploadButton) {
-      return;
+      return false;
     }
 
-    uploadButton.disabled =
-      isLoading;
+    try {
+      var responseData =
+        await requestJson(
+          ADMIN_SESSION_URL,
+          {
+            method:
+              "GET",
 
-    uploadButton.textContent =
-      isLoading
-        ? "Uploading Image..."
-        : "Upload Image";
-  }
+            headers:
+              getAdminHeaders(
+                false
+              )
+          }
+        );
 
-  function setProductSaveLoading(
-    isLoading
-  ) {
-    var saveButton =
-      getProductElement(
-        "save-product-button"
+      var admin =
+        responseData.admin ||
+        responseData.user ||
+        responseData;
+
+      localStorage.setItem(
+        "adminUser",
+        JSON.stringify(
+          admin
+        )
       );
 
-    if (!saveButton) {
-      return;
+      displayAdminInformation(
+        admin
+      );
+
+      return true;
+    } catch (error) {
+      console.error(
+        "Administrator session verification failed.",
+        error
+      );
+
+      var errorMessage =
+        error &&
+        error.name ===
+          "AbortError"
+          ? "The session check took too long. Please reload the page."
+          : getErrorMessage(
+              error,
+              "Your administrator session could not be verified."
+            );
+
+      showProductMessage(
+        errorMessage,
+        "error"
+      );
+
+      return false;
     }
-
-    saveButton.disabled =
-      isLoading;
-
-    saveButton.textContent =
-      isLoading
-        ? "Saving Product..."
-        : "Save Product";
   }
 
   // ==========================================================
@@ -394,7 +623,7 @@
 
   async function loadProductCategories() {
     var categorySelect =
-      getProductElement(
+      getElement(
         "p-category"
       );
 
@@ -412,7 +641,8 @@
         "option"
       );
 
-    loadingOption.value = "";
+    loadingOption.value =
+      "";
 
     loadingOption.textContent =
       "Loading categories...";
@@ -422,85 +652,102 @@
     );
 
     try {
-      var response = await fetch(
-        ADD_PRODUCT_CATEGORIES_API,
-        {
-          method: "GET"
-        }
-      );
+      var responseData =
+        await requestJson(
+          CATEGORIES_URL,
+          {
+            method:
+              "GET",
 
-      var data =
-        await readProductResponse(
-          response
+            headers:
+              getAdminHeaders(
+                false
+              )
+          }
         );
 
-      var categories;
-
-      if (Array.isArray(data)) {
-        categories = data;
-      } else if (
-        data &&
+      var categories =
         Array.isArray(
-          data.categories
+          responseData
         )
-      ) {
-        categories =
-          data.categories;
-      } else {
-        categories = [];
-      }
-
-      categories = categories
-        .filter(
-          function (category) {
-            return (
-              category &&
-              category.active !== false
+          ? responseData
+          : (
+              Array.isArray(
+                responseData.categories
+              )
+                ? responseData.categories
+                : []
             );
-          }
-        )
-        .sort(
-          function (
-            firstCategory,
-            secondCategory
-          ) {
-            var firstOrder =
-              Number(
-                firstCategory.displayOrder !==
-                  undefined
-                  ? firstCategory.displayOrder
-                  : firstCategory.display_order ||
-                    0
-              );
 
-            var secondOrder =
-              Number(
-                secondCategory.displayOrder !==
-                  undefined
-                  ? secondCategory.displayOrder
-                  : secondCategory.display_order ||
-                    0
-              );
-
-            if (
-              firstOrder !==
-              secondOrder
-            ) {
+      categories =
+        categories
+          .filter(
+            function (category) {
               return (
-                firstOrder -
-                secondOrder
+                category &&
+                category.active !==
+                  false
               );
             }
+          )
+          .sort(
+            function (
+              firstCategory,
+              secondCategory
+            ) {
+              var firstOrder =
+                Number(
+                  firstCategory.sortOrder !==
+                    undefined
+                    ? firstCategory.sortOrder
+                    : (
+                        firstCategory.displayOrder !==
+                          undefined
+                          ? firstCategory.displayOrder
+                          : (
+                              firstCategory.display_order ||
+                              0
+                            )
+                      )
+                );
 
-            return String(
-              firstCategory.name || ""
-            ).localeCompare(
-              String(
-                secondCategory.name || ""
-              )
-            );
-          }
-        );
+              var secondOrder =
+                Number(
+                  secondCategory.sortOrder !==
+                    undefined
+                    ? secondCategory.sortOrder
+                    : (
+                        secondCategory.displayOrder !==
+                          undefined
+                          ? secondCategory.displayOrder
+                          : (
+                              secondCategory.display_order ||
+                              0
+                            )
+                      )
+                );
+
+              if (
+                firstOrder !==
+                secondOrder
+              ) {
+                return (
+                  firstOrder -
+                  secondOrder
+                );
+              }
+
+              return String(
+                firstCategory.name ||
+                ""
+              ).localeCompare(
+                String(
+                  secondCategory.name ||
+                  ""
+                )
+              );
+            }
+          );
 
       categorySelect.replaceChildren();
 
@@ -509,7 +756,8 @@
           "option"
         );
 
-      defaultOption.value = "";
+      defaultOption.value =
+        "";
 
       defaultOption.textContent =
         categories.length > 0
@@ -529,29 +777,28 @@
 
           option.value =
             String(
-              category.name || ""
+              category.name ||
+              ""
             );
 
           option.textContent =
             String(
-              category.name || ""
+              category.name ||
+              ""
             );
 
-          option.setAttribute(
-            "data-category-id",
+          option.dataset.categoryId =
             String(
               category.id ||
               category._id ||
               ""
-            )
-          );
+            );
 
-          option.setAttribute(
-            "data-category-slug",
+          option.dataset.categorySlug =
             String(
-              category.slug || ""
-            )
-          );
+              category.slug ||
+              ""
+            );
 
           categorySelect.appendChild(
             option
@@ -560,19 +807,21 @@
       );
 
       categorySelect.disabled =
-        categories.length === 0;
+        categories.length ===
+        0;
 
       if (
-        categories.length === 0
+        categories.length ===
+        0
       ) {
         showProductMessage(
-          "No active categories exist yet. Create a category before assigning one to this product.",
+          "No active categories exist yet. Create a category before assigning one.",
           "information"
         );
       }
     } catch (error) {
       console.error(
-        "Categories could not be loaded:",
+        "Product categories could not be loaded.",
         error
       );
 
@@ -583,7 +832,8 @@
           "option"
         );
 
-      errorOption.value = "";
+      errorOption.value =
+        "";
 
       errorOption.textContent =
         "Categories unavailable";
@@ -596,34 +846,134 @@
         true;
 
       showProductMessage(
-        error.message ||
-        "Product categories could not be loaded.",
+        getErrorMessage(
+          error,
+          "Product categories could not be loaded."
+        ),
         "error"
       );
     }
   }
 
   // ==========================================================
-  // VARIANT VALIDATION
+  // GENERAL VALIDATION HELPERS
   // ==========================================================
 
-  function validateVariantData(
-    variant
+  function isValidWebAddress(
+    value
   ) {
-    if (
-      variant.name.length < 1
-    ) {
+    try {
+      var address =
+        new URL(value);
+
       return (
-        "Variant name is required."
+        address.protocol ===
+          "http:" ||
+        address.protocol ===
+          "https:"
       );
+    } catch (error) {
+      return false;
+    }
+  }
+
+  function formatProductCurrency(
+    value
+  ) {
+    var amount =
+      Number(value);
+
+    if (
+      !Number.isFinite(amount)
+    ) {
+      amount =
+        0;
+    }
+
+    return new Intl.NumberFormat(
+      "en-US",
+      {
+        style:
+          "currency",
+
+        currency:
+          "USD"
+      }
+    ).format(
+      amount
+    );
+  }
+
+  // ==========================================================
+  // VARIANT DATA
+  // ==========================================================
+
+  function getVariantFormData() {
+    return {
+      id:
+        "variant-" +
+        Date.now() +
+        "-" +
+        productVariants.length,
+
+      name:
+        getValue(
+          "v-name"
+        ),
+
+      sku:
+        getValue(
+          "v-sku"
+        ),
+
+      price:
+        Number(
+          getValue(
+            "v-price"
+          )
+        ),
+
+      stock:
+        Number(
+          getValue(
+            "v-stock"
+          )
+        ),
+
+      image:
+        getValue(
+          "v-image"
+        ),
+
+      imagePublicId:
+        ""
+    };
+  }
+
+  function validateVariantData(
+    variant,
+    checkForDuplicateSku
+  ) {
+    if (!variant.name) {
+      return "Variant name is required.";
     }
 
     if (
-      variant.sku.length < 1
+      variant.name.length >
+      150
     ) {
-      return (
-        "Variant SKU is required."
-      );
+      return "Variant name cannot exceed 150 characters.";
+    }
+
+    if (!variant.sku) {
+      return "Variant SKU is required.";
+    }
+
+    if (
+      variant.sku.length >
+      100
+    ) {
+      return "Variant SKU cannot exceed 100 characters.";
     }
 
     if (
@@ -632,9 +982,7 @@
       ) ||
       variant.price < 0
     ) {
-      return (
-        "Variant price must be 0 or higher."
-      );
+      return "Variant price must be 0 or higher.";
     }
 
     if (
@@ -643,33 +991,39 @@
       ) ||
       variant.stock < 0
     ) {
-      return (
-        "Variant stock must be a whole number of 0 or higher."
-      );
+      return "Variant stock must be a whole number of 0 or higher.";
     }
 
-    var duplicateSku =
-      productVariants.some(
-        function (
-          existingVariant
-        ) {
-          return (
-            String(
-              existingVariant.sku || ""
-            )
-              .trim()
-              .toLowerCase() ===
-            variant.sku
-              .trim()
-              .toLowerCase()
-          );
-        }
-      );
+    if (
+      variant.image &&
+      !isValidWebAddress(
+        variant.image
+      )
+    ) {
+      return "Variant image must be a valid HTTP or HTTPS address.";
+    }
 
-    if (duplicateSku) {
-      return (
-        "A variant with that SKU already exists."
-      );
+    if (checkForDuplicateSku) {
+      var duplicateSku =
+        productVariants.some(
+          function (existingVariant) {
+            return (
+              String(
+                existingVariant.sku ||
+                ""
+              )
+                .trim()
+                .toLowerCase() ===
+              variant.sku
+                .trim()
+                .toLowerCase()
+            );
+          }
+        );
+
+      if (duplicateSku) {
+        return "A variant with that SKU already exists.";
+      }
     }
 
     return "";
@@ -680,50 +1034,18 @@
   // ==========================================================
 
   function addVariant() {
-    clearProductMessage();
+    showProductMessage(
+      "",
+      "information"
+    );
 
-    var name =
-      getProductValue(
-        "v-name"
-      );
-
-    var sku =
-      getProductValue(
-        "v-sku"
-      );
-
-    var price =
-      Number(
-        getProductValue(
-          "v-price"
-        )
-      );
-
-    var stock =
-      Number(
-        getProductValue(
-          "v-stock"
-        )
-      );
-
-    var variant = {
-      id:
-        "variant-" +
-        Date.now() +
-        "-" +
-        productVariants.length,
-
-      name: name,
-      sku: sku,
-      price: price,
-      stock: stock,
-      image: "",
-      imagePublicId: ""
-    };
+    var variant =
+      getVariantFormData();
 
     var validationError =
       validateVariantData(
-        variant
+        variant,
+        true
       );
 
     if (validationError) {
@@ -743,28 +1065,28 @@
     renderVariants();
 
     showProductMessage(
-      "Variant added to the product. Save the product to store it in Neon.",
+      "Variant added. Save the product to store it.",
       "information"
     );
   }
 
   function clearVariantInputs() {
-    var inputIds = [
+    [
       "v-name",
       "v-sku",
       "v-price",
-      "v-stock"
-    ];
-
-    inputIds.forEach(
+      "v-stock",
+      "v-image"
+    ].forEach(
       function (elementId) {
         var element =
-          getProductElement(
+          getElement(
             elementId
           );
 
         if (element) {
-          element.value = "";
+          element.value =
+            "";
         }
       }
     );
@@ -776,7 +1098,7 @@
 
   function renderVariants() {
     var variantList =
-      getProductElement(
+      getElement(
         "variantList"
       );
 
@@ -791,118 +1113,122 @@
         variant,
         variantIndex
       ) {
+        var container =
+          document.createElement(
+            "article"
+          );
+
+        container.className =
+          "variant-item";
+
+        var information =
+          document.createElement(
+            "div"
+          );
+
+        var title =
+          document.createElement(
+            "h4"
+          );
+
+        title.textContent =
+          variant.name;
+
+        information.appendChild(
+          title
+        );
+
+        var skuLine =
+          document.createElement(
+            "p"
+          );
+
+        skuLine.textContent =
+          "SKU: " +
+          variant.sku;
+
+        information.appendChild(
+          skuLine
+        );
+
+        var priceLine =
+          document.createElement(
+            "p"
+          );
+
+        priceLine.textContent =
+          "Price: " +
+          formatProductCurrency(
+            variant.price
+          );
+
+        information.appendChild(
+          priceLine
+        );
+
+        var stockLine =
+          document.createElement(
+            "p"
+          );
+
+        stockLine.textContent =
+          "Stock: " +
+          variant.stock;
+
+        information.appendChild(
+          stockLine
+        );
+
+        if (variant.image) {
+          var imageLine =
+            document.createElement(
+              "p"
+            );
+
+          imageLine.textContent =
+            "Custom variant image added";
+
+          information.appendChild(
+            imageLine
+          );
+        }
+
+        var removeButton =
+          document.createElement(
+            "button"
+          );
+
+        removeButton.type =
+          "button";
+
+        removeButton.className =
+          "remove-variant-button";
+
+        removeButton.textContent =
+          "Remove Variant";
+
+        removeButton.addEventListener(
+          "click",
+          function () {
+            deleteVariant(
+              variantIndex
+            );
+          }
+        );
+
+        container.appendChild(
+          information
+        );
+
+        container.appendChild(
+          removeButton
+        );
+
         variantList.appendChild(
-          createVariantDisplay(
-            variant,
-            variantIndex
-          )
+          container
         );
       }
     );
-  }
-
-  function createVariantDisplay(
-    variant,
-    variantIndex
-  ) {
-    var container =
-      document.createElement(
-        "article"
-      );
-
-    container.className =
-      "variant-item";
-
-    var information =
-      document.createElement(
-        "div"
-      );
-
-    var title =
-      document.createElement(
-        "h4"
-      );
-
-    title.textContent =
-      variant.name;
-
-    var skuLine =
-      document.createElement(
-        "p"
-      );
-
-    skuLine.textContent =
-      "SKU: " +
-      variant.sku;
-
-    var priceLine =
-      document.createElement(
-        "p"
-      );
-
-    priceLine.textContent =
-      "Price: " +
-      formatProductCurrency(
-        variant.price
-      );
-
-    var stockLine =
-      document.createElement(
-        "p"
-      );
-
-    stockLine.textContent =
-      "Stock: " +
-      variant.stock;
-
-    information.appendChild(
-      title
-    );
-
-    information.appendChild(
-      skuLine
-    );
-
-    information.appendChild(
-      priceLine
-    );
-
-    information.appendChild(
-      stockLine
-    );
-
-    var deleteButton =
-      document.createElement(
-        "button"
-      );
-
-    deleteButton.type =
-      "button";
-
-    deleteButton.className =
-      "remove-variant-button";
-
-    deleteButton.textContent =
-      "Remove Variant";
-
-    deleteButton.addEventListener(
-      "click",
-      function () {
-        deleteVariant(
-          variantIndex
-        );
-      }
-    );
-
-    container.appendChild(
-      information
-    );
-
-    container.appendChild(
-      deleteButton
-    );
-
-    return container;
   }
 
   function deleteVariant(
@@ -941,39 +1267,21 @@
     );
   }
 
-  function formatProductCurrency(
-    value
-  ) {
-    var amount =
-      Number(value);
-
-    if (!Number.isFinite(amount)) {
-      amount = 0;
-    }
-
-    return new Intl.NumberFormat(
-      "en-US",
-      {
-        style: "currency",
-        currency: "USD"
-      }
-    ).format(amount);
-  }
-
   // ==========================================================
-  // IMAGE VALIDATION
+  // SELECTED IMAGE
   // ==========================================================
 
   function getSelectedProductImage() {
     var fileInput =
-      getProductElement(
+      getElement(
         "p-image-file"
       );
 
     if (
       !fileInput ||
       !fileInput.files ||
-      fileInput.files.length === 0
+      fileInput.files.length ===
+        0
     ) {
       return null;
     }
@@ -985,31 +1293,168 @@
     imageFile
   ) {
     if (!imageFile) {
-      return (
-        "Select an image before uploading."
-      );
+      return "Select an image before uploading.";
     }
 
     if (
-      ADD_PRODUCT_ALLOWED_IMAGE_TYPES.indexOf(
+      ALLOWED_IMAGE_TYPES.indexOf(
         imageFile.type
-      ) === -1
+      ) ===
+      -1
     ) {
-      return (
-        "Please upload a JPG, PNG, WEBP, or GIF image."
-      );
+      return "Please upload a JPG, PNG, WEBP, or GIF image.";
     }
 
     if (
       imageFile.size >
-      ADD_PRODUCT_MAX_IMAGE_SIZE
+      MAX_IMAGE_SIZE
     ) {
-      return (
-        "The product image must be 10 MB or smaller."
-      );
+      return "The product image must be 10 MB or smaller.";
     }
 
     return "";
+  }
+
+  // ==========================================================
+  // IMAGE PREVIEW
+  // ==========================================================
+
+  function revokeLocalPreviewUrl() {
+    if (!localPreviewUrl) {
+      return;
+    }
+
+    URL.revokeObjectURL(
+      localPreviewUrl
+    );
+
+    localPreviewUrl =
+      null;
+  }
+
+  function showProductImagePreview(
+    imageUrl
+  ) {
+    var previewContainer =
+      getElement(
+        "product-preview-container"
+      );
+
+    var previewImage =
+      getElement(
+        "p-preview"
+      );
+
+    if (
+      !previewContainer ||
+      !previewImage
+    ) {
+      return;
+    }
+
+    if (!imageUrl) {
+      previewContainer.hidden =
+        true;
+
+      previewImage.removeAttribute(
+        "src"
+      );
+
+      return;
+    }
+
+    previewImage.onerror =
+      function () {
+        previewContainer.hidden =
+          true;
+
+        previewImage.removeAttribute(
+          "src"
+        );
+
+        showProductMessage(
+          "The product image preview could not be loaded.",
+          "error"
+        );
+      };
+
+    previewImage.onload =
+      function () {
+        previewContainer.hidden =
+          false;
+      };
+
+    previewImage.src =
+      imageUrl;
+  }
+
+  function previewSelectedProductImage() {
+    var imageFile =
+      getSelectedProductImage();
+
+    revokeLocalPreviewUrl();
+
+    if (!imageFile) {
+      return;
+    }
+
+    var validationError =
+      validateProductImage(
+        imageFile
+      );
+
+    if (validationError) {
+      var fileInput =
+        getElement(
+          "p-image-file"
+        );
+
+      if (fileInput) {
+        fileInput.value =
+          "";
+      }
+
+      showProductMessage(
+        validationError,
+        "error"
+      );
+
+      return;
+    }
+
+    localPreviewUrl =
+      URL.createObjectURL(
+        imageFile
+      );
+
+    showProductImagePreview(
+      localPreviewUrl
+    );
+  }
+
+  function previewManualImageUrl() {
+    var imageUrl =
+      getValue(
+        "p-image"
+      );
+
+    if (!imageUrl) {
+      showProductImagePreview(
+        ""
+      );
+
+      return;
+    }
+
+    if (
+      isValidWebAddress(
+        imageUrl
+      )
+    ) {
+      showProductImagePreview(
+        imageUrl
+      );
+    }
   }
 
   // ==========================================================
@@ -1017,7 +1462,9 @@
   // ==========================================================
 
   async function uploadProductImage() {
-    clearProductMessage();
+    if (uploadingImage) {
+      return;
+    }
 
     var imageFile =
       getSelectedProductImage();
@@ -1044,37 +1491,49 @@
       imageFile
     );
 
+    uploadingImage =
+      true;
+
+    setButtonLoading(
+      "upload-product-image-button",
+      true,
+      "Uploading Image...",
+      "Upload Image"
+    );
+
+    showProductMessage(
+      "Uploading product image...",
+      "information"
+    );
+
     try {
-      setImageUploadLoading(
-        true
-      );
+      var responseData =
+        await requestJson(
+          UPLOAD_URL,
+          {
+            method:
+              "POST",
 
-      showProductMessage(
-        "Uploading product image...",
-        "information"
-      );
+            headers:
+              getAdminHeaders(
+                false
+              ),
 
-      var response = await fetch(
-        ADD_PRODUCT_UPLOAD_API,
-        {
-          method: "POST",
-
-          headers:
-            getAdminHeaders(false),
-
-          body: formData
-        }
-      );
-
-      var data =
-        await readProductResponse(
-          response
+            body:
+              formData
+          }
         );
 
       var imageUrl =
-        data.url ||
-        data.secure_url ||
-        "";
+        String(
+          responseData.url ||
+          responseData.secure_url ||
+          (
+            responseData.image &&
+            responseData.image.url
+          ) ||
+          ""
+        );
 
       if (!imageUrl) {
         throw new Error(
@@ -1083,7 +1542,7 @@
       }
 
       var imageUrlInput =
-        getProductElement(
+        getElement(
           "p-image"
         );
 
@@ -1092,8 +1551,18 @@
           imageUrl;
       }
 
-      uploadedProductImagePublicId =
-        data.public_id || "";
+      uploadedImagePublicId =
+        String(
+          responseData.public_id ||
+          responseData.publicId ||
+          (
+            responseData.image &&
+            responseData.image.public_id
+          ) ||
+          ""
+        );
+
+      revokeLocalPreviewUrl();
 
       showProductImagePreview(
         imageUrl
@@ -1105,172 +1574,61 @@
       );
     } catch (error) {
       console.error(
-        "Product image upload failed:",
+        "Product image upload failed.",
         error
       );
 
+      var errorMessage =
+        error &&
+        error.name ===
+          "AbortError"
+          ? "The image upload took too long. Please try again."
+          : getErrorMessage(
+              error,
+              "The product image could not be uploaded."
+            );
+
       showProductMessage(
-        error.message ||
-        "The product image could not be uploaded.",
+        errorMessage,
         "error"
       );
     } finally {
-      setImageUploadLoading(
-        false
+      uploadingImage =
+        false;
+
+      setButtonLoading(
+        "upload-product-image-button",
+        false,
+        "Uploading Image...",
+        "Upload Image"
       );
     }
   }
 
   // ==========================================================
-  // IMAGE PREVIEW
-  // ==========================================================
-
-  function revokeLocalPreviewUrl() {
-    if (!localProductPreviewUrl) {
-      return;
-    }
-
-    URL.revokeObjectURL(
-      localProductPreviewUrl
-    );
-
-    localProductPreviewUrl =
-      null;
-  }
-
-  function showProductImagePreview(
-    imageUrl
-  ) {
-    var previewContainer =
-      getProductElement(
-        "product-preview-container"
-      );
-
-    var previewImage =
-      getProductElement(
-        "p-preview"
-      );
-
-    if (
-      !previewContainer ||
-      !previewImage
-    ) {
-      return;
-    }
-
-    if (!imageUrl) {
-      previewContainer.hidden =
-        true;
-
-      previewImage.removeAttribute(
-        "src"
-      );
-
-      return;
-    }
-
-    previewImage.src =
-      imageUrl;
-
-    previewImage.alt =
-      "Product image preview";
-
-    previewContainer.hidden =
-      false;
-
-    previewImage.onerror =
-      function () {
-        previewContainer.hidden =
-          true;
-
-        previewImage.removeAttribute(
-          "src"
-        );
-
-        showProductMessage(
-          "The product image preview could not be loaded.",
-          "error"
-        );
-      };
-  }
-
-  function previewSelectedProductImage() {
-    var imageFile =
-      getSelectedProductImage();
-
-    revokeLocalPreviewUrl();
-
-    if (!imageFile) {
-      return;
-    }
-
-    var validationError =
-      validateProductImage(
-        imageFile
-      );
-
-    if (validationError) {
-      var fileInput =
-        getProductElement(
-          "p-image-file"
-        );
-
-      if (fileInput) {
-        fileInput.value = "";
-      }
-
-      showProductMessage(
-        validationError,
-        "error"
-      );
-
-      return;
-    }
-
-    localProductPreviewUrl =
-      URL.createObjectURL(
-        imageFile
-      );
-
-    showProductImagePreview(
-      localProductPreviewUrl
-    );
-  }
-
-  function previewManualImageUrl() {
-    var imageUrl =
-      getProductValue(
-        "p-image"
-      );
-
-    if (!imageUrl) {
-      showProductImagePreview("");
-      return;
-    }
-
-    showProductImagePreview(
-      imageUrl
-    );
-  }
-
-  // ==========================================================
-  // PRODUCT DATA
+  // SELECTED CATEGORY
   // ==========================================================
 
   function getSelectedCategoryData() {
     var categorySelect =
-      getProductElement(
+      getElement(
         "p-category"
       );
 
     if (
       !categorySelect ||
-      categorySelect.selectedIndex < 0
+      categorySelect.selectedIndex <
+        0
     ) {
       return {
-        category: "General",
-        categoryId: null,
-        categorySlug: ""
+        category:
+          "General",
+
+        categoryId:
+          null,
+
+        categorySlug:
+          ""
       };
     }
 
@@ -1284,9 +1642,14 @@
       !selectedOption.value
     ) {
       return {
-        category: "General",
-        categoryId: null,
-        categorySlug: ""
+        category:
+          "General",
+
+        categoryId:
+          null,
+
+        categorySlug:
+          ""
       };
     }
 
@@ -1295,56 +1658,62 @@
         selectedOption.value,
 
       categoryId:
-        selectedOption.getAttribute(
-          "data-category-id"
-        ) || null,
+        selectedOption.dataset
+          .categoryId ||
+        null,
 
       categorySlug:
-        selectedOption.getAttribute(
-          "data-category-slug"
-        ) || ""
+        selectedOption.dataset
+          .categorySlug ||
+        ""
     };
   }
+
+  // ==========================================================
+  // PRODUCT DATA
+  // ==========================================================
 
   function getProductFormData() {
     var categoryData =
       getSelectedCategoryData();
 
     var activeCheckbox =
-      getProductElement(
+      getElement(
         "p-active"
       );
 
     return {
       name:
-        getProductValue(
+        getValue(
           "p-name"
         ),
 
       sku:
-        getProductValue(
+        getValue(
           "p-sku"
         ),
 
       price:
         Number(
-          getProductValue(
+          getValue(
             "p-price"
           )
         ),
 
       stock:
         Number(
-          getProductValue(
+          getValue(
             "p-stock"
-          ) || 0
+          ) ||
+          0
         ),
 
       lowStockWarning:
         Number(
-          getProductValue(
+          getValue(
             "p-low-stock-warning"
-          ) || 5
+          ) ||
+          5
         ),
 
       category:
@@ -1357,20 +1726,27 @@
         categoryData.categorySlug,
 
       description:
-        getProductValue(
+        getValue(
           "p-description"
         ),
 
       image:
-        getProductValue(
+        getValue(
           "p-image"
         ),
 
       imagePublicId:
-        uploadedProductImagePublicId,
+        uploadedImagePublicId,
 
       variants:
-        productVariants.slice(),
+        productVariants.map(
+          function (variant) {
+            return Object.assign(
+              {},
+              variant
+            );
+          }
+        ),
 
       active:
         activeCheckbox
@@ -1387,19 +1763,21 @@
     product
   ) {
     if (
-      product.name.length < 2
+      product.name.length <
+        2 ||
+      product.name.length >
+        200
     ) {
-      return (
-        "Product name must contain at least 2 characters."
-      );
+      return "Product name must contain 2 to 200 characters.";
     }
 
     if (
-      product.sku.length < 2
+      product.sku.length <
+        2 ||
+      product.sku.length >
+        100
     ) {
-      return (
-        "Product SKU must contain at least 2 characters."
-      );
+      return "Product SKU must contain 2 to 100 characters.";
     }
 
     if (
@@ -1408,9 +1786,7 @@
       ) ||
       product.price < 0
     ) {
-      return (
-        "Product price must be 0 or higher."
-      );
+      return "Product price must be 0 or higher.";
     }
 
     if (
@@ -1419,29 +1795,37 @@
       ) ||
       product.stock < 0
     ) {
-      return (
-        "Product stock must be a whole number of 0 or higher."
-      );
+      return "Product stock must be a whole number of 0 or higher.";
     }
 
     if (
       !Number.isInteger(
         product.lowStockWarning
       ) ||
-      product.lowStockWarning < 0
+      product.lowStockWarning <
+        0
     ) {
-      return (
-        "Low stock warning must be a whole number of 0 or higher."
-      );
+      return "Low stock warning must be a whole number of 0 or higher.";
     }
 
-    if (!product.image) {
-      return (
-        "Upload a product image before saving the product."
-      );
+    if (
+      product.description.length >
+      5000
+    ) {
+      return "Product description cannot exceed 5,000 characters.";
     }
 
-    var variantSkuSet = {};
+    if (
+      !product.image ||
+      !isValidWebAddress(
+        product.image
+      )
+    ) {
+      return "Enter or upload a valid product image URL before saving.";
+    }
+
+    var variantSkuSet =
+      {};
 
     for (
       var index = 0;
@@ -1450,80 +1834,125 @@
       index += 1
     ) {
       var variant =
-        product.variants[index];
+        product.variants[
+          index
+        ];
 
       var variantError =
-        validateSavedVariant(
+        validateVariantData(
           variant,
-          variantSkuSet
+          false
         );
 
       if (variantError) {
         return variantError;
       }
+
+      var normalizedSku =
+        variant.sku
+          .trim()
+          .toLowerCase();
+
+      if (
+        variantSkuSet[
+          normalizedSku
+        ]
+      ) {
+        return "Variant SKUs must be unique.";
+      }
+
+      variantSkuSet[
+        normalizedSku
+      ] =
+        true;
     }
 
     return "";
   }
 
-  function validateSavedVariant(
-    variant,
-    variantSkuSet
-  ) {
-    if (!variant.name) {
-      return (
-        "Every variant must have a name."
-      );
-    }
+  // ==========================================================
+  // DESCRIPTION CHARACTER COUNT
+  // ==========================================================
 
-    if (!variant.sku) {
-      return (
-        "Every variant must have a SKU."
+  function updateDescriptionCount() {
+    var descriptionInput =
+      getElement(
+        "p-description"
       );
-    }
 
-    var normalizedSku =
-      variant.sku
-        .trim()
-        .toLowerCase();
+    var counter =
+      getElement(
+        "p-description-count"
+      );
 
     if (
-      variantSkuSet[
-        normalizedSku
-      ]
+      descriptionInput &&
+      counter
     ) {
-      return (
-        "Variant SKUs must be unique."
+      counter.textContent =
+        descriptionInput.value.length +
+        " of 5,000 characters";
+    }
+  }
+
+  // ==========================================================
+  // RESET PRODUCT FORM
+  // ==========================================================
+
+  function resetProductForm() {
+    var productForm =
+      getElement(
+        "add-product-form"
       );
+
+    if (productForm) {
+      productForm.reset();
     }
 
-    variantSkuSet[
-      normalizedSku
-    ] = true;
-
-    if (
-      !Number.isFinite(
-        Number(variant.price)
-      ) ||
-      Number(variant.price) < 0
-    ) {
-      return (
-        "Every variant must have a valid price."
+    var stockInput =
+      getElement(
+        "p-stock"
       );
+
+    var lowStockInput =
+      getElement(
+        "p-low-stock-warning"
+      );
+
+    var activeCheckbox =
+      getElement(
+        "p-active"
+      );
+
+    if (stockInput) {
+      stockInput.value =
+        "0";
     }
 
-    if (
-      !Number.isInteger(
-        Number(variant.stock)
-      ) ||
-      Number(variant.stock) < 0
-    ) {
-      return (
-        "Every variant must have a valid whole-number stock amount."
-      );
+    if (lowStockInput) {
+      lowStockInput.value =
+        "5";
     }
 
-    return "";
+    if (activeCheckbox) {
+      activeCheckbox.checked =
+        true;
+    }
+
+    productVariants =
+      [];
+
+    uploadedImagePublicId =
+      "";
+
+    revokeLocalPreviewUrl();
+
+    showProductImagePreview(
+      ""
+    );
+
+    renderVariants();
+    updateDescriptionCount();
   }
 
   // ==========================================================
@@ -1537,7 +1966,9 @@
       event.preventDefault();
     }
 
-    clearProductMessage();
+    if (savingProduct) {
+      return;
+    }
 
     var product =
       getProductFormData();
@@ -1556,46 +1987,54 @@
       return;
     }
 
+    savingProduct =
+      true;
+
+    setButtonLoading(
+      "save-product-button",
+      true,
+      "Saving Product...",
+      "Save Product"
+    );
+
+    showProductMessage(
+      "Saving product...",
+      "information"
+    );
+
     try {
-      setProductSaveLoading(
-        true
-      );
+      var responseData =
+        await requestJson(
+          PRODUCTS_URL,
+          {
+            method:
+              "POST",
 
-      showProductMessage(
-        "Saving product...",
-        "information"
-      );
+            headers:
+              getAdminHeaders(
+                true
+              ),
 
-      var response = await fetch(
-        ADD_PRODUCT_API,
-        {
-          method: "POST",
-
-          headers:
-            getAdminHeaders(true),
-
-          body: JSON.stringify(
-            product
-          )
-        }
-      );
-
-      var data =
-        await readProductResponse(
-          response
+            body:
+              JSON.stringify(
+                product
+              )
+          }
         );
 
+      resetProductForm();
+
       showProductMessage(
-        data.message ||
-        (
-          'The product "' +
-          product.name +
-          '" was created successfully.'
+        getErrorMessage(
+          responseData.message,
+          (
+            'The product "' +
+            product.name +
+            '" was created successfully.'
+          )
         ),
         "success"
       );
-
-      resetProductForm();
 
       window.setTimeout(
         function () {
@@ -1606,166 +2045,183 @@
       );
     } catch (error) {
       console.error(
-        "Product creation failed:",
+        "Product creation failed.",
         error
       );
 
+      var errorMessage =
+        error &&
+        error.name ===
+          "AbortError"
+          ? "The product request took too long. Please try again."
+          : error instanceof
+              TypeError
+            ? (
+                "The product server could not be reached. " +
+                "Check the backend URL and try again."
+              )
+            : getErrorMessage(
+                error,
+                "The product could not be created."
+              );
+
       showProductMessage(
-        error.message ||
-        "The product could not be created.",
+        errorMessage,
         "error"
       );
     } finally {
-      setProductSaveLoading(
-        false
+      savingProduct =
+        false;
+
+      setButtonLoading(
+        "save-product-button",
+        false,
+        "Saving Product...",
+        "Save Product"
       );
     }
   }
 
   // ==========================================================
-  // RESET PRODUCT FORM
+  // LOGOUT BUTTONS
   // ==========================================================
 
-  function resetProductForm() {
+  function connectLogoutButtons() {
+    [
+      "admin-logout-button",
+      "admin-navigation-logout-button"
+    ].forEach(
+      function (elementId) {
+        var button =
+          getElement(
+            elementId
+          );
+
+        if (button) {
+          button.addEventListener(
+            "click",
+            logoutAdmin
+          );
+        }
+      }
+    );
+  }
+
+  // ==========================================================
+  // PAGE INITIALIZATION
+  // ==========================================================
+
+  async function initializePage() {
+    var validSession =
+      await verifyAdminSession();
+
+    if (!validSession) {
+      return;
+    }
+
     var productForm =
-      getProductElement(
+      getElement(
         "add-product-form"
       );
 
+    var addVariantButton =
+      getElement(
+        "add-variant-button"
+      );
+
+    var uploadImageButton =
+      getElement(
+        "upload-product-image-button"
+      );
+
+    var imageFileInput =
+      getElement(
+        "p-image-file"
+      );
+
+    var imageUrlInput =
+      getElement(
+        "p-image"
+      );
+
+    var descriptionInput =
+      getElement(
+        "p-description"
+      );
+
     if (productForm) {
-      productForm.reset();
+      productForm.addEventListener(
+        "submit",
+        saveProduct
+      );
     }
 
-    var stockInput =
-      getProductElement(
-        "p-stock"
+    if (addVariantButton) {
+      addVariantButton.addEventListener(
+        "click",
+        addVariant
+      );
+    }
+
+    if (uploadImageButton) {
+      uploadImageButton.addEventListener(
+        "click",
+        uploadProductImage
+      );
+    }
+
+    if (imageFileInput) {
+      imageFileInput.addEventListener(
+        "change",
+        previewSelectedProductImage
+      );
+    }
+
+    if (imageUrlInput) {
+      imageUrlInput.addEventListener(
+        "input",
+        previewManualImageUrl
       );
 
-    var lowStockInput =
-      getProductElement(
-        "p-low-stock-warning"
+      imageUrlInput.addEventListener(
+        "blur",
+        previewManualImageUrl
       );
+    }
 
-    var activeCheckbox =
-      getProductElement(
-        "p-active"
+    if (descriptionInput) {
+      descriptionInput.addEventListener(
+        "input",
+        updateDescriptionCount
       );
-
-    if (stockInput) {
-      stockInput.value = "0";
     }
 
-    if (lowStockInput) {
-      lowStockInput.value = "5";
-    }
-
-    if (activeCheckbox) {
-      activeCheckbox.checked = true;
-    }
-
-    productVariants = [];
-
-    uploadedProductImagePublicId =
-      "";
-
-    revokeLocalPreviewUrl();
-
-    showProductImagePreview("");
-
+    connectLogoutButtons();
     renderVariants();
+    updateDescriptionCount();
+
+    await loadProductCategories();
+
+    console.log(
+      "MMC Add Product page initialized."
+    );
   }
 
   // ==========================================================
-  // PAGE STARTUP
+  // STARTUP
   // ==========================================================
 
-  document.addEventListener(
-    "DOMContentLoaded",
-    async function () {
-      var validSession =
-        await verifyAdminSession();
-
-      if (!validSession) {
-        return;
-      }
-
-      var productForm =
-        getProductElement(
-          "add-product-form"
-        );
-
-      var addVariantButton =
-        getProductElement(
-          "add-variant-button"
-        );
-
-      var uploadImageButton =
-        getProductElement(
-          "upload-product-image-button"
-        );
-
-      var imageFileInput =
-        getProductElement(
-          "p-image-file"
-        );
-
-      var imageUrlInput =
-        getProductElement(
-          "p-image"
-        );
-
-      var logoutButton =
-        getProductElement(
-          "admin-logout-button"
-        );
-
-      if (productForm) {
-        productForm.addEventListener(
-          "submit",
-          saveProduct
-        );
-      }
-
-      if (addVariantButton) {
-        addVariantButton.addEventListener(
-          "click",
-          addVariant
-        );
-      }
-
-      if (uploadImageButton) {
-        uploadImageButton.addEventListener(
-          "click",
-          uploadProductImage
-        );
-      }
-
-      if (imageFileInput) {
-        imageFileInput.addEventListener(
-          "change",
-          previewSelectedProductImage
-        );
-      }
-
-      if (imageUrlInput) {
-        imageUrlInput.addEventListener(
-          "input",
-          previewManualImageUrl
-        );
-      }
-
-      if (logoutButton) {
-        logoutButton.addEventListener(
-          "click",
-          logoutAdmin
-        );
-      }
-
-      renderVariants();
-
-      await loadProductCategories();
-    }
-  );
+  if (
+    document.readyState ===
+    "loading"
+  ) {
+    document.addEventListener(
+      "DOMContentLoaded",
+      initializePage
+    );
+  } else {
+    initializePage();
+  }
 
   window.addEventListener(
     "beforeunload",
@@ -1773,7 +2229,7 @@
   );
 
   // ==========================================================
-  // OPTIONAL INLINE HTML SUPPORT
+  // GLOBAL SUPPORT
   // ==========================================================
 
   window.addVariant =
@@ -1791,6 +2247,9 @@
   window.saveProduct =
     saveProduct;
 
+  window.resetProductForm =
+    resetProductForm;
+
   window.logoutAdmin =
     logoutAdmin;
-})();
+}());

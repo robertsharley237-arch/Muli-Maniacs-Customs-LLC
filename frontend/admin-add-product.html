@@ -13,6 +13,16 @@
     content="Add products, variants, images, pricing, categories, and inventory to Multi-Maniacs Customs."
   >
 
+  <meta
+    name="theme-color"
+    content="#000000"
+  >
+
+  <meta
+    name="robots"
+    content="noindex, nofollow"
+  >
+
   <title>
     Add Product | Multi-Maniacs Customs LLC
   </title>
@@ -28,119 +38,47 @@
   >
 
   <style>
-    :root {
-      --product-page-background: #111111;
-      --product-panel-background: #222222;
-      --product-inner-background: #191919;
-      --product-border: #444444;
-      --product-text: #ffffff;
-      --product-muted: #cccccc;
-      --product-input-background: #ffffff;
-      --product-input-text: #111111;
-      --product-button: #2196f3;
-      --product-button-hover: #1976d2;
-      --product-success: #4caf50;
-      --product-success-hover: #43a047;
-      --product-danger: #e53935;
-      --product-danger-hover: #c62828;
-      --product-error-text: #ff7676;
-      --product-success-text: #79d77c;
-      --product-information-text: #90caf9;
-      --product-focus: #64b5f6;
-    }
-
-    * {
-      box-sizing: border-box;
-    }
-
-    html {
-      min-height: 100%;
-    }
-
-    body {
-      min-height: 100vh;
-      margin: 0;
-      color: var(--product-text);
-      background: var(--product-page-background);
-      font-family: Arial, Helvetica, sans-serif;
-    }
-
-    .top-header {
-      padding: 18px 20px;
-      background: #000000;
-      border-bottom: 1px solid var(--product-border);
-    }
-
-    .header-content {
-      width: 100%;
-      max-width: 1200px;
-      margin: 0 auto;
-    }
-
-    .site-heading {
-      margin: 0 0 16px;
-      font-size: 26px;
-      line-height: 1.25;
-    }
-
-    .header-buttons {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-    }
-
-    .header-buttons a {
-      display: inline-flex;
-      min-height: 42px;
-      align-items: center;
-      justify-content: center;
-      gap: 7px;
-      padding: 9px 13px;
-      color: #ffffff;
-      background: #222222;
-      border: 1px solid #353535;
-      border-radius: 7px;
-      text-decoration: none;
-    }
-
-    .header-buttons a:hover,
-    .header-buttons a:focus {
-      background: #333333;
-    }
-
-    .header-buttons a[aria-current="page"] {
-      background: var(--product-button);
-      border-color: var(--product-button);
-    }
+    /* ========================================================
+       MMC ADD PRODUCT PAGE
+       Page-specific styles
+       ======================================================== */
 
     .admin-product-page {
-      width: 100%;
-      max-width: 950px;
-      margin: 36px auto;
-      padding: 0 20px;
+      width: calc(100% - 32px);
+      max-width: 1050px;
+      margin: 34px auto;
     }
 
     .admin-product-container {
+      position: relative;
+      overflow: hidden;
       padding: 30px;
-      background: var(--product-panel-background);
-      border: 1px solid var(--product-border);
-      border-radius: 14px;
+      color: var(--admin-black, #000000);
+      background: var(
+        --admin-panel,
+        rgba(255, 255, 255, 0.95)
+      );
+      border: 3px solid var(--admin-black, #000000);
+      border-radius: 16px;
       box-shadow:
-        0 18px 50px rgba(0, 0, 0, 0.4);
+        0 14px 34px rgba(0, 0, 0, 0.38),
+        0 0 0 4px rgba(255, 255, 255, 0.22);
     }
 
     .page-heading {
       margin: 0 0 10px;
+      color: var(--admin-black, #000000);
+      font-size: clamp(32px, 6vw, 46px);
+      line-height: 1.15;
       text-align: center;
-      font-size: 30px;
     }
 
     .page-description {
-      max-width: 700px;
+      max-width: 760px;
       margin: 0 auto 24px;
-      color: var(--product-muted);
+      color: var(--admin-muted, #333333);
+      line-height: 1.65;
       text-align: center;
-      line-height: 1.55;
     }
 
     .admin-account-bar {
@@ -148,40 +86,79 @@
       flex-wrap: wrap;
       align-items: center;
       justify-content: space-between;
-      gap: 12px;
+      gap: 14px;
       margin-bottom: 24px;
-      padding: 14px;
-      background: var(--product-inner-background);
-      border: 1px solid var(--product-border);
-      border-radius: 8px;
+      padding: 16px;
+      color: var(--admin-white, #ffffff);
+      background: var(--admin-black, #000000);
+      border: 3px solid var(--admin-black, #000000);
+      border-radius: 10px;
     }
 
     .admin-account-bar p {
       margin: 4px 0;
+      color: var(--admin-white, #ffffff);
+    }
+
+    .admin-account-bar strong {
+      color: var(--admin-cyan, #00eaff);
     }
 
     .admin-account-actions {
       display: flex;
       flex-wrap: wrap;
-      gap: 8px;
+      gap: 9px;
     }
 
     .small-action-button {
-      display: inline-block;
+      display: inline-flex;
+      min-height: 42px;
+      align-items: center;
+      justify-content: center;
       padding: 9px 13px;
-      color: #ffffff;
-      background: #444444;
-      border: none;
-      border-radius: 6px;
+      color: var(--admin-white, #ffffff);
+      background: var(--admin-dark-gray, #222222);
+      border: 2px solid var(--admin-white, #ffffff);
+      border-radius: 7px;
       font: inherit;
       font-size: 14px;
+      font-weight: 800;
+      text-align: center;
       text-decoration: none;
       cursor: pointer;
+      transition:
+        color 0.2s ease,
+        background 0.2s ease,
+        transform 0.2s ease,
+        box-shadow 0.2s ease;
     }
 
     .small-action-button:hover,
     .small-action-button:focus {
-      background: #5a5a5a;
+      color: var(--admin-black, #000000);
+      background:
+        linear-gradient(
+          135deg,
+          var(--admin-pink, #ff1493),
+          var(--admin-yellow, #ffe600),
+          var(--admin-green, #34e600),
+          var(--admin-cyan, #00eaff)
+        );
+      transform: translateY(-2px);
+      box-shadow:
+        0 0 12px rgba(255, 20, 147, 0.42),
+        0 0 16px rgba(0, 234, 255, 0.28);
+    }
+
+    .logout-action-button {
+      color: var(--admin-white, #ffffff);
+      background: var(--admin-red, #e53935);
+    }
+
+    .logout-action-button:hover,
+    .logout-action-button:focus {
+      color: var(--admin-white, #ffffff);
+      background: #b71c1c;
     }
 
     .add-product-form {
@@ -192,29 +169,34 @@
 
     .product-section {
       padding: 22px;
-      background: var(--product-inner-background);
-      border: 1px solid var(--product-border);
-      border-radius: 10px;
+      color: var(--admin-black, #000000);
+      background: var(--admin-off-white, #fffdf8);
+      border: 2px solid var(--admin-black, #000000);
+      border-radius: 12px;
     }
 
     .product-section h2 {
       margin: 0 0 18px;
-      font-size: 22px;
+      color: var(--admin-black, #000000);
+      font-size: 23px;
     }
 
     .product-section h3 {
       margin: 22px 0 14px;
+      color: var(--admin-black, #000000);
       font-size: 18px;
     }
 
     .form-grid {
       display: grid;
-      grid-template-columns: 1fr 1fr;
+      grid-template-columns:
+        repeat(2, minmax(0, 1fr));
       gap: 18px;
     }
 
     .form-field {
       display: flex;
+      min-width: 0;
       flex-direction: column;
       gap: 7px;
     }
@@ -224,19 +206,27 @@
     }
 
     .form-field label {
+      color: var(--admin-black, #000000);
       font-size: 15px;
-      font-weight: 700;
+      font-weight: 800;
     }
 
     .required-marker {
-      color: #ff8585;
+      color: var(--admin-error-text, #b00024);
     }
 
     .field-help {
       margin: 0;
-      color: var(--product-muted);
+      color: var(--admin-muted, #333333);
       font-size: 13px;
-      line-height: 1.45;
+      line-height: 1.5;
+    }
+
+    .character-count {
+      margin: 0;
+      color: var(--admin-muted, #333333);
+      font-size: 12px;
+      text-align: right;
     }
 
     .form-field input,
@@ -244,12 +234,11 @@
     .form-field textarea {
       width: 100%;
       padding: 11px 12px;
-      color: var(--product-input-text);
-      background: var(--product-input-background);
-      border: 2px solid transparent;
-      border-radius: 7px;
+      color: var(--admin-black, #000000);
+      background: var(--admin-white, #ffffff);
+      border: 2px solid var(--admin-black, #000000);
+      border-radius: 8px;
       font: inherit;
-      outline: none;
     }
 
     .form-field input,
@@ -265,9 +254,20 @@
     .form-field input:focus,
     .form-field select:focus,
     .form-field textarea:focus {
-      border-color: var(--product-focus);
+      outline: none;
+      border-color: var(--admin-purple, #8a00ff);
       box-shadow:
-        0 0 0 3px rgba(100, 181, 246, 0.2);
+        0 0 0 4px rgba(138, 0, 255, 0.2),
+        0 0 12px rgba(0, 234, 255, 0.35);
+    }
+
+    .form-field input:disabled,
+    .form-field select:disabled,
+    .form-field textarea:disabled {
+      color: #666666;
+      background: #eeeeee;
+      cursor: not-allowed;
+      opacity: 0.75;
     }
 
     .image-upload-row {
@@ -275,41 +275,68 @@
       flex-wrap: wrap;
       align-items: flex-end;
       gap: 12px;
+      margin-top: 18px;
     }
 
     .image-upload-row .form-field {
-      flex: 1;
       min-width: 220px;
+      flex: 1;
     }
 
-    .upload-image-button {
+    .upload-image-button,
+    .add-variant-button {
+      display: inline-flex;
       min-height: 48px;
+      align-items: center;
+      justify-content: center;
       padding: 11px 16px;
-      color: #ffffff;
-      background: var(--product-button);
-      border: none;
-      border-radius: 7px;
+      color: var(--admin-black, #000000);
+      background:
+        linear-gradient(
+          135deg,
+          var(--admin-pink, #ff1493),
+          var(--admin-yellow, #ffe600),
+          var(--admin-green, #34e600),
+          var(--admin-cyan, #00eaff)
+        );
+      border: 2px solid var(--admin-black, #000000);
+      border-radius: 8px;
       font: inherit;
-      font-weight: 700;
+      font-weight: 900;
       cursor: pointer;
+      transition:
+        filter 0.2s ease,
+        transform 0.2s ease,
+        box-shadow 0.2s ease;
     }
 
-    .upload-image-button:hover:not(:disabled) {
-      background: var(--product-button-hover);
+    .upload-image-button:hover:not(:disabled),
+    .upload-image-button:focus:not(:disabled),
+    .add-variant-button:hover:not(:disabled),
+    .add-variant-button:focus:not(:disabled) {
+      filter: saturate(1.2) brightness(1.04);
+      transform: translateY(-2px);
+      box-shadow:
+        0 0 14px rgba(255, 20, 147, 0.4),
+        0 0 18px rgba(0, 234, 255, 0.3);
     }
 
-    .upload-image-button:disabled {
+    .upload-image-button:disabled,
+    .add-variant-button:disabled {
       cursor: wait;
-      opacity: 0.7;
+      filter: grayscale(0.6);
+      opacity: 0.65;
+      transform: none;
     }
 
     .product-preview-container {
       margin-top: 18px;
-      padding: 16px;
+      padding: 18px;
+      color: var(--admin-black, #000000);
+      background: var(--admin-white, #ffffff);
+      border: 2px solid var(--admin-black, #000000);
+      border-radius: 10px;
       text-align: center;
-      background: #101010;
-      border: 1px solid var(--product-border);
-      border-radius: 8px;
     }
 
     .product-preview-container[hidden] {
@@ -323,10 +350,12 @@
     .product-preview {
       display: block;
       width: 100%;
-      max-width: 350px;
-      max-height: 300px;
+      max-width: 380px;
+      max-height: 320px;
       margin: 0 auto;
-      border-radius: 8px;
+      background: #ffffff;
+      border: 2px solid var(--admin-black, #000000);
+      border-radius: 9px;
       object-fit: contain;
     }
 
@@ -337,22 +366,13 @@
       gap: 12px;
     }
 
-    .add-variant-button {
-      width: 100%;
-      min-height: 46px;
-      margin-top: 14px;
-      padding: 11px;
-      color: #ffffff;
-      background: var(--product-button);
-      border: none;
-      border-radius: 7px;
-      font: inherit;
-      font-weight: 700;
-      cursor: pointer;
+    .variant-image-field {
+      grid-column: 1 / -1;
     }
 
-    .add-variant-button:hover {
-      background: var(--product-button-hover);
+    .add-variant-button {
+      width: 100%;
+      margin-top: 14px;
     }
 
     .variant-list {
@@ -363,113 +383,173 @@
     }
 
     .variant-list:empty::before {
-      content: "No variants have been added. The product will use its base price and stock.";
       display: block;
       padding: 14px;
-      color: var(--product-muted);
-      background: #101010;
-      border: 1px solid var(--product-border);
-      border-radius: 7px;
+      color: var(--admin-muted, #333333);
+      background: var(--admin-white, #ffffff);
+      border: 2px solid var(--admin-black, #000000);
+      border-radius: 8px;
+      content:
+        "No variants have been added. The product will use its base price and stock.";
     }
 
     .variant-item {
       display: grid;
-      grid-template-columns: 1fr auto;
+      grid-template-columns:
+        minmax(0, 1fr)
+        auto;
       gap: 14px;
       align-items: center;
       padding: 14px;
-      background: #101010;
-      border: 1px solid var(--product-border);
-      border-radius: 8px;
+      color: var(--admin-black, #000000);
+      background: var(--admin-white, #ffffff);
+      border: 2px solid var(--admin-black, #000000);
+      border-radius: 9px;
+    }
+
+    .variant-item h3,
+    .variant-item h4 {
+      margin: 0 0 7px;
+      color: var(--admin-black, #000000);
     }
 
     .variant-item p {
       margin: 4px 0;
-      color: var(--product-muted);
+      color: var(--admin-muted, #333333);
+      overflow-wrap: anywhere;
     }
 
     .remove-variant-button {
+      display: inline-flex;
+      min-height: 42px;
+      align-items: center;
+      justify-content: center;
       padding: 9px 12px;
-      color: #ffffff;
-      background: var(--product-danger);
-      border: none;
-      border-radius: 6px;
+      color: var(--admin-white, #ffffff);
+      background: var(--admin-red, #e53935);
+      border: 2px solid var(--admin-black, #000000);
+      border-radius: 7px;
       font: inherit;
+      font-weight: 800;
       cursor: pointer;
     }
 
-    .remove-variant-button:hover {
-      background: var(--product-danger-hover);
+    .remove-variant-button:hover,
+    .remove-variant-button:focus {
+      background: #b71c1c;
+      transform: translateY(-2px);
     }
 
     .checkbox-field {
       display: flex;
       align-items: flex-start;
       gap: 10px;
-      padding: 14px;
-      background: #101010;
-      border: 1px solid var(--product-border);
-      border-radius: 8px;
+      padding: 15px;
+      color: var(--admin-black, #000000);
+      background:
+        linear-gradient(
+          135deg,
+          rgba(255, 20, 147, 0.1),
+          rgba(255, 230, 0, 0.13),
+          rgba(52, 230, 0, 0.1),
+          rgba(0, 234, 255, 0.12)
+        );
+      border: 2px solid var(--admin-black, #000000);
+      border-radius: 9px;
     }
 
     .checkbox-field input {
       width: 20px;
       height: 20px;
-      margin: 1px 0 0;
-      accent-color: var(--product-success);
+      flex: 0 0 auto;
+      margin: 2px 0 0;
+      accent-color: var(--admin-purple, #8a00ff);
       cursor: pointer;
     }
 
     .checkbox-field label {
-      line-height: 1.45;
+      color: var(--admin-black, #000000);
+      font-weight: 800;
+      line-height: 1.5;
       cursor: pointer;
     }
 
     .save-product-button {
+      display: inline-flex;
       width: 100%;
-      min-height: 52px;
-      padding: 13px;
-      color: #ffffff;
-      background: var(--product-success);
-      border: none;
-      border-radius: 8px;
+      min-height: 54px;
+      align-items: center;
+      justify-content: center;
+      padding: 13px 18px;
+      color: var(--admin-black, #000000);
+      background:
+        linear-gradient(
+          135deg,
+          var(--admin-pink, #ff1493),
+          var(--admin-yellow, #ffe600),
+          var(--admin-green, #34e600),
+          var(--admin-cyan, #00eaff)
+        );
+      border: 3px solid var(--admin-black, #000000);
+      border-radius: 9px;
       font: inherit;
       font-size: 17px;
-      font-weight: 700;
+      font-weight: 900;
       cursor: pointer;
+      box-shadow:
+        0 6px 0 var(--admin-black, #000000);
+      transition:
+        filter 0.2s ease,
+        transform 0.2s ease,
+        box-shadow 0.2s ease;
     }
 
-    .save-product-button:hover:not(:disabled) {
-      background: var(--product-success-hover);
+    .save-product-button:hover:not(:disabled),
+    .save-product-button:focus:not(:disabled) {
+      filter: saturate(1.25) brightness(1.05);
+      transform: translateY(-2px);
+      box-shadow:
+        0 8px 0 var(--admin-black, #000000),
+        0 0 15px rgba(255, 20, 147, 0.48);
     }
 
     .save-product-button:disabled {
       cursor: wait;
-      opacity: 0.7;
+      filter: grayscale(0.65);
+      opacity: 0.65;
+      transform: none;
+      box-shadow:
+        0 4px 0 var(--admin-black, #000000);
     }
 
     .product-message {
       min-height: 24px;
       margin: 20px 0 0;
-      text-align: center;
-      font-weight: 700;
+      padding: 0;
+      border-radius: 9px;
+      font-weight: 800;
       line-height: 1.5;
+      text-align: center;
     }
 
-    .product-message:empty {
-      display: none;
+    .product-message:not(:empty) {
+      padding: 12px 14px;
+      border: 2px solid currentColor;
     }
 
     .product-error {
-      color: var(--product-error-text);
+      color: var(--admin-error-text, #b00024);
+      background: #fff0f3;
     }
 
     .product-success {
-      color: var(--product-success-text);
+      color: var(--admin-success-text, #126b17);
+      background: #effff2;
     }
 
     .product-information {
-      color: var(--product-information-text);
+      color: var(--admin-information-text, #003d9c);
+      background: #edf8ff;
     }
 
     .page-actions {
@@ -480,45 +560,82 @@
       margin-top: 24px;
     }
 
-    @media (max-width: 760px) {
-      .form-grid,
+    @media (max-width: 820px) {
       .variant-entry-grid {
+        grid-template-columns:
+          repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 760px) {
+      .form-grid {
         grid-template-columns: 1fr;
       }
 
       .form-field-full {
         grid-column: auto;
       }
-
-      .header-buttons {
-        flex-direction: column;
-      }
-
-      .header-buttons a {
-        width: 100%;
-      }
     }
 
     @media (max-width: 520px) {
       .admin-product-page {
-        margin: 20px auto;
-        padding: 0 14px;
+        width: calc(100% - 24px);
+        margin: 22px auto;
       }
 
       .admin-product-container {
-        padding: 20px 14px;
+        padding: 22px 16px;
       }
 
       .product-section {
-        padding: 17px 13px;
+        padding: 18px 14px;
       }
 
       .admin-account-bar {
-        align-items: flex-start;
+        align-items: stretch;
         flex-direction: column;
+      }
+
+      .admin-account-actions,
+      .image-upload-row,
+      .page-actions {
+        align-items: stretch;
+        flex-direction: column;
+      }
+
+      .small-action-button,
+      .upload-image-button,
+      .page-actions a {
+        width: 100%;
+      }
+
+      .variant-entry-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .variant-image-field {
+        grid-column: auto;
+      }
+
+      .variant-item {
+        grid-template-columns: 1fr;
+      }
+
+      .remove-variant-button {
+        width: 100%;
       }
     }
   </style>
+
+  <!--
+    config.js must load first because admin-add-product.js
+    uses the configured MMC backend address.
+  -->
+
+  <script
+    src="config.js"
+    defer
+  ></script>
 
   <script
     src="navigation.js"
@@ -531,52 +648,143 @@
   ></script>
 </head>
 
-<body>
-  <header class="top-header">
-    <div class="header-content">
-      <h1 class="site-heading">
-        Multi-Maniacs Customs LLC - Admin
-      </h1>
+<body class="admin-page">
+  #main-content
+    Skip to main content
+  </a>
 
-      <nav
-        class="header-buttons"
-        aria-label="Administrator navigation"
+  <!-- ========================================================
+       ADMINISTRATOR HEADER
+       ======================================================== -->
+
+  <header class="admin-header">
+    <div class="admin-header-content">
+      <a
+        class="admin-logo-link"
+        href="admin-dashboard.html"
+        aria-label="Go to the MMC administrator dashboard"
       >
-        <a href="index.html">
-          Home
-        </a>
+        images/mmc-logo.png
 
-        <a href="admin-dashboard.html">
-          Dashboard
-        </a>
+        <div class="admin-branding">
+          <p class="admin-site-heading">
+            Multi-Maniacs Customs LLC
+          </p>
 
-        <a
-          href="admin-add-product.html"
-          aria-current="page"
+          <p class="admin-site-tagline">
+            Administrator System
+          </p>
+        </div>
+      </a>
+
+      <div
+        class="admin-header-account"
+        aria-label="Administrator account"
+      >
+        <span>
+          Signed in as
+        </span>
+
+        <strong
+          id="admin-header-username"
+          class="admin-user-name"
         >
-          Add Product
-        </a>
+          Loading...
+        </strong>
 
-        <a href="admin-products.html">
-          Manage Products
-        </a>
-
-        admin-add-category.html
-          Add Category
-        </a>
-
-        <a href="shop.html">
-          View Shop
-        </a>
-      </nav>
+        <span
+          id="admin-header-role"
+          class="admin-user-role"
+        >
+          Loading...
+        </span>
+      </div>
     </div>
   </header>
 
-  <main class="admin-product-page">
+  <!-- ========================================================
+       ADMINISTRATOR NAVIGATION
+       ======================================================== -->
+
+  <nav
+    class="admin-navigation"
+    aria-label="Administrator navigation"
+  >
+    <div class="admin-navigation-content">
+      <a href="admin-dashboard.html">
+        Dashboard
+      </a>
+
+      <a href="admin-products.html">
+        Products
+      </a>
+
+      <a
+        href="admin-add-product.html"
+        aria-current="page"
+      >
+        Add Product
+      </a>
+
+      admin-categories.html
+        Categories
+      </a>
+
+      <a href="admin-add-category.html">
+        Add Category
+      </a>
+
+      <a href="admin-inventory.html">
+        Inventory
+      </a>
+
+      <a href="admin-orders.html">
+        Orders
+      </a>
+
+      <a href="admin-intake.html">
+        Client Intake
+      </a>
+
+      <a href="admin-settings.html">
+        Settings
+      </a>
+
+      <a href="shop.html">
+        View Shop
+      </a>
+
+      <button
+        id="admin-navigation-logout-button"
+        class="admin-logout-button"
+        type="button"
+      >
+        Log Out
+      </button>
+    </div>
+  </nav>
+
+  <!-- ========================================================
+       ADD PRODUCT PAGE
+       ======================================================== -->
+
+  <main
+    id="main-content"
+    class="admin-product-page"
+  >
     <section
       class="admin-product-container"
       aria-labelledby="add-product-heading"
     >
+      <div
+        class="admin-tie-dye-color-bar"
+        aria-hidden="true"
+      ></div>
+
+      <p class="admin-section-eyebrow">
+        Product Management
+      </p>
+
       <h1
         id="add-product-heading"
         class="page-heading"
@@ -590,10 +798,15 @@
         variants.
       </p>
 
+      <!-- ====================================================
+           ADMINISTRATOR ACCOUNT
+           ==================================================== -->
+
       <div class="admin-account-bar">
         <div>
           <p>
             Signed in as:
+
             <strong id="admin-username">
               Loading...
             </strong>
@@ -601,6 +814,7 @@
 
           <p>
             Role:
+
             <strong id="admin-role">
               Loading...
             </strong>
@@ -615,9 +829,16 @@
             Dashboard
           </a>
 
+          <a
+            class="small-action-button"
+            href="admin-products.html"
+          >
+            Manage Products
+          </a>
+
           <button
             id="admin-logout-button"
-            class="small-action-button"
+            class="small-action-button logout-action-button"
             type="button"
           >
             Log Out
@@ -625,11 +846,19 @@
         </div>
       </div>
 
+      <!-- ====================================================
+           ADD PRODUCT FORM
+           ==================================================== -->
+
       <form
         id="add-product-form"
         class="add-product-form"
         novalidate
       >
+        <!-- ==================================================
+             PRODUCT DETAILS
+             ================================================== -->
+
         <section
           class="product-section"
           aria-labelledby="product-details-heading"
@@ -642,6 +871,7 @@
             <div class="form-field form-field-full">
               <label for="p-name">
                 Product Name
+
                 <span
                   class="required-marker"
                   aria-hidden="true"
@@ -654,16 +884,27 @@
                 id="p-name"
                 name="name"
                 type="text"
+                autocomplete="off"
                 placeholder="Enter the product name"
                 minlength="2"
                 maxlength="200"
+                aria-describedby="p-name-help"
                 required
               >
+
+              <p
+                id="p-name-help"
+                class="field-help"
+              >
+                Enter the complete name clients should see in
+                the public shop.
+              </p>
             </div>
 
             <div class="form-field">
               <label for="p-sku">
                 Product SKU
+
                 <span
                   class="required-marker"
                   aria-hidden="true"
@@ -676,16 +917,26 @@
                 id="p-sku"
                 name="sku"
                 type="text"
+                autocomplete="off"
                 placeholder="Example: MMC-001"
                 minlength="2"
                 maxlength="100"
+                aria-describedby="p-sku-help"
                 required
               >
+
+              <p
+                id="p-sku-help"
+                class="field-help"
+              >
+                Use a unique inventory code for this product.
+              </p>
             </div>
 
             <div class="form-field">
               <label for="p-price">
                 Base Price
+
                 <span
                   class="required-marker"
                   aria-hidden="true"
@@ -700,6 +951,7 @@
                 type="number"
                 min="0"
                 step="0.01"
+                inputmode="decimal"
                 placeholder="0.00"
                 required
               >
@@ -716,6 +968,7 @@
                 type="number"
                 min="0"
                 step="1"
+                inputmode="numeric"
                 value="0"
               >
 
@@ -736,8 +989,14 @@
                 type="number"
                 min="0"
                 step="1"
+                inputmode="numeric"
                 value="5"
               >
+
+              <p class="field-help">
+                Inventory at or below this number can be marked
+                as low stock.
+              </p>
             </div>
 
             <div class="form-field form-field-full">
@@ -748,6 +1007,7 @@
               <select
                 id="p-category"
                 name="category"
+                aria-describedby="p-category-help"
                 disabled
               >
                 <option value="">
@@ -755,7 +1015,10 @@
                 </option>
               </select>
 
-              <p class="field-help">
+              <p
+                id="p-category-help"
+                class="field-help"
+              >
                 Categories are created through the category
                 management pages and displayed to clients in the
                 shop filters.
@@ -772,10 +1035,32 @@
                 name="description"
                 placeholder="Describe the product, customization options, materials, sizes, or other client information."
                 maxlength="5000"
+                aria-describedby="p-description-help p-description-count"
               ></textarea>
+
+              <p
+                id="p-description-help"
+                class="field-help"
+              >
+                Include useful product details, available
+                customization choices, materials, sizes, and
+                ordering information.
+              </p>
+
+              <p
+                id="p-description-count"
+                class="character-count"
+                aria-live="polite"
+              >
+                0 of 5,000 characters
+              </p>
             </div>
           </div>
         </section>
+
+        <!-- ==================================================
+             PRODUCT IMAGE
+             ================================================== -->
 
         <section
           class="product-section"
@@ -788,6 +1073,7 @@
           <div class="form-field">
             <label for="p-image">
               Image URL
+
               <span
                 class="required-marker"
                 aria-hidden="true"
@@ -800,9 +1086,21 @@
               id="p-image"
               name="image"
               type="url"
-              placeholder="The Cloudinary image URL will appear here"
+              inputmode="url"
+              autocomplete="url"
+              placeholder="https://example.com/product-image.jpg"
+              aria-describedby="p-image-help"
               required
             >
+
+            <p
+              id="p-image-help"
+              class="field-help"
+            >
+              Enter an existing image URL or upload an image
+              below. A successful upload should place the
+              Cloudinary URL in this field automatically.
+            </p>
           </div>
 
           <div class="image-upload-row">
@@ -816,10 +1114,15 @@
                 name="imageFile"
                 type="file"
                 accept="image/jpeg,image/png,image/webp,image/gif"
+                aria-describedby="p-image-file-help"
               >
 
-              <p class="field-help">
-                JPG, PNG, WEBP, or GIF. Maximum file size: 10 MB.
+              <p
+                id="p-image-file-help"
+                class="field-help"
+              >
+                JPG, PNG, WEBP, or GIF. Maximum file size:
+                10 MB.
               </p>
             </div>
 
@@ -850,6 +1153,10 @@
           </section>
         </section>
 
+        <!-- ==================================================
+             PRODUCT VARIANTS
+             ================================================== -->
+
         <section
           class="product-section"
           aria-labelledby="variants-heading"
@@ -861,11 +1168,14 @@
           <p class="field-help">
             Variants are optional. Use variants for choices such
             as color, size, material, finish, or package type.
+            Each variant may have its own SKU, price, stock, and
+            image.
           </p>
 
           <div
             id="variantList"
             class="variant-list"
+            aria-live="polite"
           ></div>
 
           <h3>
@@ -881,6 +1191,7 @@
               <input
                 id="v-name"
                 type="text"
+                autocomplete="off"
                 placeholder="Example: Red or XL"
                 maxlength="150"
               >
@@ -894,6 +1205,7 @@
               <input
                 id="v-sku"
                 type="text"
+                autocomplete="off"
                 placeholder="Example: MMC-001-RED"
                 maxlength="100"
               >
@@ -909,6 +1221,7 @@
                 type="number"
                 min="0"
                 step="0.01"
+                inputmode="decimal"
                 placeholder="0.00"
               >
             </div>
@@ -923,8 +1236,28 @@
                 type="number"
                 min="0"
                 step="1"
+                inputmode="numeric"
                 placeholder="0"
               >
+            </div>
+
+            <div class="form-field variant-image-field">
+              <label for="v-image">
+                Variant Image URL
+              </label>
+
+              <input
+                id="v-image"
+                type="url"
+                inputmode="url"
+                autocomplete="url"
+                placeholder="https://example.com/variant-image.jpg"
+              >
+
+              <p class="field-help">
+                Leave this field empty to use the main product
+                image for this variant.
+              </p>
             </div>
           </div>
 
@@ -937,7 +1270,18 @@
           </button>
         </section>
 
-        <section class="product-section">
+        <!-- ==================================================
+             PRODUCT VISIBILITY
+             ================================================== -->
+
+        <section
+          class="product-section"
+          aria-labelledby="product-visibility-heading"
+        >
+          <h2 id="product-visibility-heading">
+            Product Visibility
+          </h2>
+
           <div class="checkbox-field">
             <input
               id="p-active"
@@ -947,7 +1291,8 @@
             >
 
             <label for="p-active">
-              Show this product to clients in the public shop.
+              Make this product active and show it to clients in
+              the public shop.
             </label>
           </div>
         </section>
@@ -961,12 +1306,20 @@
         </button>
       </form>
 
+      <!-- ====================================================
+           FORM STATUS MESSAGE
+           ==================================================== -->
+
       <p
         id="product-message"
         class="product-message"
-        role="status"
         aria-live="polite"
+        aria-atomic="true"
       ></p>
+
+      <!-- ====================================================
+           PAGE ACTIONS
+           ==================================================== -->
 
       <div class="page-actions">
         <a
@@ -983,7 +1336,14 @@
           Manage Products
         </a>
 
-        admin-add-category.html
+        admin-categories.html
+          Manage Categories
+        </a>
+
+        <a
+          class="small-action-button"
+          href="admin-add-category.html"
+        >
           Add Category
         </a>
 
@@ -997,10 +1357,73 @@
     </section>
   </main>
 
-  <noscript>
+  <!-- ========================================================
+       ADMINISTRATOR FOOTER
+       ======================================================== -->
+
+  <footer class="admin-footer">
     <p>
-      JavaScript must be enabled to add products.
+      <strong>
+        Multi-Maniacs Customs LLC Administrator System
+      </strong>
     </p>
+
+    <p>
+      Product, category, inventory, and order-management tools
+      are restricted to authorized MMC administrators.
+    </p>
+
+    <nav
+      class="admin-footer-navigation"
+      aria-label="Administrator footer navigation"
+    >
+      <a href="admin-dashboard.html">
+        Dashboard
+      </a>
+
+      <a href="admin-products.html">
+        Products
+      </a>
+
+      <a href="admin-add-product.html">
+        Add Product
+      </a>
+
+      admin-categories.html
+        Categories
+      </a>
+
+      <a href="admin-add-category.html">
+        Add Category
+      </a>
+
+      <a href="admin-inventory.html">
+        Inventory
+      </a>
+
+      <a href="admin-orders.html">
+        Orders
+      </a>
+
+      <a href="admin-settings.html">
+        Settings
+      </a>
+
+      <a href="shop.html">
+        View Shop
+      </a>
+    </nav>
+
+    <p>
+      &copy; 2026 Multi-Maniacs Customs LLC. All rights reserved.
+    </p>
+  </footer>
+
+  <noscript>
+    <div class="admin-noscript">
+      JavaScript must be enabled to add products, upload images,
+      create variants, and use the MMC administrator system.
+    </div>
   </noscript>
 </body>
 </html>

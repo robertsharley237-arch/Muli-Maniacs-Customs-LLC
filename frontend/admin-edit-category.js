@@ -1,5 +1,6 @@
 // ============================================================
 // MULTI-MANIACS CUSTOMS LLC
+// FILE: admin-edit-category.js
 // EDIT CATEGORY ADMIN PAGE
 //
 // Hosting: Vercel
@@ -7,1142 +8,2054 @@
 // Authentication: JWT multi-admin system
 // ============================================================
 
-const BACKEND_URL =
-  window.MMC_BACKEND_URL ||
-  window.location.origin;
+(function () {
+  "use strict";
 
-const CATEGORIES_API =
-  `${BACKEND_URL}/categories`;
+  // ==========================================================
+  // CONFIGURATION
+  // ==========================================================
 
-const ADMIN_PRODUCTS_API =
-  `${BACKEND_URL}/admin/products`;
+  var REQUEST_TIMEOUT_MS =
+    15000;
 
-let availableCategories = [];
-let availableProducts = [];
-let selectedCategory = null;
+  var availableCategories =
+    [];
 
-// ============================================================
-// ADMIN AUTHENTICATION
-// ============================================================
+  var availableProducts =
+    [];
 
-function getAdminToken() {
-  return localStorage.getItem(
-    "adminToken"
-  );
-}
+  var selectedCategory =
+    null;
 
-function getAdminHeaders(
-  includeContentType = true
-) {
-  const headers = {
-    Authorization:
-      `Bearer ${getAdminToken()}`
-  };
+  var slugWasManuallyEdited =
+    false;
 
-  if (includeContentType) {
-    headers["Content-Type"] =
-      "application/json";
+  var updateInProgress =
+    false;
+
+  // ==========================================================
+  // ELEMENT HELPERS
+  // ==========================================================
+
+  function getElement(
+    elementId
+  ) {
+    return document.getElementById(
+      elementId
+    );
   }
 
-  return headers;
-}
+  function getValue(
+    elementId
+  ) {
+    var element =
+      getElement(
+        elementId
+      );
 
-function clearSavedAdminLogin() {
-  localStorage.removeItem(
-    "adminToken"
-  );
+    if (!element) {
+      return "";
+    }
 
-  localStorage.removeItem(
-    "adminUser"
-  );
+    return String(
+      element.value ||
+      ""
+    ).trim();
+  }
 
-  localStorage.removeItem(
-    "MMC_ADMIN_TOKEN"
-  );
-}
+  function setInputValue(
+    elementId,
+    value
+  ) {
+    var element =
+      getElement(
+        elementId
+      );
 
-function redirectToLogin() {
-  clearSavedAdminLogin();
+    if (!element) {
+      return;
+    }
 
-  window.location.href =
-    "admin-login.html";
-}
+    element.value =
+      value === undefined ||
+      value === null
+        ? ""
+        : String(value);
+  }
 
-function logoutAdmin() {
-  redirectToLogin();
-}
+  function setText(
+    elementId,
+    value
+  ) {
+    var element =
+      getElement(
+        elementId
+      );
 
-// ============================================================
-// SERVER RESPONSE HELPER
-// ============================================================
+    if (!element) {
+      return;
+    }
 
-async function readApiResponse(
-  response
-) {
-  let data;
+    element.textContent =
+      value === undefined ||
+      value === null
+        ? ""
+        : String(value);
+  }
 
-  try {
-    data = await response.json();
-  } catch (error) {
-    data = {
-      error:
-        "The server returned an unexpected response."
+  // ==========================================================
+  // BACKEND URL
+  // ==========================================================
+
+  function removeTrailingSlashes(
+    value
+  ) {
+    return String(value || "")
+      .trim()
+      .replace(
+        /\/+$/,
+        ""
+      );
+  }
+
+  function getBackendUrl() {
+    if (
+      typeof window.MMC_BACKEND_URL ===
+        "string" &&
+      window.MMC_BACKEND_URL.trim()
+    ) {
+      return removeTrailingSlashes(
+        window.MMC_BACKEND_URL
+      );
+    }
+
+    if (
+      window.location.hostname ===
+        "localhost" ||
+      window.location.hostname ===
+        "127.0.0.1"
+    ) {
+      return "http://localhost:10000";
+    }
+
+    return removeTrailingSlashes(
+      window.location.origin
+    );
+  }
+
+  var BACKEND_URL =
+    getBackendUrl();
+
+  var CATEGORIES_URL =
+    BACKEND_URL +
+    "/categories";
+
+  var ADMIN_PRODUCTS_URL =
+    BACKEND_URL +
+    "/admin/products";
+
+  var ADMIN_SESSION_URL =
+    BACKEND_URL +
+    "/admin/me";
+
+  // ==========================================================
+  // ADMIN AUTHENTICATION
+  // ==========================================================
+
+  function getAdminToken() {
+    return String(
+      localStorage.getItem(
+        "adminToken"
+      ) ||
+      localStorage.getItem(
+        "MMC_ADMIN_TOKEN"
+      ) ||
+      ""
+    ).trim();
+  }
+
+  function getAdminHeaders(
+    includeContentType
+  ) {
+    var headers = {
+      Accept:
+        "application/json",
+
+      Authorization:
+        "Bearer " +
+        getAdminToken()
+    };
+
+    if (
+      includeContentType !==
+      false
+    ) {
+      headers["Content-Type"] =
+        "application/json";
+    }
+
+    return headers;
+  }
+
+  function clearSavedAdminLogin() {
+    localStorage.removeItem(
+      "adminToken"
+    );
+
+    localStorage.removeItem(
+      "MMC_ADMIN_TOKEN"
+    );
+
+    localStorage.removeItem(
+      "adminUser"
+    );
+  }
+
+  function redirectToAdminLogin() {
+    clearSavedAdminLogin();
+
+    window.location.replace(
+      "admin-login.html?return=" +
+      encodeURIComponent(
+        "admin-edit-category.html"
+      )
+    );
+  }
+
+  function logoutAdmin() {
+    redirectToAdminLogin();
+  }
+
+  // ==========================================================
+  // FETCH WITH TIMEOUT
+  // ==========================================================
+
+  async function fetchWithTimeout(
+    url,
+    options
+  ) {
+    var controller =
+      new AbortController();
+
+    var timeoutIdentifier =
+      window.setTimeout(
+        function () {
+          controller.abort();
+        },
+        REQUEST_TIMEOUT_MS
+      );
+
+    try {
+      return await fetch(
+        url,
+        Object.assign(
+          {},
+          options || {},
+          {
+            signal:
+              controller.signal
+          }
+        )
+      );
+    } finally {
+      window.clearTimeout(
+        timeoutIdentifier
+      );
+    }
+  }
+
+  // ==========================================================
+  // SERVER RESPONSE
+  // ==========================================================
+
+  async function readResponse(
+    response
+  ) {
+    var responseText =
+      "";
+
+    try {
+      responseText =
+        await response.text();
+    } catch (error) {
+      return {
+        error:
+          "The server response could not be read."
+      };
+    }
+
+    if (!responseText) {
+      return {};
+    }
+
+    try {
+      return JSON.parse(
+        responseText
+      );
+    } catch (error) {
+      return {
+        error:
+          responseText
+      };
+    }
+  }
+
+  function getErrorMessage(
+    value,
+    fallbackMessage
+  ) {
+    if (
+      typeof value ===
+        "string" &&
+      value.trim()
+    ) {
+      return value.trim();
+    }
+
+    if (
+      value &&
+      typeof value ===
+        "object"
+    ) {
+      if (
+        typeof value.message ===
+          "string" &&
+        value.message.trim()
+      ) {
+        return value.message.trim();
+      }
+
+      if (
+        value.error !==
+        undefined
+      ) {
+        return getErrorMessage(
+          value.error,
+          fallbackMessage
+        );
+      }
+    }
+
+    return fallbackMessage;
+  }
+
+  async function requestJson(
+    url,
+    options
+  ) {
+    var response =
+      await fetchWithTimeout(
+        url,
+        options
+      );
+
+    var responseData =
+      await readResponse(
+        response
+      );
+
+    if (
+      response.status ===
+      401
+    ) {
+      redirectToAdminLogin();
+
+      throw new Error(
+        "Your administrator session expired."
+      );
+    }
+
+    if (
+      response.status ===
+      403
+    ) {
+      throw new Error(
+        getErrorMessage(
+          responseData,
+          "You do not have permission to perform this action."
+        )
+      );
+    }
+
+    if (!response.ok) {
+      throw new Error(
+        getErrorMessage(
+          responseData,
+          (
+            "The request failed with status " +
+            response.status +
+            "."
+          )
+        )
+      );
+    }
+
+    return responseData;
+  }
+
+  // ==========================================================
+  // ADMIN INFORMATION
+  // ==========================================================
+
+  function formatAdminRole(
+    role
+  ) {
+    return String(
+      role ||
+      "Administrator"
+    )
+      .replace(
+        /_/g,
+        " "
+      )
+      .replace(
+        /\b\w/g,
+        function (letter) {
+          return letter.toUpperCase();
+        }
+      );
+  }
+
+  function displayAdminInformation(
+    administrator
+  ) {
+    var username =
+      String(
+        administrator.username ||
+        administrator.name ||
+        administrator.email ||
+        "Administrator"
+      );
+
+    var role =
+      formatAdminRole(
+        administrator.role
+      );
+
+    [
+      "admin-username",
+      "admin-header-username"
+    ].forEach(
+      function (elementId) {
+        setText(
+          elementId,
+          username
+        );
+      }
+    );
+
+    [
+      "admin-role",
+      "admin-header-role"
+    ].forEach(
+      function (elementId) {
+        setText(
+          elementId,
+          role
+        );
+      }
+    );
+  }
+
+  async function verifyAdminSession() {
+    if (!getAdminToken()) {
+      redirectToAdminLogin();
+
+      return false;
+    }
+
+    try {
+      var responseData =
+        await requestJson(
+          ADMIN_SESSION_URL,
+          {
+            method:
+              "GET",
+
+            headers:
+              getAdminHeaders(
+                false
+              )
+          }
+        );
+
+      var administrator =
+        responseData.admin ||
+        responseData.user ||
+        responseData;
+
+      localStorage.setItem(
+        "adminUser",
+        JSON.stringify(
+          administrator
+        )
+      );
+
+      displayAdminInformation(
+        administrator
+      );
+
+      return true;
+    } catch (error) {
+      console.error(
+        "Administrator session verification failed.",
+        error
+      );
+
+      showCategoryMessage(
+        getRequestErrorMessage(
+          error,
+          "Your administrator session could not be verified."
+        ),
+        "error"
+      );
+
+      return false;
+    }
+  }
+
+  // ==========================================================
+  // REQUEST ERROR MESSAGE
+  // ==========================================================
+
+  function getRequestErrorMessage(
+    error,
+    fallbackMessage
+  ) {
+    if (
+      error &&
+      error.name ===
+        "AbortError"
+    ) {
+      return (
+        "The server request took too long. " +
+        "Please try again."
+      );
+    }
+
+    if (
+      error instanceof
+      TypeError
+    ) {
+      return (
+        "The server could not be reached. " +
+        "Check the backend URL and try again."
+      );
+    }
+
+    return getErrorMessage(
+      error,
+      fallbackMessage
+    );
+  }
+
+  // ==========================================================
+  // MESSAGE DISPLAY
+  // ==========================================================
+
+  function showCategoryMessage(
+    message,
+    messageType
+  ) {
+    var messageElement =
+      getElement(
+        "category-message"
+      );
+
+    if (!messageElement) {
+      return;
+    }
+
+    messageElement.textContent =
+      String(message || "");
+
+    messageElement.classList.remove(
+      "category-error",
+      "category-success",
+      "category-information"
+    );
+
+    messageElement.removeAttribute(
+      "role"
+    );
+
+    if (!message) {
+      return;
+    }
+
+    if (
+      messageType ===
+      "success"
+    ) {
+      messageElement.classList.add(
+        "category-success"
+      );
+
+      messageElement.setAttribute(
+        "role",
+        "status"
+      );
+    } else if (
+      messageType ===
+      "information"
+    ) {
+      messageElement.classList.add(
+        "category-information"
+      );
+
+      messageElement.setAttribute(
+        "role",
+        "status"
+      );
+    } else {
+      messageElement.classList.add(
+        "category-error"
+      );
+
+      messageElement.setAttribute(
+        "role",
+        "alert"
+      );
+    }
+  }
+
+  // ==========================================================
+  // CATEGORY NORMALIZATION
+  // ==========================================================
+
+  function normalizeCategory(
+    category
+  ) {
+    var source =
+      category &&
+      typeof category ===
+        "object"
+        ? category
+        : {};
+
+    var displayOrder =
+      source.sortOrder;
+
+    if (
+      displayOrder ===
+      undefined
+    ) {
+      displayOrder =
+        source.displayOrder;
+    }
+
+    if (
+      displayOrder ===
+      undefined
+    ) {
+      displayOrder =
+        source.display_order;
+    }
+
+    displayOrder =
+      Number(
+        displayOrder
+      );
+
+    if (
+      !Number.isFinite(
+        displayOrder
+      ) ||
+      displayOrder < 0
+    ) {
+      displayOrder =
+        0;
+    }
+
+    return {
+      id:
+        String(
+          source.id ||
+          source._id ||
+          ""
+        ),
+
+      name:
+        String(
+          source.name ||
+          ""
+        ),
+
+      slug:
+        String(
+          source.slug ||
+          ""
+        ),
+
+      description:
+        String(
+          source.description ||
+          ""
+        ),
+
+      image:
+        String(
+          source.image ||
+          ""
+        ),
+
+      imagePublicId:
+        String(
+          source.imagePublicId ||
+          source.image_public_id ||
+          ""
+        ),
+
+      color:
+        normalizeColor(
+          source.color
+        ),
+
+      active:
+        source.active !==
+        false,
+
+      featured:
+        source.featured ===
+        true,
+
+      displayOrder:
+        Math.floor(
+          displayOrder
+        ),
+
+      createdAt:
+        source.createdAt ||
+        source.created_at ||
+        null,
+
+      updatedAt:
+        source.updatedAt ||
+        source.updated_at ||
+        null
     };
   }
 
-  if (response.status === 401) {
-    redirectToLogin();
+  function normalizeColor(
+    value
+  ) {
+    var color =
+      String(
+        value ||
+        "#ff1493"
+      ).trim();
 
-    throw new Error(
-      data.error ||
-      "Your admin session expired."
+    if (
+      /^#[0-9a-fA-F]{6}$/.test(
+        color
+      )
+    ) {
+      return color;
+    }
+
+    return "#ff1493";
+  }
+
+  function createCategorySlug(
+    value
+  ) {
+    return String(value || "")
+      .trim()
+      .toLowerCase()
+      .replace(
+        /['"]/g,
+        ""
+      )
+      .replace(
+        /[^a-z0-9]+/g,
+        "-"
+      )
+      .replace(
+        /^-+|-+$/g,
+        ""
+      );
+  }
+
+  // ==========================================================
+  // PRODUCT LIST
+  // ==========================================================
+
+  function getProductList(
+    responseData
+  ) {
+    if (
+      Array.isArray(
+        responseData
+      )
+    ) {
+      return responseData;
+    }
+
+    if (
+      responseData &&
+      Array.isArray(
+        responseData.products
+      )
+    ) {
+      return responseData.products;
+    }
+
+    if (
+      responseData &&
+      responseData.data &&
+      Array.isArray(
+        responseData.data.products
+      )
+    ) {
+      return responseData.data.products;
+    }
+
+    return [];
+  }
+
+  async function loadProducts() {
+    try {
+      var responseData =
+        await requestJson(
+          ADMIN_PRODUCTS_URL,
+          {
+            method:
+              "GET",
+
+            headers:
+              getAdminHeaders(
+                false
+              )
+          }
+        );
+
+      availableProducts =
+        getProductList(
+          responseData
+        );
+    } catch (error) {
+      console.error(
+        "Products could not be loaded.",
+        error
+      );
+
+      availableProducts =
+        [];
+    }
+  }
+
+  function countProductsInCategory(
+    category
+  ) {
+    if (!category) {
+      return 0;
+    }
+
+    var categoryId =
+      String(
+        category.id ||
+        ""
+      );
+
+    var categoryName =
+      String(
+        category.name ||
+        ""
+      )
+        .trim()
+        .toLowerCase();
+
+    var categorySlug =
+      String(
+        category.slug ||
+        ""
+      )
+        .trim()
+        .toLowerCase();
+
+    return availableProducts.filter(
+      function (product) {
+        var productCategoryId =
+          String(
+            product.categoryId ||
+            product.category_id ||
+            ""
+          );
+
+        var productCategoryName =
+          String(
+            product.category ||
+            product.categoryName ||
+            ""
+          )
+            .trim()
+            .toLowerCase();
+
+        var productCategorySlug =
+          String(
+            product.categorySlug ||
+            product.category_slug ||
+            ""
+          )
+            .trim()
+            .toLowerCase();
+
+        return (
+          (
+            categoryId &&
+            productCategoryId ===
+              categoryId
+          ) ||
+          (
+            categoryName &&
+            productCategoryName ===
+              categoryName
+          ) ||
+          (
+            categorySlug &&
+            productCategorySlug ===
+              categorySlug
+          )
+        );
+      }
+    ).length;
+  }
+
+  // ==========================================================
+  // SELECTED CATEGORY
+  // ==========================================================
+
+  function getSelectedCategoryId() {
+    var categorySelect =
+      getElement(
+        "category-to-edit"
+      );
+
+    if (!categorySelect) {
+      return "";
+    }
+
+    return categorySelect.value;
+  }
+
+  function findSelectedCategory() {
+    var selectedCategoryId =
+      getSelectedCategoryId();
+
+    return (
+      availableCategories.find(
+        function (category) {
+          return (
+            category.id ===
+            selectedCategoryId
+          );
+        }
+      ) ||
+      null
     );
   }
 
-  if (response.status === 403) {
-    throw new Error(
-      data.error ||
-      "You do not have permission to perform this action."
+  // ==========================================================
+  // CATEGORY DROPDOWN
+  // ==========================================================
+
+  function populateCategorySelect(
+    categoryIdToReselect
+  ) {
+    var categorySelect =
+      getElement(
+        "category-to-edit"
+      );
+
+    if (!categorySelect) {
+      return;
+    }
+
+    categorySelect.replaceChildren();
+
+    var defaultOption =
+      document.createElement(
+        "option"
+      );
+
+    defaultOption.value =
+      "";
+
+    defaultOption.textContent =
+      availableCategories.length > 0
+        ? "Select a category to edit"
+        : "No categories available";
+
+    categorySelect.appendChild(
+      defaultOption
     );
-  }
 
-  if (!response.ok) {
-    throw new Error(
-      data.error ||
-      `Request failed with status ${response.status}.`
-    );
-  }
+    availableCategories.forEach(
+      function (category) {
+        var option =
+          document.createElement(
+            "option"
+          );
 
-  return data;
-}
+        option.value =
+          category.id;
 
-// ============================================================
-// VERIFY ADMIN SESSION
-// ============================================================
+        option.textContent =
+          category.active
+            ? category.name
+            : (
+                category.name +
+                " (Inactive)"
+              );
 
-async function verifyAdminSession() {
-  const token = getAdminToken();
-
-  if (!token) {
-    redirectToLogin();
-    return false;
-  }
-
-  try {
-    const response = await fetch(
-      `${BACKEND_URL}/admin/me`,
-      {
-        method: "GET",
-        headers:
-          getAdminHeaders(false)
+        categorySelect.appendChild(
+          option
+        );
       }
     );
 
-    const data =
-      await readApiResponse(
-        response
+    categorySelect.disabled =
+      availableCategories.length ===
+      0;
+
+    if (
+      categoryIdToReselect &&
+      availableCategories.some(
+        function (category) {
+          return (
+            category.id ===
+            categoryIdToReselect
+          );
+        }
+      )
+    ) {
+      categorySelect.value =
+        categoryIdToReselect;
+    }
+  }
+
+  // ==========================================================
+  // LOAD CATEGORIES
+  // ==========================================================
+
+  async function loadCategories(
+    categoryIdToReselect
+  ) {
+    var categorySelect =
+      getElement(
+        "category-to-edit"
       );
 
-    localStorage.setItem(
-      "adminUser",
-      JSON.stringify(
-        data.admin || {}
+    var refreshButton =
+      getElement(
+        "refresh-categories-button"
+      );
+
+    if (!categorySelect) {
+      showCategoryMessage(
+        "The category dropdown could not be found.",
+        "error"
+      );
+
+      return false;
+    }
+
+    categorySelect.disabled =
+      true;
+
+    categorySelect.replaceChildren();
+
+    var loadingOption =
+      document.createElement(
+        "option"
+      );
+
+    loadingOption.value =
+      "";
+
+    loadingOption.textContent =
+      "Loading categories...";
+
+    categorySelect.appendChild(
+      loadingOption
+    );
+
+    if (refreshButton) {
+      refreshButton.disabled =
+        true;
+
+      refreshButton.textContent =
+        "Loading Categories...";
+    }
+
+    hideEditForm();
+
+    try {
+      var responseData =
+        await requestJson(
+          CATEGORIES_URL,
+          {
+            method:
+              "GET",
+
+            headers:
+              getAdminHeaders(
+                false
+              )
+          }
+        );
+
+      var categoryList =
+        Array.isArray(
+          responseData
+        )
+          ? responseData
+          : (
+              Array.isArray(
+                responseData.categories
+              )
+                ? responseData.categories
+                : []
+            );
+
+      availableCategories =
+        categoryList
+          .map(
+            normalizeCategory
+          )
+          .filter(
+            function (category) {
+              return Boolean(
+                category.id
+              );
+            }
+          )
+          .sort(
+            function (
+              firstCategory,
+              secondCategory
+            ) {
+              if (
+                firstCategory.displayOrder !==
+                secondCategory.displayOrder
+              ) {
+                return (
+                  firstCategory.displayOrder -
+                  secondCategory.displayOrder
+                );
+              }
+
+              return firstCategory.name
+                .localeCompare(
+                  secondCategory.name
+                );
+            }
+          );
+
+      populateCategorySelect(
+        categoryIdToReselect ||
+        ""
+      );
+
+      if (
+        categoryIdToReselect
+      ) {
+        selectedCategory =
+          findSelectedCategory();
+
+        if (selectedCategory) {
+          displaySelectedCategory();
+        }
+      }
+
+      if (
+        availableCategories.length ===
+        0
+      ) {
+        showCategoryMessage(
+          "No categories have been created yet.",
+          "information"
+        );
+      } else if (
+        !categoryIdToReselect
+      ) {
+        showCategoryMessage(
+          "Select the category you want to edit.",
+          "information"
+        );
+      }
+
+      return true;
+    } catch (error) {
+      console.error(
+        "Categories could not be loaded.",
+        error
+      );
+
+      availableCategories =
+        [];
+
+      populateCategorySelect(
+        ""
+      );
+
+      showCategoryMessage(
+        getRequestErrorMessage(
+          error,
+          "The categories could not be loaded."
+        ),
+        "error"
+      );
+
+      return false;
+    } finally {
+      if (refreshButton) {
+        refreshButton.disabled =
+          false;
+
+        refreshButton.textContent =
+          "Refresh Categories";
+      }
+    }
+  }
+
+  // ==========================================================
+  // DESCRIPTION CHARACTER COUNT
+  // ==========================================================
+
+  function updateDescriptionCount() {
+    var descriptionInput =
+      getElement(
+        "edit-category-description"
+      );
+
+    var counter =
+      getElement(
+        "edit-category-description-count"
+      );
+
+    if (
+      !descriptionInput ||
+      !counter
+    ) {
+      return;
+    }
+
+    counter.textContent =
+      descriptionInput.value.length +
+      " of 1,000 characters";
+  }
+
+  // ==========================================================
+  // CATEGORY IMAGE PREVIEW
+  // ==========================================================
+
+  function isValidWebAddress(
+    value
+  ) {
+    try {
+      var address =
+        new URL(value);
+
+      return (
+        address.protocol ===
+          "http:" ||
+        address.protocol ===
+          "https:"
+      );
+    } catch (error) {
+      return false;
+    }
+  }
+
+  function hideImagePreview() {
+    var previewContainer =
+      getElement(
+        "category-image-preview-container"
+      );
+
+    var previewImage =
+      getElement(
+        "category-image-preview"
+      );
+
+    if (previewContainer) {
+      previewContainer.hidden =
+        true;
+    }
+
+    if (previewImage) {
+      previewImage.removeAttribute(
+        "src"
+      );
+    }
+  }
+
+  function updateImagePreview(
+    suppliedImageUrl
+  ) {
+    var previewContainer =
+      getElement(
+        "category-image-preview-container"
+      );
+
+    var previewImage =
+      getElement(
+        "category-image-preview"
+      );
+
+    var imageUrl =
+      String(
+        suppliedImageUrl !==
+          undefined
+          ? suppliedImageUrl
+          : getValue(
+              "edit-category-image"
+            )
+      ).trim();
+
+    if (
+      !previewContainer ||
+      !previewImage ||
+      !imageUrl ||
+      !isValidWebAddress(
+        imageUrl
+      )
+    ) {
+      hideImagePreview();
+
+      return;
+    }
+
+    previewImage.onload =
+      function () {
+        previewContainer.hidden =
+          false;
+      };
+
+    previewImage.onerror =
+      function () {
+        hideImagePreview();
+
+        showCategoryMessage(
+          "The category image preview could not be loaded.",
+          "error"
+        );
+      };
+
+    previewImage.alt =
+      "Category image preview";
+
+    previewImage.src =
+      imageUrl;
+  }
+
+  // ==========================================================
+  // DISPLAY CATEGORY
+  // ==========================================================
+
+  function displaySelectedCategory() {
+    selectedCategory =
+      findSelectedCategory();
+
+    if (!selectedCategory) {
+      hideEditForm();
+
+      showCategoryMessage(
+        "Select the category you want to edit.",
+        "information"
+      );
+
+      return;
+    }
+
+    slugWasManuallyEdited =
+      false;
+
+    setInputValue(
+      "edit-category-id",
+      selectedCategory.id
+    );
+
+    setInputValue(
+      "edit-category-name",
+      selectedCategory.name
+    );
+
+    setInputValue(
+      "edit-category-slug",
+      selectedCategory.slug ||
+      createCategorySlug(
+        selectedCategory.name
       )
     );
 
-    displayAdminInformation(
-      data.admin || {}
+    setInputValue(
+      "edit-category-description",
+      selectedCategory.description
     );
 
-    return true;
-  } catch (error) {
-    console.error(
-      "Admin session verification failed:",
-      error
+    setInputValue(
+      "edit-category-image",
+      selectedCategory.image
+    );
+
+    setInputValue(
+      "edit-category-display-order",
+      selectedCategory.displayOrder
+    );
+
+    setInputValue(
+      "edit-category-product-count",
+      countProductsInCategory(
+        selectedCategory
+      )
+    );
+
+    setInputValue(
+      "edit-category-color",
+      selectedCategory.color
+    );
+
+    var activeCheckbox =
+      getElement(
+        "edit-category-active"
+      );
+
+    var featuredCheckbox =
+      getElement(
+        "edit-category-featured"
+      );
+
+    if (activeCheckbox) {
+      activeCheckbox.checked =
+        selectedCategory.active;
+    }
+
+    if (featuredCheckbox) {
+      featuredCheckbox.checked =
+        selectedCategory.featured;
+    }
+
+    var editForm =
+      getElement(
+        "edit-category-form"
+      );
+
+    if (editForm) {
+      editForm.hidden =
+        false;
+    }
+
+    updateDescriptionCount();
+
+    updateImagePreview(
+      selectedCategory.image
     );
 
     showCategoryMessage(
-      error.message ||
-      "Your administrator session could not be verified.",
-      "error"
-    );
-
-    return false;
-  }
-}
-
-// ============================================================
-// DISPLAY ADMIN INFORMATION
-// ============================================================
-
-function displayAdminInformation(
-  admin
-) {
-  const usernameElement =
-    document.getElementById(
-      "admin-username"
-    );
-
-  const roleElement =
-    document.getElementById(
-      "admin-role"
-    );
-
-  if (usernameElement) {
-    usernameElement.textContent =
-      admin.username || "";
-  }
-
-  if (roleElement) {
-    roleElement.textContent =
-      formatRole(admin.role);
-  }
-}
-
-function formatRole(role) {
-  if (!role) {
-    return "";
-  }
-
-  return String(role)
-    .replaceAll("_", " ")
-    .replace(
-      /\b\w/g,
-      (letter) =>
-        letter.toUpperCase()
-    );
-}
-
-// ============================================================
-// MESSAGE DISPLAY
-// ============================================================
-
-function showCategoryMessage(
-  message,
-  type = "information"
-) {
-  const messageElement =
-    document.getElementById(
-      "category-message"
-    );
-
-  if (!messageElement) {
-    if (type === "error") {
-      alert(message);
-    }
-
-    return;
-  }
-
-  messageElement.textContent =
-    message;
-
-  messageElement.classList.remove(
-    "category-error",
-    "category-success",
-    "category-information"
-  );
-
-  if (type === "error") {
-    messageElement.classList.add(
-      "category-error"
-    );
-  } else if (type === "success") {
-    messageElement.classList.add(
-      "category-success"
-    );
-  } else {
-    messageElement.classList.add(
-      "category-information"
-    );
-  }
-}
-
-function clearCategoryMessage() {
-  const messageElement =
-    document.getElementById(
-      "category-message"
-    );
-
-  if (!messageElement) {
-    return;
-  }
-
-  messageElement.textContent = "";
-
-  messageElement.classList.remove(
-    "category-error",
-    "category-success",
-    "category-information"
-  );
-}
-
-// ============================================================
-// CATEGORY HELPERS
-// ============================================================
-
-function normalizeCategory(category) {
-  return {
-    id: String(
-      category.id ||
-      category._id ||
-      ""
-    ),
-
-    name: String(
-      category.name || ""
-    ),
-
-    slug: String(
-      category.slug || ""
-    ),
-
-    description: String(
-      category.description || ""
-    ),
-
-    image: String(
-      category.image || ""
-    ),
-
-    imagePublicId: String(
-      category.imagePublicId ||
-      category.image_public_id ||
-      ""
-    ),
-
-    active:
-      category.active !== false,
-
-    displayOrder: Number(
-      category.displayOrder ??
-      category.display_order ??
-      0
-    ),
-
-    createdAt:
-      category.createdAt ||
-      category.created_at ||
-      null,
-
-    updatedAt:
-      category.updatedAt ||
-      category.updated_at ||
-      null
-  };
-}
-
-function createCategorySlug(value) {
-  return String(value || "")
-    .trim()
-    .toLowerCase()
-    .replace(/['"]/g, "")
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "");
-}
-
-function getSelectedCategoryId() {
-  const categorySelect =
-    document.getElementById(
-      "category-to-edit"
-    );
-
-  return categorySelect
-    ? categorySelect.value
-    : "";
-}
-
-function findSelectedCategory() {
-  const selectedId =
-    getSelectedCategoryId();
-
-  return (
-    availableCategories.find(
-      (category) =>
-        category.id === selectedId
-    ) || null
-  );
-}
-
-// ============================================================
-// LOAD CATEGORIES
-// ============================================================
-
-async function loadCategories(
-  categoryIdToReselect = ""
-) {
-  const categorySelect =
-    document.getElementById(
-      "category-to-edit"
-    );
-
-  if (!categorySelect) {
-    throw new Error(
-      "The category dropdown could not be found."
-    );
-  }
-
-  categorySelect.disabled = true;
-  categorySelect.replaceChildren();
-
-  const loadingOption =
-    document.createElement(
-      "option"
-    );
-
-  loadingOption.value = "";
-
-  loadingOption.textContent =
-    "Loading categories...";
-
-  categorySelect.appendChild(
-    loadingOption
-  );
-
-  const response = await fetch(
-    CATEGORIES_API,
-    {
-      method: "GET"
-    }
-  );
-
-  const data =
-    await readApiResponse(
-      response
-    );
-
-  const categoryList =
-    Array.isArray(data)
-      ? data
-      : Array.isArray(data.categories)
-        ? data.categories
-        : [];
-
-  availableCategories =
-    categoryList
-      .map(normalizeCategory)
-      .sort(
-        (first, second) => {
-          if (
-            first.displayOrder !==
-            second.displayOrder
-          ) {
-            return (
-              first.displayOrder -
-              second.displayOrder
-            );
-          }
-
-          return first.name.localeCompare(
-            second.name
-          );
-        }
-      );
-
-  categorySelect.replaceChildren();
-
-  const defaultOption =
-    document.createElement(
-      "option"
-    );
-
-  defaultOption.value = "";
-
-  defaultOption.textContent =
-    availableCategories.length > 0
-      ? "Select a category"
-      : "No categories are available";
-
-  categorySelect.appendChild(
-    defaultOption
-  );
-
-  availableCategories.forEach(
-    (category) => {
-      const option =
-        document.createElement(
-          "option"
-        );
-
-      option.value = category.id;
-
-      option.textContent =
-        category.active
-          ? category.name
-          : `${category.name} (Hidden)`;
-
-      categorySelect.appendChild(
-        option
-      );
-    }
-  );
-
-  categorySelect.disabled =
-    availableCategories.length === 0;
-
-  if (
-    categoryIdToReselect &&
-    availableCategories.some(
-      (category) =>
-        category.id ===
-        categoryIdToReselect
-    )
-  ) {
-    categorySelect.value =
-      categoryIdToReselect;
-
-    displaySelectedCategory();
-  } else {
-    hideEditForm();
-  }
-
-  if (
-    availableCategories.length === 0
-  ) {
-    showCategoryMessage(
-      "No categories have been created yet.",
+      (
+        'Editing the category "' +
+        selectedCategory.name +
+        '".'
+      ),
       "information"
     );
   }
-}
 
-// ============================================================
-// LOAD PRODUCTS FOR ASSIGNED COUNT
-// ============================================================
+  function hideEditForm() {
+    selectedCategory =
+      null;
 
-async function loadProducts() {
-  try {
-    const response = await fetch(
-      ADMIN_PRODUCTS_API,
-      {
-        method: "GET",
-        headers:
-          getAdminHeaders(false)
-      }
-    );
+    slugWasManuallyEdited =
+      false;
 
-    const data =
-      await readApiResponse(
-        response
+    var editForm =
+      getElement(
+        "edit-category-form"
       );
 
-    availableProducts =
-      Array.isArray(data)
-        ? data
-        : [];
-  } catch (error) {
-    console.error(
-      "Products could not be loaded:",
-      error
-    );
+    if (editForm) {
+      editForm.hidden =
+        true;
 
-    availableProducts = [];
-  }
-}
-
-function countProductsInCategory(
-  category
-) {
-  if (!category) {
-    return 0;
-  }
-
-  const categoryName =
-    category.name
-      .trim()
-      .toLowerCase();
-
-  return availableProducts.filter(
-    (product) => {
-      const productCategoryId =
-        String(
-          product.categoryId ||
-          product.category_id ||
-          ""
-        );
-
-      const productCategoryName =
-        String(
-          product.category || ""
-        )
-          .trim()
-          .toLowerCase();
-
-      return (
-        productCategoryId ===
-          category.id ||
-        productCategoryName ===
-          categoryName
-      );
+      editForm.reset();
     }
-  ).length;
-}
 
-// ============================================================
-// DISPLAY SELECTED CATEGORY
-// ============================================================
-
-function displaySelectedCategory() {
-  clearCategoryMessage();
-
-  selectedCategory =
-    findSelectedCategory();
-
-  if (!selectedCategory) {
-    hideEditForm();
-    return;
-  }
-
-  setInputValue(
-    "edit-category-id",
-    selectedCategory.id
-  );
-
-  setInputValue(
-    "edit-category-name",
-    selectedCategory.name
-  );
-
-  setInputValue(
-    "edit-category-slug",
-    selectedCategory.slug ||
-    createCategorySlug(
-      selectedCategory.name
-    )
-  );
-
-  setInputValue(
-    "edit-category-description",
-    selectedCategory.description
-  );
-
-  setInputValue(
-    "edit-category-image",
-    selectedCategory.image
-  );
-
-  setInputValue(
-    "edit-category-display-order",
-    selectedCategory.displayOrder
-  );
-
-  setInputValue(
-    "edit-category-product-count",
-    countProductsInCategory(
-      selectedCategory
-    )
-  );
-
-  const activeCheckbox =
-    document.getElementById(
-      "edit-category-active"
+    setInputValue(
+      "edit-category-id",
+      ""
     );
 
-  if (activeCheckbox) {
-    activeCheckbox.checked =
-      selectedCategory.active;
-  }
-
-  updateImagePreview(
-    selectedCategory.image
-  );
-
-  const editForm =
-    document.getElementById(
-      "edit-category-form"
+    setInputValue(
+      "edit-category-product-count",
+      "0"
     );
 
-  if (editForm) {
-    editForm.hidden = false;
-  }
-}
-
-function hideEditForm() {
-  selectedCategory = null;
-
-  const editForm =
-    document.getElementById(
-      "edit-category-form"
+    setInputValue(
+      "edit-category-color",
+      "#ff1493"
     );
 
-  if (editForm) {
-    editForm.hidden = true;
-    editForm.reset();
+    hideImagePreview();
+    updateDescriptionCount();
+    setUpdateButtonLoading(false);
   }
 
-  updateImagePreview("");
-}
+  // ==========================================================
+  // AUTOMATIC CATEGORY TAG
+  // ==========================================================
 
-function setInputValue(
-  elementId,
-  value
-) {
-  const element =
-    document.getElementById(
-      elementId
-    );
+  function updateSlugFromName() {
+    var nameInput =
+      getElement(
+        "edit-category-name"
+      );
 
-  if (element) {
-    element.value =
-      value ?? "";
-  }
-}
+    var slugInput =
+      getElement(
+        "edit-category-slug"
+      );
 
-// ============================================================
-// AUTOMATIC CATEGORY TAG
-// ============================================================
+    if (
+      !nameInput ||
+      !slugInput
+    ) {
+      return;
+    }
 
-function updateSlugFromName() {
-  const nameInput =
-    document.getElementById(
-      "edit-category-name"
-    );
-
-  const slugInput =
-    document.getElementById(
-      "edit-category-slug"
-    );
-
-  if (!nameInput || !slugInput) {
-    return;
+    if (
+      !slugWasManuallyEdited ||
+      !slugInput.value.trim()
+    ) {
+      slugInput.value =
+        createCategorySlug(
+          nameInput.value
+        );
+    }
   }
 
-  if (
-    !slugInput.dataset.manuallyEdited ||
-    slugInput.value.trim() === ""
-  ) {
+  function markSlugAsManuallyEdited() {
+    var slugInput =
+      getElement(
+        "edit-category-slug"
+      );
+
+    if (!slugInput) {
+      return;
+    }
+
+    slugWasManuallyEdited =
+      Boolean(
+        slugInput.value.trim()
+      );
+  }
+
+  function cleanSlugInput() {
+    var slugInput =
+      getElement(
+        "edit-category-slug"
+      );
+
+    if (!slugInput) {
+      return;
+    }
+
     slugInput.value =
       createCategorySlug(
-        nameInput.value
+        slugInput.value
       );
   }
-}
 
-function markSlugAsManuallyEdited() {
-  const slugInput =
-    document.getElementById(
-      "edit-category-slug"
-    );
+  // ==========================================================
+  // CATEGORY FORM DATA
+  // ==========================================================
 
-  if (!slugInput) {
-    return;
+  function getCategoryFormData() {
+    var activeCheckbox =
+      getElement(
+        "edit-category-active"
+      );
+
+    var featuredCheckbox =
+      getElement(
+        "edit-category-featured"
+      );
+
+    var displayOrder =
+      Number(
+        getValue(
+          "edit-category-display-order"
+        ) ||
+        0
+      );
+
+    return {
+      id:
+        getValue(
+          "edit-category-id"
+        ),
+
+      name:
+        getValue(
+          "edit-category-name"
+        ),
+
+      slug:
+        createCategorySlug(
+          getValue(
+            "edit-category-slug"
+          )
+        ),
+
+      description:
+        getValue(
+          "edit-category-description"
+        ),
+
+      image:
+        getValue(
+          "edit-category-image"
+        ),
+
+      imagePublicId:
+        selectedCategory
+          ? selectedCategory.imagePublicId
+          : "",
+
+      displayOrder:
+        displayOrder,
+
+      sortOrder:
+        displayOrder,
+
+      color:
+        normalizeColor(
+          getValue(
+            "edit-category-color"
+          )
+        ),
+
+      active:
+        activeCheckbox
+          ? activeCheckbox.checked
+          : true,
+
+      featured:
+        featuredCheckbox
+          ? featuredCheckbox.checked
+          : false
+    };
   }
 
-  slugInput.dataset.manuallyEdited =
-    slugInput.value.trim()
-      ? "true"
-      : "";
-}
+  // ==========================================================
+  // CATEGORY VALIDATION
+  // ==========================================================
 
-function cleanSlugInput() {
-  const slugInput =
-    document.getElementById(
-      "edit-category-slug"
-    );
-
-  if (!slugInput) {
-    return;
-  }
-
-  slugInput.value =
-    createCategorySlug(
-      slugInput.value
-    );
-}
-
-// ============================================================
-// CATEGORY IMAGE PREVIEW
-// ============================================================
-
-function updateImagePreview(
-  imageUrl
-) {
-  const previewContainer =
-    document.getElementById(
-      "category-image-preview-container"
-    );
-
-  const previewImage =
-    document.getElementById(
-      "category-image-preview"
-    );
-
-  if (
-    !previewContainer ||
-    !previewImage
+  function categoryNameExists(
+    categoryData
   ) {
-    return;
-  }
+    var normalizedName =
+      categoryData.name
+        .trim()
+        .toLowerCase();
 
-  const cleanImageUrl =
-    String(imageUrl || "").trim();
-
-  if (!cleanImageUrl) {
-    previewContainer.hidden = true;
-    previewImage.removeAttribute(
-      "src"
-    );
-
-    return;
-  }
-
-  previewImage.src =
-    cleanImageUrl;
-
-  previewImage.alt =
-    "Category image preview";
-
-  previewContainer.hidden = false;
-
-  previewImage.onerror = () => {
-    previewContainer.hidden = true;
-
-    previewImage.removeAttribute(
-      "src"
-    );
-  };
-}
-
-function handleImageUrlChange() {
-  const imageInput =
-    document.getElementById(
-      "edit-category-image"
-    );
-
-  updateImagePreview(
-    imageInput
-      ? imageInput.value
-      : ""
-  );
-}
-
-// ============================================================
-// FORM VALIDATION
-// ============================================================
-
-function getCategoryFormData() {
-  const id =
-    document.getElementById(
-      "edit-category-id"
-    )?.value || "";
-
-  const name =
-    document.getElementById(
-      "edit-category-name"
-    )?.value.trim() || "";
-
-  const slug =
-    createCategorySlug(
-      document.getElementById(
-        "edit-category-slug"
-      )?.value || ""
-    );
-
-  const description =
-    document.getElementById(
-      "edit-category-description"
-    )?.value.trim() || "";
-
-  const image =
-    document.getElementById(
-      "edit-category-image"
-    )?.value.trim() || "";
-
-  const displayOrder = Number(
-    document.getElementById(
-      "edit-category-display-order"
-    )?.value || 0
-  );
-
-  const activeCheckbox =
-    document.getElementById(
-      "edit-category-active"
-    );
-
-  const active =
-    activeCheckbox
-      ? activeCheckbox.checked
-      : true;
-
-  return {
-    id,
-    name,
-    slug,
-    description,
-    image,
-    displayOrder,
-    active
-  };
-}
-
-function validateCategoryData(
-  categoryData
-) {
-  if (!categoryData.id) {
-    return "Please select a category.";
-  }
-
-  if (
-    categoryData.name.length < 2
-  ) {
-    return "Category name must contain at least 2 characters.";
-  }
-
-  if (
-    categoryData.slug.length < 2
-  ) {
-    return "Category tag must contain at least 2 characters.";
-  }
-
-  if (
-    !Number.isInteger(
-      categoryData.displayOrder
-    ) ||
-    categoryData.displayOrder < 0
-  ) {
-    return "Display order must be a whole number of 0 or higher.";
-  }
-
-  if (
-    categoryData.description.length >
-    1000
-  ) {
-    return "Category description cannot exceed 1,000 characters.";
-  }
-
-  if (
-    categoryData.image &&
-    !isValidWebAddress(
-      categoryData.image
-    )
-  ) {
-    return "Category image must be a valid web address.";
-  }
-
-  const duplicateName =
-    availableCategories.some(
-      (category) =>
-        category.id !==
-          categoryData.id &&
-        category.name
-          .trim()
-          .toLowerCase() ===
-        categoryData.name
-          .trim()
-          .toLowerCase()
-    );
-
-  if (duplicateName) {
-    return "Another category already uses that name.";
-  }
-
-  const duplicateSlug =
-    availableCategories.some(
-      (category) =>
-        category.id !==
-          categoryData.id &&
-        category.slug
-          .trim()
-          .toLowerCase() ===
-        categoryData.slug
-          .trim()
-          .toLowerCase()
-    );
-
-  if (duplicateSlug) {
-    return "Another category already uses that tag.";
-  }
-
-  return "";
-}
-
-function isValidWebAddress(value) {
-  try {
-    const url =
-      new URL(value);
-
-    return (
-      url.protocol === "http:" ||
-      url.protocol === "https:"
-    );
-  } catch (error) {
-    return false;
-  }
-}
-
-// ============================================================
-// SAVE CATEGORY CHANGES
-// ============================================================
-
-async function saveCategoryChanges(
-  event
-) {
-  if (event) {
-    event.preventDefault();
-  }
-
-  clearCategoryMessage();
-
-  const categoryData =
-    getCategoryFormData();
-
-  const validationError =
-    validateCategoryData(
-      categoryData
-    );
-
-  if (validationError) {
-    showCategoryMessage(
-      validationError,
-      "error"
-    );
-
-    return;
-  }
-
-  const updateButton =
-    document.getElementById(
-      "update-category-button"
-    );
-
-  try {
-    if (updateButton) {
-      updateButton.disabled = true;
-
-      updateButton.textContent =
-        "Saving Changes...";
-    }
-
-    const response = await fetch(
-      `${CATEGORIES_API}/${encodeURIComponent(categoryData.id)}`,
-      {
-        method: "PUT",
-        headers:
-          getAdminHeaders(true),
-
-        body: JSON.stringify({
-          name:
-            categoryData.name,
-
-          slug:
-            categoryData.slug,
-
-          description:
-            categoryData.description,
-
-          image:
-            categoryData.image,
-
-          displayOrder:
-            categoryData.displayOrder,
-
-          active:
-            categoryData.active
-        })
+    return availableCategories.some(
+      function (category) {
+        return (
+          category.id !==
+            categoryData.id &&
+          category.name
+            .trim()
+            .toLowerCase() ===
+            normalizedName
+        );
       }
     );
+  }
 
-    const data =
-      await readApiResponse(
-        response
+  function categorySlugExists(
+    categoryData
+  ) {
+    var normalizedSlug =
+      categoryData.slug
+        .trim()
+        .toLowerCase();
+
+    return availableCategories.some(
+      function (category) {
+        return (
+          category.id !==
+            categoryData.id &&
+          category.slug
+            .trim()
+            .toLowerCase() ===
+            normalizedSlug
+        );
+      }
+    );
+  }
+
+  function validateCategoryData(
+    categoryData
+  ) {
+    if (!categoryData.id) {
+      return "Select a category before saving changes.";
+    }
+
+    if (
+      categoryData.name.length <
+        2 ||
+      categoryData.name.length >
+        100
+    ) {
+      return "Category name must contain 2 to 100 characters.";
+    }
+
+    if (
+      categoryData.slug.length <
+        2 ||
+      categoryData.slug.length >
+        100
+    ) {
+      return "Category tag must contain 2 to 100 characters.";
+    }
+
+    if (
+      !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(
+        categoryData.slug
+      )
+    ) {
+      return (
+        "Category tag may contain lowercase letters, " +
+        "numbers, and hyphens only."
+      );
+    }
+
+    if (
+      categoryData.description.length >
+      1000
+    ) {
+      return "Category description cannot exceed 1,000 characters.";
+    }
+
+    if (
+      !Number.isInteger(
+        categoryData.displayOrder
+      ) ||
+      categoryData.displayOrder <
+        0
+    ) {
+      return "Display order must be a whole number of 0 or higher.";
+    }
+
+    if (
+      categoryData.image &&
+      !isValidWebAddress(
+        categoryData.image
+      )
+    ) {
+      return "Category image must be a valid HTTP or HTTPS web address.";
+    }
+
+    if (
+      !/^#[0-9a-fA-F]{6}$/.test(
+        categoryData.color
+      )
+    ) {
+      return "Category color must be a valid six-digit color value.";
+    }
+
+    if (
+      categoryNameExists(
+        categoryData
+      )
+    ) {
+      return "Another category already uses that name.";
+    }
+
+    if (
+      categorySlugExists(
+        categoryData
+      )
+    ) {
+      return "Another category already uses that tag.";
+    }
+
+    return "";
+  }
+
+  // ==========================================================
+  // UPDATE BUTTON
+  // ==========================================================
+
+  function setUpdateButtonLoading(
+    isLoading
+  ) {
+    var updateButton =
+      getElement(
+        "update-category-button"
       );
 
-    const updatedCategory =
-      normalizeCategory(
-        data.category || data
+    if (!updateButton) {
+      return;
+    }
+
+    updateButton.disabled =
+      Boolean(
+        isLoading
       );
 
+    updateButton.setAttribute(
+      "aria-busy",
+      isLoading
+        ? "true"
+        : "false"
+    );
+
+    updateButton.textContent =
+      isLoading
+        ? "Saving Changes..."
+        : "Save Category Changes";
+  }
+
+  // ==========================================================
+  // SAVE CATEGORY CHANGES
+  // ==========================================================
+
+  async function saveCategoryChanges(
+    event
+  ) {
+    if (event) {
+      event.preventDefault();
+    }
+
+    if (updateInProgress) {
+      return;
+    }
+
+    var categoryData =
+      getCategoryFormData();
+
+    var validationError =
+      validateCategoryData(
+        categoryData
+      );
+
+    if (validationError) {
+      showCategoryMessage(
+        validationError,
+        "error"
+      );
+
+      return;
+    }
+
+    updateInProgress =
+      true;
+
+    setUpdateButtonLoading(
+      true
+    );
+
     showCategoryMessage(
-      data.message ||
-      `The category "${updatedCategory.name}" was updated successfully.`,
-      "success"
+      "Saving category changes...",
+      "information"
     );
 
-    await loadCategories(
-      updatedCategory.id ||
-      categoryData.id
-    );
-  } catch (error) {
-    console.error(
-      "Category update failed:",
-      error
-    );
+    try {
+      var responseData =
+        await requestJson(
+          CATEGORIES_URL +
+          "/" +
+          encodeURIComponent(
+            categoryData.id
+          ),
+          {
+            method:
+              "PUT",
 
-    showCategoryMessage(
-      error.message ||
-      "The category could not be updated.",
-      "error"
-    );
-  } finally {
-    if (updateButton) {
-      updateButton.disabled = false;
+            headers:
+              getAdminHeaders(
+                true
+              ),
 
-      updateButton.textContent =
-        "Save Category Changes";
+            body:
+              JSON.stringify({
+                name:
+                  categoryData.name,
+
+                slug:
+                  categoryData.slug,
+
+                description:
+                  categoryData.description,
+
+                image:
+                  categoryData.image,
+
+                imagePublicId:
+                  categoryData.imagePublicId,
+
+                displayOrder:
+                  categoryData.displayOrder,
+
+                sortOrder:
+                  categoryData.sortOrder,
+
+                color:
+                  categoryData.color,
+
+                active:
+                  categoryData.active,
+
+                featured:
+                  categoryData.featured
+              })
+          }
+        );
+
+      var updatedCategory =
+        normalizeCategory(
+          responseData.category ||
+          responseData
+        );
+
+      var categoryId =
+        updatedCategory.id ||
+        categoryData.id;
+
+      await loadProducts();
+
+      await loadCategories(
+        categoryId
+      );
+
+      showCategoryMessage(
+        getErrorMessage(
+          responseData.message,
+          (
+            'The category "' +
+            categoryData.name +
+            '" was updated successfully.'
+          )
+        ),
+        "success"
+      );
+    } catch (error) {
+      console.error(
+        "Category update failed.",
+        error
+      );
+
+      showCategoryMessage(
+        getRequestErrorMessage(
+          error,
+          "The category could not be updated."
+        ),
+        "error"
+      );
+    } finally {
+      updateInProgress =
+        false;
+
+      setUpdateButtonLoading(
+        false
+      );
     }
   }
-}
 
-// ============================================================
-// RESET FORM TO SAVED VALUES
-// ============================================================
+  // ==========================================================
+  // RESET FORM TO SAVED VALUES
+  // ==========================================================
 
-function resetCategoryForm() {
-  if (!selectedCategory) {
-    hideEditForm();
-    return;
+  function resetCategoryForm() {
+    if (!selectedCategory) {
+      hideEditForm();
+
+      return;
+    }
+
+    displaySelectedCategory();
+
+    showCategoryMessage(
+      "The form was reset to the currently saved category information.",
+      "information"
+    );
   }
 
-  displaySelectedCategory();
+  // ==========================================================
+  // LOGOUT BUTTONS
+  // ==========================================================
 
-  showCategoryMessage(
-    "The form was reset to the currently saved category information.",
-    "information"
-  );
-}
+  function connectLogoutButtons() {
+    [
+      "admin-logout-button",
+      "admin-navigation-logout-button"
+    ].forEach(
+      function (elementId) {
+        var button =
+          getElement(
+            elementId
+          );
 
-// ============================================================
-// PAGE STARTUP
-// ============================================================
+        if (button) {
+          button.addEventListener(
+            "click",
+            logoutAdmin
+          );
+        }
+      }
+    );
+  }
 
-document.addEventListener(
-  "DOMContentLoaded",
-  async () => {
-    const validSession =
+  // ==========================================================
+  // PAGE INITIALIZATION
+  // ==========================================================
+
+  async function initializePage() {
+    connectLogoutButtons();
+
+    var validSession =
       await verifyAdminSession();
 
     if (!validSession) {
       return;
     }
 
-    const categorySelect =
-      document.getElementById(
+    var categorySelect =
+      getElement(
         "category-to-edit"
       );
 
-    const editForm =
-      document.getElementById(
+    var editForm =
+      getElement(
         "edit-category-form"
       );
 
-    const nameInput =
-      document.getElementById(
+    var nameInput =
+      getElement(
         "edit-category-name"
       );
 
-    const slugInput =
-      document.getElementById(
+    var slugInput =
+      getElement(
         "edit-category-slug"
       );
 
-    const imageInput =
-      document.getElementById(
+    var imageInput =
+      getElement(
         "edit-category-image"
       );
 
-    const logoutButton =
-      document.getElementById(
-        "admin-logout-button"
+    var descriptionInput =
+      getElement(
+        "edit-category-description"
+      );
+
+    var refreshButton =
+      getElement(
+        "refresh-categories-button"
       );
 
     if (categorySelect) {
@@ -1181,56 +2094,88 @@ document.addEventListener(
     if (imageInput) {
       imageInput.addEventListener(
         "input",
-        handleImageUrlChange
+        function () {
+          updateImagePreview();
+        }
+      );
+
+      imageInput.addEventListener(
+        "blur",
+        function () {
+          updateImagePreview();
+        }
       );
     }
 
-    if (logoutButton) {
-      logoutButton.addEventListener(
+    if (descriptionInput) {
+      descriptionInput.addEventListener(
+        "input",
+        updateDescriptionCount
+      );
+    }
+
+    if (refreshButton) {
+      refreshButton.addEventListener(
         "click",
-        logoutAdmin
+        async function () {
+          showCategoryMessage(
+            "Refreshing categories...",
+            "information"
+          );
+
+          await Promise.all([
+            loadProducts(),
+            loadCategories("")
+          ]);
+        }
       );
     }
 
-    try {
-      showCategoryMessage(
-        "Loading categories...",
-        "information"
-      );
+    updateDescriptionCount();
+    hideImagePreview();
 
-      await Promise.all([
-        loadCategories(),
-        loadProducts()
-      ]);
+    showCategoryMessage(
+      "Loading categories...",
+      "information"
+    );
 
-      clearCategoryMessage();
-    } catch (error) {
-      console.error(
-        "Category edit page startup failed:",
-        error
-      );
+    await loadProducts();
+    await loadCategories("");
 
-      showCategoryMessage(
-        error.message ||
-        "The categories could not be loaded.",
-        "error"
-      );
-    }
+    console.log(
+      "MMC Edit Category page initialized."
+    );
   }
-);
 
-// ============================================================
-// SUPPORT EXISTING INLINE HTML
-// ============================================================
+  // ==========================================================
+  // STARTUP
+  // ==========================================================
 
-window.saveCategoryChanges =
-  saveCategoryChanges;
+  if (
+    document.readyState ===
+    "loading"
+  ) {
+    document.addEventListener(
+      "DOMContentLoaded",
+      initializePage
+    );
+  } else {
+    initializePage();
+  }
 
-window.loadCategories =
-  loadCategories;
+  // ==========================================================
+  // GLOBAL SUPPORT
+  // ==========================================================
 
-window.resetCategoryForm =
-  resetCategoryForm;
+  window.saveCategoryChanges =
+    saveCategoryChanges;
 
-window.logoutAdmin =
-  logoutAdmin;
+  window.loadCategories =
+    loadCategories;
+
+  window.resetCategoryForm =
+    resetCategoryForm;
+
+  window.logoutAdmin =
+    logoutAdmin;
+}());

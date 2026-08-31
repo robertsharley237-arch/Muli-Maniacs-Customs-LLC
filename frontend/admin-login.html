@@ -34,15 +34,181 @@
 
   <style>
     /* ========================================================
-       MMC ADMINISTRATOR LOGIN PAGE
+       MULTI-MANIACS CUSTOMS LLC
+       ADMINISTRATOR LOGIN PAGE
        ======================================================== */
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      min-height: 100%;
+      scroll-behavior: smooth;
+    }
+
+    body {
+      min-height: 100vh;
+      margin: 0;
+    }
 
     .admin-login-page {
       display: flex;
       min-height: 100vh;
       flex-direction: column;
-      margin: 0;
     }
+
+    .skip-link {
+      position: fixed;
+      top: 12px;
+      left: 12px;
+      z-index: 9999;
+      padding: 10px 14px;
+      color: #ffffff;
+      background: #000000;
+      border: 2px solid #ffffff;
+      border-radius: 7px;
+      font-weight: 800;
+      text-decoration: none;
+      transform: translateY(-180%);
+      transition: transform 0.2s ease;
+    }
+
+    .skip-link:focus {
+      transform: translateY(0);
+    }
+
+    /* ========================================================
+       WEBSITE HEADER
+       ======================================================== */
+
+    .admin-login-header {
+      color: var(--mmc-white, #ffffff);
+      background: var(--mmc-black, #000000);
+      border-bottom: 3px solid var(--mmc-black, #000000);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+    }
+
+    .admin-login-header-content {
+      display: flex;
+      width: calc(100% - 32px);
+      max-width: 1400px;
+      align-items: center;
+      justify-content: space-between;
+      gap: 24px;
+      margin: 0 auto;
+      padding: 18px 0;
+    }
+
+    .admin-login-brand-link {
+      display: flex;
+      min-width: 0;
+      align-items: center;
+      gap: 14px;
+      color: var(--mmc-white, #ffffff);
+      text-decoration: none;
+    }
+
+    .admin-login-header-logo {
+      display: block;
+      width: 82px;
+      height: 82px;
+      flex: 0 0 auto;
+      background: var(--mmc-white, #ffffff);
+      border: 3px solid var(--mmc-white, #ffffff);
+      border-radius: 50%;
+      object-fit: contain;
+      filter:
+        drop-shadow(
+          0 0 8px rgba(255, 20, 147, 0.7)
+        )
+        drop-shadow(
+          0 0 10px rgba(0, 234, 255, 0.45)
+        );
+    }
+
+    .admin-login-branding {
+      min-width: 0;
+    }
+
+    .admin-login-site-name {
+      margin: 0;
+      color: var(--mmc-white, #ffffff);
+      font-size: clamp(20px, 3vw, 30px);
+      font-weight: 900;
+      line-height: 1.2;
+    }
+
+    .admin-login-site-tagline {
+      margin: 5px 0 0;
+      color: var(--mmc-cyan, #00eaff);
+      font-size: 14px;
+      font-weight: 800;
+    }
+
+    .admin-login-navigation {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+
+    .admin-login-navigation a {
+      display: inline-flex;
+      min-height: 42px;
+      align-items: center;
+      justify-content: center;
+      padding: 9px 12px;
+      color: var(--mmc-white, #ffffff);
+      background: #222222;
+      border: 2px solid #444444;
+      border-radius: 7px;
+      font-size: 14px;
+      font-weight: 800;
+      text-align: center;
+      text-decoration: none;
+      transition:
+        color 0.2s ease,
+        background 0.2s ease,
+        border-color 0.2s ease,
+        transform 0.2s ease,
+        box-shadow 0.2s ease;
+    }
+
+    .admin-login-navigation a:hover,
+    .admin-login-navigation a:focus {
+      color: var(--mmc-black, #000000);
+      background:
+        linear-gradient(
+          135deg,
+          var(--mmc-hot-pink, #ff1493),
+          var(--mmc-yellow, #ffe600),
+          var(--mmc-green, #34e600),
+          var(--mmc-cyan, #00eaff)
+        );
+      border-color: var(--mmc-white, #ffffff);
+      transform: translateY(-2px);
+      box-shadow:
+        0 0 12px rgba(255, 20, 147, 0.42),
+        0 0 16px rgba(0, 234, 255, 0.28);
+    }
+
+    .admin-login-navigation a[aria-current="page"] {
+      color: var(--mmc-black, #000000);
+      background:
+        linear-gradient(
+          135deg,
+          var(--mmc-hot-pink, #ff1493),
+          var(--mmc-yellow, #ffe600),
+          var(--mmc-green, #34e600),
+          var(--mmc-cyan, #00eaff)
+        );
+      border-color: var(--mmc-white, #ffffff);
+    }
+
+    /* ========================================================
+       LOGIN PAGE
+       ======================================================== */
 
     .admin-login-main {
       display: flex;
@@ -60,7 +226,7 @@
       max-width: 520px;
       overflow: hidden;
       color: var(--mmc-black, #000000);
-      background: rgba(255, 255, 255, 0.96);
+      background: rgba(255, 255, 255, 0.97);
       border: 3px solid var(--mmc-black, #000000);
       border-radius: 18px;
       box-shadow:
@@ -99,6 +265,8 @@
       width: 125px;
       height: 125px;
       margin: 0 auto 16px;
+      background: var(--mmc-white, #ffffff);
+      border: 3px solid var(--mmc-black, #000000);
       border-radius: 50%;
       object-fit: contain;
       filter:
@@ -148,6 +316,10 @@
       font-weight: 800;
     }
 
+    .required-marker {
+      color: var(--mmc-danger, #c40028);
+    }
+
     .admin-login-form input {
       width: 100%;
       min-height: 50px;
@@ -165,6 +337,20 @@
       box-shadow:
         0 0 0 4px rgba(138, 0, 255, 0.2),
         0 0 12px rgba(0, 234, 255, 0.35);
+    }
+
+    .admin-login-form input:disabled {
+      color: #666666;
+      background: #eeeeee;
+      cursor: wait;
+      opacity: 0.75;
+    }
+
+    .field-help {
+      margin: 7px 0 0;
+      color: var(--mmc-muted-text, #333333);
+      font-size: 13px;
+      line-height: 1.5;
     }
 
     .password-field-wrapper {
@@ -185,6 +371,7 @@
       background: var(--mmc-black, #000000);
       border: 2px solid var(--mmc-black, #000000);
       border-radius: 7px;
+      font: inherit;
       font-size: 13px;
       font-weight: 800;
       cursor: pointer;
@@ -223,7 +410,8 @@
       font-size: 17px;
       font-weight: 900;
       cursor: pointer;
-      box-shadow: 0 6px 0 var(--mmc-black, #000000);
+      box-shadow:
+        0 6px 0 var(--mmc-black, #000000);
       transition:
         filter 0.2s ease,
         transform 0.2s ease,
@@ -242,7 +430,8 @@
 
     .admin-login-button:active:not(:disabled) {
       transform: translateY(2px);
-      box-shadow: 0 2px 0 var(--mmc-black, #000000);
+      box-shadow:
+        0 2px 0 var(--mmc-black, #000000);
     }
 
     .admin-login-button:disabled {
@@ -301,6 +490,87 @@
       text-align: center;
     }
 
+    .admin-login-help-links {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 9px;
+      margin-top: 20px;
+    }
+
+    .admin-login-help-links a {
+      display: inline-flex;
+      min-height: 40px;
+      align-items: center;
+      justify-content: center;
+      padding: 8px 12px;
+      color: var(--mmc-white, #ffffff);
+      background: var(--mmc-black, #000000);
+      border: 2px solid var(--mmc-black, #000000);
+      border-radius: 7px;
+      font-size: 13px;
+      font-weight: 800;
+      text-align: center;
+      text-decoration: none;
+    }
+
+    .admin-login-help-links a:hover,
+    .admin-login-help-links a:focus {
+      color: var(--mmc-black, #000000);
+      background: var(--mmc-cyan, #00eaff);
+    }
+
+    /* ========================================================
+       FOOTER
+       ======================================================== */
+
+    .admin-login-footer {
+      margin-top: auto;
+      padding: 28px 16px;
+      color: var(--mmc-white, #ffffff);
+      background: var(--mmc-black, #000000);
+      border-top: 3px solid var(--mmc-black, #000000);
+      text-align: center;
+    }
+
+    .admin-login-footer-logo {
+      display: block;
+      width: 88px;
+      height: 88px;
+      margin: 0 auto 12px;
+      background: var(--mmc-white, #ffffff);
+      border: 2px solid var(--mmc-white, #ffffff);
+      border-radius: 50%;
+      object-fit: contain;
+    }
+
+    .admin-login-footer p {
+      max-width: 760px;
+      margin: 8px auto;
+      color: var(--mmc-white, #ffffff);
+      line-height: 1.6;
+    }
+
+    .admin-login-footer-navigation {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px;
+      margin: 18px auto;
+    }
+
+    .admin-login-footer-navigation a {
+      color: var(--mmc-cyan, #00eaff);
+      font-weight: 800;
+      text-decoration: none;
+    }
+
+    .admin-login-footer-navigation a:hover,
+    .admin-login-footer-navigation a:focus {
+      color: var(--mmc-yellow, #ffe600);
+      text-decoration: underline;
+    }
+
     .admin-login-noscript {
       max-width: 650px;
       margin: 20px auto;
@@ -312,7 +582,39 @@
       text-align: center;
     }
 
+    @media (max-width: 1000px) {
+      .admin-login-header-content {
+        align-items: stretch;
+        flex-direction: column;
+      }
+
+      .admin-login-navigation {
+        justify-content: flex-start;
+      }
+    }
+
     @media (max-width: 650px) {
+      .admin-login-header-content {
+        width: calc(100% - 24px);
+      }
+
+      .admin-login-brand-link {
+        align-items: flex-start;
+      }
+
+      .admin-login-header-logo {
+        width: 68px;
+        height: 68px;
+      }
+
+      .admin-login-navigation {
+        flex-direction: column;
+      }
+
+      .admin-login-navigation a {
+        width: 100%;
+      }
+
       .admin-login-main {
         width: calc(100% - 24px);
         margin: 22px auto;
@@ -327,12 +629,20 @@
         width: 105px;
         height: 105px;
       }
+
+      .admin-login-help-links {
+        flex-direction: column;
+      }
+
+      .admin-login-help-links a {
+        width: 100%;
+      }
     }
   </style>
 
   <!--
     config.js must load before admin-login.js because it
-    provides the public Vercel backend address.
+    provides the configured MMC backend address.
   -->
 
   <script
@@ -357,87 +667,87 @@
   </a>
 
   <!-- ========================================================
-       SHARED WEBSITE HEADER
+       PUBLIC WEBSITE HEADER
        ======================================================== -->
 
-  <header class="top-header">
-    <div class="header-content">
+  <header class="admin-login-header">
+    <div class="admin-login-header-content">
       <a
-        class="site-logo-link"
+        class="admin-login-brand-link"
         href="index.html"
         aria-label="Go to the Multi-Maniacs Customs homepage"
       >
-        <img src="images/mmc-logo.png" alt="Multi-Maniacs Customs LLC logo featuring the brand name and a stylized custom automotive and motorcycle emblem on a clean white background, with the text Multi-Maniacs Customs LLC in the center and a polished, professional, industrial tone">
+        images/mmc-logo.png
+
+        <div class="admin-login-branding">
+          <p class="admin-login-site-name">
+            Multi-Maniacs Customs LLC
+          </p>
+
+          <p class="admin-login-site-tagline">
+            Secure Administrator Portal
+          </p>
+        </div>
       </a>
 
-      <div class="site-branding">
-        <p class="site-heading">
-          Multi-Maniacs Customs LLC
-        </p>
+      <nav
+        class="admin-login-navigation"
+        aria-label="Main website navigation"
+      >
+        <a href="index.html">
+          Home
+        </a>
 
-        <p class="site-tagline">
-          Secure Administrator Portal
-        </p>
+        <a href="about.html">
+          About
+        </a>
 
-        <nav
-          class="header-buttons"
-          aria-label="Main website navigation"
+        <a href="services.html">
+          Services
+        </a>
+
+        <a href="gallery.html">
+          Gallery
+        </a>
+
+        <a href="shop.html">
+          Shop
+        </a>
+
+        <a
+          class="cart-navigation-link"
+          href="cart.html"
         >
-          <a href="index.html">
-            Home
-          </a>
+          Cart
 
-          <a href="about.html">
-            About
-          </a>
-
-          <a href="services.html">
-            Services
-          </a>
-
-          <a href="gallery.html">
-            Gallery
-          </a>
-
-          <a href="shop.html">
-            Shop
-          </a>
-
-          <a
-            class="cart-navigation-link"
-            href="cart.html"
+          <span
+            id="cart-count"
+            class="cart-count-badge"
+            data-cart-count
+            aria-label="0 items in cart"
           >
-            Cart
+            0
+          </span>
+        </a>
 
-            <span
-              id="cart-count"
-              class="cart-count-badge"
-              data-cart-count
-              aria-label="0 items in cart"
-            >
-              0
-            </span>
-          </a>
+        <a href="contact.html">
+          Contact
+        </a>
 
-          <a href="contact.html">
-            Contact
-          </a>
+        <a href="client-intake.html">
+          Client Intake
+        </a>
 
-          <a href="client-intake.html">
-            Client Intake
-          </a>
-
-          <a
-            id="admin-navigation-button"
-            class="admin-navigation-button"
-            href="admin-login.html"
-            data-admin-navigation
-            aria-current="page"
-          >
-            Admin
-          </a>
-        </nav>
-      </div>
+        <a
+          id="admin-navigation-button"
+          class="admin-navigation-button"
+          href="admin-login.html"
+          data-admin-navigation
+          aria-current="page"
+        >
+          Admin
+        </a>
+      </nav>
     </div>
   </header>
 
@@ -460,7 +770,7 @@
 
       <div class="admin-login-content">
         <div class="admin-login-logo-area">
-          <img src="images/mmc-logo.png" alt="Multi-Maniacs Customs LLC Logo">
+          images/mmc-logo.png
 
           <p class="admin-login-eyebrow">
             Authorized Access Only
@@ -475,9 +785,9 @@
 
           <p class="admin-login-description">
             Enter your MMC administrator username and password
-            to access the dashboard, products, inventory,
-            orders, client intakes, settings, and administrator
-            tools.
+            to access the dashboard, products, categories,
+            inventory, orders, client intakes, settings, and
+            authorized administrator tools.
           </p>
         </div>
 
@@ -490,6 +800,13 @@
           <div class="form-field">
             <label for="adminUsername">
               Username
+
+              <span
+                class="required-marker"
+                aria-hidden="true"
+              >
+                *
+              </span>
             </label>
 
             <input
@@ -500,15 +817,32 @@
               autocomplete="username"
               autocapitalize="none"
               spellcheck="false"
+              minlength="2"
               maxlength="100"
               placeholder="Enter your administrator username"
+              aria-describedby="admin-username-help"
               required
             >
+
+            <p
+              id="admin-username-help"
+              class="field-help"
+            >
+              Enter the username assigned to your MMC
+              administrator account.
+            </p>
           </div>
 
           <div class="form-field">
             <label for="adminPassword">
               Password
+
+              <span
+                class="required-marker"
+                aria-hidden="true"
+              >
+                *
+              </span>
             </label>
 
             <div class="password-field-wrapper">
@@ -519,6 +853,7 @@
                 autocomplete="current-password"
                 maxlength="250"
                 placeholder="Enter your administrator password"
+                aria-describedby="admin-password-help"
                 required
               >
 
@@ -532,6 +867,13 @@
                 Show
               </button>
             </div>
+
+            <p
+              id="admin-password-help"
+              class="field-help"
+            >
+              Passwords are case-sensitive.
+            </p>
           </div>
 
           <button
@@ -556,16 +898,33 @@
           access may be recorded for security and operational
           purposes.
         </div>
+
+        <div
+          class="admin-login-help-links"
+          aria-label="Administrator login help"
+        >
+          <a href="index.html">
+            Return to Website
+          </a>
+
+          <a href="contact.html">
+            Contact MMC
+          </a>
+
+          <a href="shop.html">
+            View Shop
+          </a>
+        </div>
       </div>
     </section>
   </main>
 
   <!-- ========================================================
-       SHARED BLACK FOOTER
+       PUBLIC WEBSITE FOOTER
        ======================================================== -->
 
-  <footer class="site-footer">
-    <img src="images/mmc-logo.png" alt="Multi-Maniacs Customs LLC Logo">
+  <footer class="admin-login-footer">
+    images/mmc-logo.png
 
     <p>
       <strong>
@@ -579,5 +938,68 @@
     </p>
 
     <p>
-      Essie, Kentucky | Clients accepted throughout the United States
-    
+      Essie, Kentucky | Clients accepted throughout the United
+      States
+    </p>
+
+    <nav
+      class="admin-login-footer-navigation"
+      aria-label="Footer navigation"
+    >
+      <a href="index.html">
+        Home
+      </a>
+
+      <a href="about.html">
+        About
+      </a>
+
+      <a href="services.html">
+        Services
+      </a>
+
+      <a href="gallery.html">
+        Gallery
+      </a>
+
+      <a href="shop.html">
+        Shop
+      </a>
+
+      <a href="cart.html">
+        Cart
+      </a>
+
+      <a href="contact.html">
+        Contact
+      </a>
+
+      <a href="client-intake.html">
+        Client Intake
+      </a>
+
+      <a
+        href="admin-login.html"
+        aria-current="page"
+      >
+        Admin
+      </a>
+    </nav>
+
+    <p>
+      &copy; 2026 Multi-Maniacs Customs LLC. All rights reserved.
+    </p>
+  </footer>
+
+  <!-- ========================================================
+       NOSCRIPT MESSAGE
+       ======================================================== -->
+
+  <noscript>
+    <div class="admin-login-noscript">
+      JavaScript must be enabled to validate your administrator
+      account and access the MMC administrator system.
+    </div>
+  </noscript>
+</body>
+</html>

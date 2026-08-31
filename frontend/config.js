@@ -17,24 +17,22 @@
   "use strict";
 
   // ==========================================================
-  // BACKEND URL
+  // BACKEND URLS
   // ==========================================================
 
   /*
-   * Replace this URL only if your actual backend Vercel domain
-   * is different.
+   * Production backend requirements:
    *
-   * Requirements:
-   * - Include https://
-   * - Do not add a trailing slash
-   * - Do not add /health, /products, or another endpoint
+   * 1. Include https://
+   * 2. Do not include a trailing slash
+   * 3. Do not include an endpoint such as /health
    */
 
   var PRODUCTION_BACKEND_URL =
     "https://multi-maniacs-customs-backend.vercel.app";
 
   /*
-   * This address is used when testing the website locally.
+   * Local backend used while developing the website locally.
    */
 
   var LOCAL_BACKEND_URL =
@@ -55,7 +53,10 @@
       "adminUser",
 
     backendOverride:
-      "MMC_BACKEND_URL"
+      "MMC_BACKEND_URL",
+
+    selectedProduct:
+      "MMC_EDIT_PRODUCT_ID"
   };
 
   // ==========================================================
@@ -93,18 +94,49 @@
     }
   }
 
+  function normalizeApiPath(
+    path
+  ) {
+    var normalizedPath =
+      String(path || "")
+        .trim();
+
+    if (!normalizedPath) {
+      return "";
+    }
+
+    if (
+      normalizedPath.charAt(0) !==
+      "/"
+    ) {
+      normalizedPath =
+        "/" +
+        normalizedPath;
+    }
+
+    return normalizedPath;
+  }
+
   // ==========================================================
   // LOCAL DEVELOPMENT CHECK
   // ==========================================================
 
   function isLocalWebsite() {
     var hostname =
-      window.location.hostname;
+      String(
+        window.location.hostname ||
+        ""
+      ).toLowerCase();
 
     return (
-      hostname === "localhost" ||
-      hostname === "127.0.0.1" ||
-      hostname === "::1"
+      hostname ===
+        "localhost" ||
+      hostname ===
+        "127.0.0.1" ||
+      hostname ===
+        "::1" ||
+      hostname ===
+        "[::1]"
     );
   }
 
@@ -116,8 +148,7 @@
     try {
       var savedUrl =
         localStorage.getItem(
-          STORAGE_KEYS
-            .backendOverride
+          STORAGE_KEYS.backendOverride
         );
 
       if (
@@ -128,6 +159,12 @@
       ) {
         return removeTrailingSlashes(
           savedUrl
+        );
+      }
+
+      if (savedUrl) {
+        console.warn(
+          "The saved MMC backend URL is invalid and will be ignored."
         );
       }
     } catch (error) {
@@ -144,14 +181,7 @@
   // SELECT BACKEND URL
   // ==========================================================
 
-  function getBackendUrl() {
-    var savedOverride =
-      getSavedBackendOverride();
-
-    if (savedOverride) {
-      return savedOverride;
-    }
-
+  function getDefaultBackendUrl() {
     if (isLocalWebsite()) {
       return removeTrailingSlashes(
         LOCAL_BACKEND_URL
@@ -163,6 +193,17 @@
     );
   }
 
+  function getBackendUrl() {
+    var savedOverride =
+      getSavedBackendOverride();
+
+    if (savedOverride) {
+      return savedOverride;
+    }
+
+    return getDefaultBackendUrl();
+  }
+
   // ==========================================================
   // CREATE API URL
   // ==========================================================
@@ -170,25 +211,23 @@
   function createApiUrl(
     path
   ) {
+    var backendUrl =
+      removeTrailingSlashes(
+        window.MMC_BACKEND_URL ||
+        getBackendUrl()
+      );
+
     var normalizedPath =
-      String(path || "")
-        .trim();
+      normalizeApiPath(
+        path
+      );
 
     if (!normalizedPath) {
-      return window.MMC_BACKEND_URL;
-    }
-
-    if (
-      normalizedPath.charAt(0) !==
-      "/"
-    ) {
-      normalizedPath =
-        "/" +
-        normalizedPath;
+      return backendUrl;
     }
 
     return (
-      window.MMC_BACKEND_URL +
+      backendUrl +
       normalizedPath
     );
   }
@@ -217,8 +256,7 @@
 
     try {
       localStorage.setItem(
-        STORAGE_KEYS
-          .backendOverride,
+        STORAGE_KEYS.backendOverride,
         cleanedUrl
       );
     } catch (error) {
@@ -233,8 +271,17 @@
     window.MMC_BACKEND_URL =
       cleanedUrl;
 
-    window.MMC_CONFIG.backendUrl =
-      cleanedUrl;
+    if (
+      window.MMC_CONFIG &&
+      typeof window.MMC_CONFIG ===
+        "object"
+    ) {
+      window.MMC_CONFIG.backendUrl =
+        cleanedUrl;
+
+      window.MMC_CONFIG.environment =
+        "override";
+    }
 
     return true;
   }
@@ -242,8 +289,7 @@
   function clearBackendUrlOverride() {
     try {
       localStorage.removeItem(
-        STORAGE_KEYS
-          .backendOverride
+        STORAGE_KEYS.backendOverride
       );
     } catch (error) {
       console.warn(
@@ -253,28 +299,33 @@
     }
 
     var restoredUrl =
-      isLocalWebsite()
-        ? removeTrailingSlashes(
-            LOCAL_BACKEND_URL
-          )
-        : removeTrailingSlashes(
-            PRODUCTION_BACKEND_URL
-          );
+      getDefaultBackendUrl();
 
     window.MMC_BACKEND_URL =
       restoredUrl;
 
-    window.MMC_CONFIG.backendUrl =
-      restoredUrl;
+    if (
+      window.MMC_CONFIG &&
+      typeof window.MMC_CONFIG ===
+        "object"
+    ) {
+      window.MMC_CONFIG.backendUrl =
+        restoredUrl;
+
+      window.MMC_CONFIG.environment =
+        isLocalWebsite()
+          ? "development"
+          : "production";
+    }
 
     return restoredUrl;
   }
 
   // ==========================================================
-  // PAGE ROUTES
+  // PUBLIC WEBSITE PAGE ROUTES
   // ==========================================================
 
-  var PAGE_ROUTES = {
+  var PUBLIC_PAGE_ROUTES = {
     home:
       "index.html",
 
@@ -303,68 +354,374 @@
       "contact.html",
 
     clientIntake:
-      "client-intake.html",
-
-    adminLogin:
-      "admin-login.html",
-
-    adminDashboard:
-      "admin-dashboard.html",
-
-    adminProducts:
-      "admin-products.html",
-
-    adminAddProduct:
-      "admin-add-product.html",
-
-    adminEditProduct:
-      "admin-edit-product.html",
-
-    adminInventory:
-      "admin-inventory.html",
-
-    adminOrders:
-      "admin-orders.html",
-
-    adminIntake:
-      "admin-intake.html",
-
-    adminSettings:
-      "admin-settings.html",
-
-    adminAddCategory:
-      "admin-add-category.html",
-
-    adminEditCategory:
-      "admin-edit-category.html",
-
-    adminDeleteCategory:
-      "admin-delete-category.html"
+      "client-intake.html"
   };
 
   // ==========================================================
-  // API ROUTES
+  // ADMINISTRATOR PAGE ROUTES
   // ==========================================================
 
-  var API_ROUTES = {
+  var ADMIN_PAGE_ROUTES = {
+    login:
+      "admin-login.html",
+
+    dashboard:
+      "admin-dashboard.html",
+
+    products:
+      "admin-products.html",
+
+    addProduct:
+      "admin-add-product.html",
+
+    editProduct:
+      "admin-edit-product.html",
+
+    deleteProduct:
+      "admin-delete-product.html",
+
+    categories:
+      "admin-categories.html",
+
+    addCategory:
+      "admin-add-category.html",
+
+    editCategory:
+      "admin-edit-category.html",
+
+    deleteCategory:
+      "admin-delete-category.html",
+
+    inventory:
+      "admin-inventory.html",
+
+    orders:
+      "admin-orders.html",
+
+    intake:
+      "admin-intake.html",
+
+    settings:
+      "admin-settings.html",
+
+    users:
+      "admin-users.html"
+  };
+
+  // ==========================================================
+  // COMBINED PAGE ROUTES
+  // ==========================================================
+
+  var PAGE_ROUTES = {
+    home:
+      PUBLIC_PAGE_ROUTES.home,
+
+    about:
+      PUBLIC_PAGE_ROUTES.about,
+
+    services:
+      PUBLIC_PAGE_ROUTES.services,
+
+    gallery:
+      PUBLIC_PAGE_ROUTES.gallery,
+
+    shop:
+      PUBLIC_PAGE_ROUTES.shop,
+
+    product:
+      PUBLIC_PAGE_ROUTES.product,
+
+    cart:
+      PUBLIC_PAGE_ROUTES.cart,
+
+    checkout:
+      PUBLIC_PAGE_ROUTES.checkout,
+
+    contact:
+      PUBLIC_PAGE_ROUTES.contact,
+
+    clientIntake:
+      PUBLIC_PAGE_ROUTES.clientIntake,
+
+    adminLogin:
+      ADMIN_PAGE_ROUTES.login,
+
+    adminDashboard:
+      ADMIN_PAGE_ROUTES.dashboard,
+
+    adminProducts:
+      ADMIN_PAGE_ROUTES.products,
+
+    adminAddProduct:
+      ADMIN_PAGE_ROUTES.addProduct,
+
+    adminEditProduct:
+      ADMIN_PAGE_ROUTES.editProduct,
+
+    adminDeleteProduct:
+      ADMIN_PAGE_ROUTES.deleteProduct,
+
+    adminCategories:
+      ADMIN_PAGE_ROUTES.categories,
+
+    adminAddCategory:
+      ADMIN_PAGE_ROUTES.addCategory,
+
+    adminEditCategory:
+      ADMIN_PAGE_ROUTES.editCategory,
+
+    adminDeleteCategory:
+      ADMIN_PAGE_ROUTES.deleteCategory,
+
+    adminInventory:
+      ADMIN_PAGE_ROUTES.inventory,
+
+    adminOrders:
+      ADMIN_PAGE_ROUTES.orders,
+
+    adminIntake:
+      ADMIN_PAGE_ROUTES.intake,
+
+    adminSettings:
+      ADMIN_PAGE_ROUTES.settings,
+
+    adminUsers:
+      ADMIN_PAGE_ROUTES.users
+  };
+
+  // ==========================================================
+  // PUBLIC API ROUTES
+  // ==========================================================
+
+  var PUBLIC_API_ROUTES = {
     health:
       "/health",
 
     products:
       "/products",
 
-    adminLogin:
+    categories:
+      "/categories",
+
+    settings:
+      "/settings",
+
+    clientIntakes:
+      "/intakes",
+
+    checkout:
+      "/checkout",
+
+    createCheckoutSession:
+      "/checkout/create-session",
+
+    uploadImage:
+      "/upload/image"
+  };
+
+  // ==========================================================
+  // ADMINISTRATOR API ROUTES
+  // ==========================================================
+
+  var ADMIN_API_ROUTES = {
+    login:
       "/admin/login",
 
-    adminSession:
+    session:
       "/admin/me",
 
-    adminProducts:
+    products:
       "/admin/products",
 
-    adminProductSummary:
-      "/admin/products/summary"
+    productSummary:
+      "/admin/products/summary",
+
+    categories:
+      "/admin/categories",
+
+    inventory:
+      "/admin/inventory",
+
+    orders:
+      "/admin/orders",
+
+    intakes:
+      "/admin/intakes",
+
+    settings:
+      "/admin/settings",
+
+    systemStatus:
+      "/admin/system-status",
+
+    users:
+      "/admin/users"
   };
+
+  // ==========================================================
+  // COMBINED API ROUTES
+  // ==========================================================
+
+  var API_ROUTES = {
+    health:
+      PUBLIC_API_ROUTES.health,
+
+    products:
+      PUBLIC_API_ROUTES.products,
+
+    categories:
+      PUBLIC_API_ROUTES.categories,
+
+    settings:
+      PUBLIC_API_ROUTES.settings,
+
+    clientIntakes:
+      PUBLIC_API_ROUTES.clientIntakes,
+
+    checkout:
+      PUBLIC_API_ROUTES.checkout,
+
+    createCheckoutSession:
+      PUBLIC_API_ROUTES
+        .createCheckoutSession,
+
+    uploadImage:
+      PUBLIC_API_ROUTES.uploadImage,
+
+    adminLogin:
+      ADMIN_API_ROUTES.login,
+
+    adminSession:
+      ADMIN_API_ROUTES.session,
+
+    adminProducts:
+      ADMIN_API_ROUTES.products,
+
+    adminProductSummary:
+      ADMIN_API_ROUTES.productSummary,
+
+    adminCategories:
+      ADMIN_API_ROUTES.categories,
+
+    adminInventory:
+      ADMIN_API_ROUTES.inventory,
+
+    adminOrders:
+      ADMIN_API_ROUTES.orders,
+
+    adminIntakes:
+      ADMIN_API_ROUTES.intakes,
+
+    adminSettings:
+      ADMIN_API_ROUTES.settings,
+
+    adminSystemStatus:
+      ADMIN_API_ROUTES.systemStatus,
+
+    adminUsers:
+      ADMIN_API_ROUTES.users
+  };
+
+  // ==========================================================
+  // ROUTE BUILDERS
+  // ==========================================================
+
+  function createProductApiUrl(
+    productId
+  ) {
+    return createApiUrl(
+      API_ROUTES.products +
+      "/" +
+      encodeURIComponent(
+        String(productId || "")
+      )
+    );
+  }
+
+  function createAdminProductApiUrl(
+    productId
+  ) {
+    return createApiUrl(
+      API_ROUTES.adminProducts +
+      "/" +
+      encodeURIComponent(
+        String(productId || "")
+      )
+    );
+  }
+
+  function createAdminOrderApiUrl(
+    orderId
+  ) {
+    return createApiUrl(
+      API_ROUTES.adminOrders +
+      "/" +
+      encodeURIComponent(
+        String(orderId || "")
+      )
+    );
+  }
+
+  function createAdminOrderStatusApiUrl(
+    orderId
+  ) {
+    return (
+      createAdminOrderApiUrl(
+        orderId
+      ) +
+      "/status"
+    );
+  }
+
+  function createAdminIntakeApiUrl(
+    intakeId
+  ) {
+    return createApiUrl(
+      API_ROUTES.adminIntakes +
+      "/" +
+      encodeURIComponent(
+        String(intakeId || "")
+      )
+    );
+  }
+
+  function createAdminIntakeStatusApiUrl(
+    intakeId
+  ) {
+    return (
+      createAdminIntakeApiUrl(
+        intakeId
+      ) +
+      "/status"
+    );
+  }
+
+  function createAdminCategoryApiUrl(
+    categoryId
+  ) {
+    return createApiUrl(
+      API_ROUTES.adminCategories +
+      "/" +
+      encodeURIComponent(
+        String(categoryId || "")
+      )
+    );
+  }
+
+  function createAdminUserApiUrl(
+    administratorId
+  ) {
+    return createApiUrl(
+      API_ROUTES.adminUsers +
+      "/" +
+      encodeURIComponent(
+        String(
+          administratorId ||
+          ""
+        )
+      )
+    );
+  }
 
   // ==========================================================
   // CREATE PUBLIC CONFIGURATION
@@ -388,23 +745,68 @@
     backendUrl:
       selectedBackendUrl,
 
+    productionBackendUrl:
+      PRODUCTION_BACKEND_URL,
+
+    localBackendUrl:
+      LOCAL_BACKEND_URL,
+
     storageKeys:
       STORAGE_KEYS,
 
     pages:
       PAGE_ROUTES,
 
+    publicPages:
+      PUBLIC_PAGE_ROUTES,
+
+    adminPages:
+      ADMIN_PAGE_ROUTES,
+
     api:
       API_ROUTES,
 
+    publicApi:
+      PUBLIC_API_ROUTES,
+
+    adminApi:
+      ADMIN_API_ROUTES,
+
     createApiUrl:
       createApiUrl,
+
+    createProductApiUrl:
+      createProductApiUrl,
+
+    createAdminProductApiUrl:
+      createAdminProductApiUrl,
+
+    createAdminOrderApiUrl:
+      createAdminOrderApiUrl,
+
+    createAdminOrderStatusApiUrl:
+      createAdminOrderStatusApiUrl,
+
+    createAdminIntakeApiUrl:
+      createAdminIntakeApiUrl,
+
+    createAdminIntakeStatusApiUrl:
+      createAdminIntakeStatusApiUrl,
+
+    createAdminCategoryApiUrl:
+      createAdminCategoryApiUrl,
+
+    createAdminUserApiUrl:
+      createAdminUserApiUrl,
 
     setBackendUrlOverride:
       setBackendUrlOverride,
 
     clearBackendUrlOverride:
-      clearBackendUrlOverride
+      clearBackendUrlOverride,
+
+    isLocalWebsite:
+      isLocalWebsite
   };
 
   // ==========================================================
@@ -422,6 +824,11 @@
   } else {
     console.log(
       "MMC frontend configuration loaded."
+    );
+
+    console.log(
+      "MMC environment:",
+      window.MMC_CONFIG.environment
     );
 
     console.log(

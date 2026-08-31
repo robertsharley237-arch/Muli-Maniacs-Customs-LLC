@@ -1,33 +1,45 @@
 // ============================================================
 // MULTI-MANIACS CUSTOMS LLC
-// ADMIN PRODUCT MANAGEMENT
+// FILE: admin-products.js
+// ADMINISTRATOR PRODUCT MANAGEMENT
+//
+// Hosting: Vercel
+// Backend: Express
+// Database: Neon PostgreSQL
+// Authentication: JWT
 // ============================================================
 
 (function () {
   "use strict";
 
-  var BACKEND_URL =
-    window.MMC_BACKEND_URL ||
-    window.location.origin;
+  // ==========================================================
+  // CONFIGURATION
+  // ==========================================================
 
-  var ADMIN_PRODUCTS_URL =
-    BACKEND_URL +
-    "/admin/products";
-
-  var PRODUCTS_URL =
-    BACKEND_URL +
-    "/products";
+  var REQUEST_TIMEOUT_MS = 15000;
 
   var products = [];
+  var productRequestActive = false;
 
   // ==========================================================
   // ELEMENT HELPERS
   // ==========================================================
 
   function getElement(elementId) {
-    return document.getElementById(
-      elementId
-    );
+    return document.getElementById(elementId);
+  }
+
+  function setText(elementId, value) {
+    var element = getElement(elementId);
+
+    if (!element) {
+      return;
+    }
+
+    element.textContent =
+      value === undefined || value === null
+        ? ""
+        : String(value);
   }
 
   function createElement(
@@ -35,41 +47,97 @@
     className,
     text
   ) {
-    var node =
-      document.createElement(
-        tagName
-      );
+    var element =
+      document.createElement(tagName);
 
     if (className) {
-      node.className =
-        className;
+      element.className = className;
     }
 
-    if (text !== undefined) {
-      node.textContent =
-        text;
+    if (
+      text !== undefined &&
+      text !== null
+    ) {
+      element.textContent = String(text);
     }
 
-    return node;
+    return element;
   }
 
   // ==========================================================
-  // ADMIN AUTHENTICATION
+  // BACKEND URL
   // ==========================================================
 
-  function getAdminToken() {
-    return localStorage.getItem(
-      "adminToken"
+  function removeTrailingSlashes(value) {
+    return String(value || "")
+      .trim()
+      .replace(/\/+$/, "");
+  }
+
+  function getBackendUrl() {
+    if (
+      typeof window.MMC_BACKEND_URL === "string" &&
+      window.MMC_BACKEND_URL.trim()
+    ) {
+      return removeTrailingSlashes(
+        window.MMC_BACKEND_URL
+      );
+    }
+
+    var savedBackendUrl =
+      localStorage.getItem(
+        "MMC_BACKEND_URL"
+      );
+
+    if (
+      typeof savedBackendUrl === "string" &&
+      savedBackendUrl.trim()
+    ) {
+      return removeTrailingSlashes(
+        savedBackendUrl
+      );
+    }
+
+    if (
+      window.location.hostname === "localhost" ||
+      window.location.hostname === "127.0.0.1"
+    ) {
+      return "http://localhost:10000";
+    }
+
+    return removeTrailingSlashes(
+      window.location.origin
     );
   }
 
-  function getAdminHeaders(
-    includeJson
-  ) {
+  var BACKEND_URL = getBackendUrl();
+
+  var ADMIN_PRODUCTS_URL =
+    BACKEND_URL + "/admin/products";
+
+  var PRODUCTS_URL =
+    BACKEND_URL + "/products";
+
+  var ADMIN_SESSION_URL =
+    BACKEND_URL + "/admin/me";
+
+  // ==========================================================
+  // ADMINISTRATOR AUTHENTICATION
+  // ==========================================================
+
+  function getAdminToken() {
+    return String(
+      localStorage.getItem("adminToken") ||
+      localStorage.getItem("MMC_ADMIN_TOKEN") ||
+      ""
+    ).trim();
+  }
+
+  function getAdminHeaders(includeJson) {
     var headers = {
+      Accept: "application/json",
       Authorization:
-        "Bearer " +
-        getAdminToken()
+        "Bearer " + getAdminToken()
     };
 
     if (includeJson) {
@@ -81,24 +149,22 @@
   }
 
   function clearAdminSession() {
-    localStorage.removeItem(
-      "adminToken"
-    );
-
-    localStorage.removeItem(
-      "adminUser"
-    );
-
-    localStorage.removeItem(
-      "MMC_ADMIN_TOKEN"
-    );
+    localStorage.removeItem("adminToken");
+    localStorage.removeItem("MMC_ADMIN_TOKEN");
+    localStorage.removeItem("adminUser");
+    localStorage.removeItem("admin_token");
+    localStorage.removeItem("token");
   }
 
   function redirectToAdminLogin() {
     clearAdminSession();
 
-    window.location.href =
-      "admin-login.html";
+    window.location.replace(
+      "admin-login.html?return=" +
+      encodeURIComponent(
+        "admin-products.html"
+      )
+    );
   }
 
   function logoutAdmin() {
@@ -106,43 +172,169 @@
   }
 
   // ==========================================================
+  // FETCH WITH TIMEOUT
+  // ==========================================================
+
+  async function fetchWithTimeout(
+    url,
+    options
+  ) {
+    var controller =
+      new AbortController();
+
+    var timeoutId =
+      window.setTimeout(
+        function () {
+          controller.abort();
+        },
+        REQUEST_TIMEOUT_MS
+      );
+
+    try {
+      return await fetch(
+        url,
+        Object.assign(
+          {},
+          options || {},
+          {
+            signal: controller.signal
+          }
+        )
+      );
+    } finally {
+      window.clearTimeout(timeoutId);
+    }
+  }
+
+  // ==========================================================
   // SERVER RESPONSE
   // ==========================================================
 
-  async function readResponse(
-    response
-  ) {
-    var data;
+  async function readResponse(response) {
+    var responseText = "";
 
     try {
-      data =
-        await response.json();
+      responseText =
+        await response.text();
     } catch (error) {
-      data = {};
+      return {
+        error:
+          "The server response could not be read."
+      };
     }
+
+    if (!responseText) {
+      return {};
+    }
+
+    try {
+      return JSON.parse(responseText);
+    } catch (error) {
+      return {
+        error: responseText
+      };
+    }
+  }
+
+  function getErrorMessage(
+    value,
+    fallbackMessage
+  ) {
+    if (
+      typeof value === "string" &&
+      value.trim()
+    ) {
+      return value.trim();
+    }
+
+    if (
+      value &&
+      typeof value === "object"
+    ) {
+      if (
+        typeof value.message === "string" &&
+        value.message.trim()
+      ) {
+        return value.message.trim();
+      }
+
+      if (value.error !== undefined) {
+        return getErrorMessage(
+          value.error,
+          fallbackMessage
+        );
+      }
+
+      if (value.errors !== undefined) {
+        return getErrorMessage(
+          value.errors,
+          fallbackMessage
+        );
+      }
+    }
+
+    return fallbackMessage;
+  }
+
+  function getRequestErrorMessage(
+    error,
+    fallbackMessage
+  ) {
+    if (
+      error &&
+      error.name === "AbortError"
+    ) {
+      return (
+        "The product request took too long. " +
+        "Check the backend connection and try again."
+      );
+    }
+
+    if (error instanceof TypeError) {
+      return (
+        "The product server could not be reached. " +
+        "Check the backend URL and CORS settings."
+      );
+    }
+
+    return getErrorMessage(
+      error,
+      fallbackMessage
+    );
+  }
+
+  async function requestJson(url, options) {
+    var response =
+      await fetchWithTimeout(
+        url,
+        options
+      );
+
+    var data =
+      await readResponse(response);
 
     if (response.status === 401) {
       redirectToAdminLogin();
 
       throw new Error(
-        data.error ||
         "Your administrator session expired."
       );
     }
 
     if (response.status === 403) {
       throw new Error(
-        data.error ||
-        "You do not have permission to manage products."
+        getErrorMessage(
+          data,
+          "You do not have permission to manage products."
+        )
       );
     }
 
     if (!response.ok) {
       throw new Error(
-        data.error ||
-        data.message ||
-        (
-          "Request failed with status " +
+        getErrorMessage(
+          data,
+          "The product request failed with status " +
           response.status +
           "."
         )
@@ -161,16 +353,14 @@
     messageType
   ) {
     var messageBox =
-      getElement(
-        "products-message"
-      );
+      getElement("products-message");
 
     if (!messageBox) {
       return;
     }
 
     messageBox.textContent =
-      message || "";
+      String(message || "");
 
     messageBox.classList.remove(
       "products-error",
@@ -178,36 +368,50 @@
       "products-information"
     );
 
-    if (messageType === "error") {
-      messageBox.classList.add(
-        "products-error"
-      );
-    } else if (
-      messageType === "success"
-    ) {
+    messageBox.removeAttribute("role");
+
+    if (!message) {
+      return;
+    }
+
+    if (messageType === "success") {
       messageBox.classList.add(
         "products-success"
       );
-    } else {
+
+      messageBox.setAttribute(
+        "role",
+        "status"
+      );
+    } else if (
+      messageType === "information"
+    ) {
       messageBox.classList.add(
         "products-information"
+      );
+
+      messageBox.setAttribute(
+        "role",
+        "status"
+      );
+    } else {
+      messageBox.classList.add(
+        "products-error"
+      );
+
+      messageBox.setAttribute(
+        "role",
+        "alert"
       );
     }
   }
 
-  function clearMessage() {
-    showMessage(
-      "",
-      "information"
-    );
-  }
-
   // ==========================================================
-  // VERIFY ADMINISTRATOR
+  // ADMINISTRATOR INFORMATION
   // ==========================================================
 
   function formatAdminRole(role) {
-    return String(role || "")
+    return String(role || "Administrator")
       .replace(/_/g, " ")
       .replace(
         /\b\w/g,
@@ -217,6 +421,35 @@
       );
   }
 
+  function displayAdminInformation(
+    administrator
+  ) {
+    var username = String(
+      administrator.username ||
+      administrator.name ||
+      administrator.email ||
+      "Administrator"
+    );
+
+    var role = formatAdminRole(
+      administrator.role
+    );
+
+    [
+      "admin-username",
+      "admin-header-username"
+    ].forEach(function (elementId) {
+      setText(elementId, username);
+    });
+
+    [
+      "admin-role",
+      "admin-header-role"
+    ].forEach(function (elementId) {
+      setText(elementId, role);
+    });
+  }
+
   async function verifyAdmin() {
     if (!getAdminToken()) {
       redirectToAdminLogin();
@@ -224,9 +457,8 @@
     }
 
     try {
-      var response = await fetch(
-        BACKEND_URL +
-        "/admin/me",
+      var data = await requestJson(
+        ADMIN_SESSION_URL,
         {
           method: "GET",
           headers:
@@ -234,51 +466,41 @@
         }
       );
 
-      var data =
-        await readResponse(
-          response
-        );
+      var administrator =
+        data.admin ||
+        data.user ||
+        data;
 
-      var admin =
-        data.admin || {};
+      if (
+        !administrator ||
+        typeof administrator !== "object"
+      ) {
+        throw new Error(
+          "The administrator information was not returned."
+        );
+      }
 
       localStorage.setItem(
         "adminUser",
-        JSON.stringify(admin)
+        JSON.stringify(administrator)
       );
 
-      var usernameElement =
-        getElement(
-          "admin-username"
-        );
-
-      var roleElement =
-        getElement(
-          "admin-role"
-        );
-
-      if (usernameElement) {
-        usernameElement.textContent =
-          admin.username || "";
-      }
-
-      if (roleElement) {
-        roleElement.textContent =
-          formatAdminRole(
-            admin.role
-          );
-      }
+      displayAdminInformation(
+        administrator
+      );
 
       return true;
     } catch (error) {
       console.error(
-        "Administrator verification failed:",
+        "Administrator verification failed.",
         error
       );
 
       showMessage(
-        error.message ||
-        "The administrator session could not be verified.",
+        getRequestErrorMessage(
+          error,
+          "The administrator session could not be verified."
+        ),
         "error"
       );
 
@@ -287,84 +509,185 @@
   }
 
   // ==========================================================
-  // NORMALIZE PRODUCT
+  // PRODUCT NORMALIZATION
   // ==========================================================
 
-  function normalizeProduct(
-    product
-  ) {
-    var warningLevel =
-      product.lowStockWarning;
+  function normalizeMoney(value) {
+    var amount = Number(value);
 
-    if (
-      warningLevel === undefined
-    ) {
-      warningLevel =
-        product.low_stock_warning;
+    if (!Number.isFinite(amount)) {
+      return 0;
     }
+
+    return Math.max(
+      0,
+      Math.round(amount * 100) / 100
+    );
+  }
+
+  function normalizeWholeNumber(
+    value,
+    fallbackValue
+  ) {
+    var number = Number(value);
+
+    if (!Number.isFinite(number)) {
+      number = Number(fallbackValue);
+
+      if (!Number.isFinite(number)) {
+        number = 0;
+      }
+    }
+
+    return Math.max(
+      0,
+      Math.floor(number)
+    );
+  }
+
+  function normalizeVariant(variant) {
+    var source =
+      variant &&
+      typeof variant === "object"
+        ? variant
+        : {};
 
     return {
       id: String(
-        product.id ||
-        product._id ||
+        source.id ||
+        source._id ||
         ""
       ),
 
       name: String(
-        product.name ||
+        source.name || ""
+      ),
+
+      sku: String(
+        source.sku || ""
+      ),
+
+      price: normalizeMoney(
+        source.price
+      ),
+
+      stock: normalizeWholeNumber(
+        source.stock,
+        0
+      ),
+
+      image: String(
+        source.image || ""
+      )
+    };
+  }
+
+  function normalizeProduct(product) {
+    var source =
+      product &&
+      typeof product === "object"
+        ? product
+        : {};
+
+    var warningLevel =
+      source.lowStockWarning;
+
+    if (warningLevel === undefined) {
+      warningLevel =
+        source.low_stock_warning;
+    }
+
+    return {
+      id: String(
+        source.id ||
+        source._id ||
+        ""
+      ),
+
+      name: String(
+        source.name ||
         "Unnamed Product"
       ),
 
       sku: String(
-        product.sku || ""
+        source.sku || ""
       ),
 
-      price: Math.max(
-        0,
-        Number(
-          product.price || 0
-        )
+      price: normalizeMoney(
+        source.price
       ),
 
-      stock: Math.max(
-        0,
-        Number(
-          product.stock || 0
-        )
+      stock: normalizeWholeNumber(
+        source.stock,
+        0
       ),
 
       category: String(
-        product.category ||
+        source.category ||
+        source.categoryName ||
         "General"
       ),
 
+      categoryId:
+        source.categoryId ||
+        source.category_id ||
+        null,
+
+      categorySlug: String(
+        source.categorySlug ||
+        source.category_slug ||
+        ""
+      ),
+
       description: String(
-        product.description || ""
+        source.description || ""
       ),
 
       image: String(
-        product.image || ""
+        source.image || ""
       ),
 
       active:
-        product.active !== false,
+        source.active !== false,
 
-      lowStockWarning: Math.max(
-        0,
-        Number(
-          warningLevel === undefined
-            ? 5
-            : warningLevel
-        )
-      ),
+      lowStockWarning:
+        normalizeWholeNumber(
+          warningLevel,
+          5
+        ),
 
       variants:
-        Array.isArray(
-          product.variants
-        )
-          ? product.variants
+        Array.isArray(source.variants)
+          ? source.variants.map(
+              normalizeVariant
+            )
           : []
     };
+  }
+
+  function getProductList(data) {
+    if (Array.isArray(data)) {
+      return data;
+    }
+
+    if (
+      data &&
+      Array.isArray(data.products)
+    ) {
+      return data.products;
+    }
+
+    if (
+      data &&
+      data.data &&
+      Array.isArray(
+        data.data.products
+      )
+    ) {
+      return data.data.products;
+    }
+
+    return [];
   }
 
   // ==========================================================
@@ -372,38 +695,35 @@
   // ==========================================================
 
   function formatCurrency(value) {
-    var amount =
-      Number(value);
-
-    if (!Number.isFinite(amount)) {
-      amount = 0;
-    }
-
     return new Intl.NumberFormat(
       "en-US",
       {
         style: "currency",
         currency: "USD"
       }
-    ).format(amount);
+    ).format(
+      Number(value) || 0
+    );
   }
 
   function getTotalStock(product) {
     if (
+      !product.variants ||
       product.variants.length === 0
     ) {
-      return product.stock;
+      return normalizeWholeNumber(
+        product.stock,
+        0
+      );
     }
 
     return product.variants.reduce(
       function (total, variant) {
         return (
           total +
-          Math.max(
-            0,
-            Number(
-              variant.stock || 0
-            )
+          normalizeWholeNumber(
+            variant.stock,
+            0
           )
         );
       },
@@ -412,9 +732,7 @@
   }
 
   function isOutOfStock(product) {
-    return (
-      getTotalStock(product) === 0
-    );
+    return getTotalStock(product) === 0;
   }
 
   function isLowStock(product) {
@@ -441,7 +759,7 @@
   }
 
   // ==========================================================
-  // CREATE PRODUCT DETAILS
+  // PRODUCT DETAILS
   // ==========================================================
 
   function createProductDetail(
@@ -476,34 +794,42 @@
   }
 
   // ==========================================================
-  // OPEN PRODUCT ADMIN PAGES
+  // PRODUCT PAGE NAVIGATION
   // ==========================================================
 
-  function rememberProductAndOpen(
-    productId,
-    page
-  ) {
+  function rememberProduct(productId) {
     localStorage.setItem(
       "MMC_EDIT_PRODUCT_ID",
       productId
     );
+  }
 
-    window.location.href =
-      page;
+  function openProductPage(
+    productId,
+    page
+  ) {
+    rememberProduct(productId);
+
+    window.location.assign(
+      page +
+      "?id=" +
+      encodeURIComponent(productId)
+    );
   }
 
   // ==========================================================
-  // CREATE PRODUCT CARD
+  // PRODUCT CARD
   // ==========================================================
 
-  function createProductCard(
-    product
-  ) {
+  function createProductCard(product) {
     var card =
       createElement(
         "article",
         "product-card"
       );
+
+    card.dataset.productId =
+      product.id;
 
     var imageContainer =
       createElement(
@@ -513,21 +839,18 @@
 
     if (product.image) {
       var image =
-        document.createElement(
-          "img"
-        );
+        document.createElement("img");
 
       image.className =
         "product-image";
 
-      image.src =
-        product.image;
+      image.src = product.image;
 
       image.alt =
-        product.name;
+        product.name +
+        " product image";
 
-      image.loading =
-        "lazy";
+      image.loading = "lazy";
 
       image.addEventListener(
         "error",
@@ -542,9 +865,7 @@
         }
       );
 
-      imageContainer.appendChild(
-        image
-      );
+      imageContainer.appendChild(image);
     } else {
       imageContainer.appendChild(
         createElement(
@@ -578,13 +899,11 @@
     headingRow.appendChild(
       createElement(
         "span",
+        "product-status " +
         (
-          "product-status " +
-          (
-            product.active
-              ? "status-active"
-              : "status-hidden"
-          )
+          product.active
+            ? "status-active"
+            : "status-hidden"
         ),
         product.active
           ? "Active"
@@ -601,17 +920,14 @@
     details.appendChild(
       createProductDetail(
         "SKU",
-        product.sku ||
-        "No SKU"
+        product.sku || "No SKU"
       )
     );
 
     details.appendChild(
       createProductDetail(
         "Price",
-        formatCurrency(
-          product.price
-        )
+        formatCurrency(product.price)
       )
     );
 
@@ -625,9 +941,7 @@
     details.appendChild(
       createProductDetail(
         "Total Stock",
-        String(
-          getTotalStock(product)
-        ),
+        getTotalStock(product),
         getStockClass(product)
       )
     );
@@ -635,28 +949,19 @@
     details.appendChild(
       createProductDetail(
         "Variants",
-        String(
-          product.variants.length
-        )
+        product.variants.length
       )
     );
 
     details.appendChild(
       createProductDetail(
         "Warning Level",
-        String(
-          product.lowStockWarning
-        )
+        product.lowStockWarning
       )
     );
 
-    content.appendChild(
-      headingRow
-    );
-
-    content.appendChild(
-      details
-    );
+    content.appendChild(headingRow);
+    content.appendChild(details);
 
     if (product.description) {
       content.appendChild(
@@ -684,36 +989,25 @@
     var inventoryButton =
       createElement(
         "button",
-        (
-          "product-card-button " +
-          "inventory-card-button"
-        ),
+        "product-card-button inventory-card-button",
         "Inventory"
       );
 
     var deleteButton =
       createElement(
         "button",
-        (
-          "product-card-button " +
-          "delete-card-button"
-        ),
+        "product-card-button delete-card-button",
         "Delete"
       );
 
-    editButton.type =
-      "button";
-
-    inventoryButton.type =
-      "button";
-
-    deleteButton.type =
-      "button";
+    editButton.type = "button";
+    inventoryButton.type = "button";
+    deleteButton.type = "button";
 
     editButton.addEventListener(
       "click",
       function () {
-        rememberProductAndOpen(
+        openProductPage(
           product.id,
           "admin-edit-product.html"
         );
@@ -723,7 +1017,7 @@
     inventoryButton.addEventListener(
       "click",
       function () {
-        rememberProductAndOpen(
+        openProductPage(
           product.id,
           "admin-inventory.html"
         );
@@ -733,37 +1027,20 @@
     deleteButton.addEventListener(
       "click",
       function () {
-        deleteProduct(
+        openProductPage(
           product.id,
-          product.name,
-          deleteButton
+          "admin-delete-product.html"
         );
       }
     );
 
-    actions.appendChild(
-      editButton
-    );
+    actions.appendChild(editButton);
+    actions.appendChild(inventoryButton);
+    actions.appendChild(deleteButton);
 
-    actions.appendChild(
-      inventoryButton
-    );
-
-    actions.appendChild(
-      deleteButton
-    );
-
-    content.appendChild(
-      actions
-    );
-
-    card.appendChild(
-      imageContainer
-    );
-
-    card.appendChild(
-      content
-    );
+    content.appendChild(actions);
+    card.appendChild(imageContainer);
+    card.appendChild(content);
 
     return card;
   }
@@ -774,9 +1051,7 @@
 
   function getFilteredProducts() {
     var searchBox =
-      getElement(
-        "searchBox"
-      );
+      getElement("searchBox");
 
     var statusFilter =
       getElement(
@@ -797,11 +1072,23 @@
 
     return products.filter(
       function (product) {
+        var variantText =
+          product.variants
+            .map(function (variant) {
+              return [
+                variant.name,
+                variant.sku
+              ].join(" ");
+            })
+            .join(" ");
+
         var searchableText = [
           product.name,
           product.sku,
           product.category,
-          product.description
+          product.categorySlug,
+          product.description,
+          variantText
         ]
           .join(" ")
           .toLowerCase();
@@ -812,19 +1099,14 @@
             searchQuery
           ) >= 0;
 
-        var statusMatches =
-          true;
+        var statusMatches = true;
 
-        if (
-          selectedFilter === "active"
-        ) {
-          statusMatches =
-            product.active;
+        if (selectedFilter === "active") {
+          statusMatches = product.active;
         } else if (
           selectedFilter === "hidden"
         ) {
-          statusMatches =
-            !product.active;
+          statusMatches = !product.active;
         } else if (
           selectedFilter === "low-stock"
         ) {
@@ -852,9 +1134,7 @@
 
   function displayProducts() {
     var productList =
-      getElement(
-        "productList"
-      );
+      getElement("productList");
 
     if (!productList) {
       return;
@@ -865,13 +1145,18 @@
 
     productList.replaceChildren();
 
+    productList.setAttribute(
+      "aria-busy",
+      "false"
+    );
+
     if (
       filteredProducts.length === 0
     ) {
       var emptyMessage =
-        products.length
-          ? "No products match the selected filters."
-          : "No products found.";
+        products.length > 0
+          ? "No products match the selected search and status filters."
+          : "No products were found.";
 
       productList.appendChild(
         createElement(
@@ -898,65 +1183,95 @@
   // ==========================================================
 
   function updateProductSummary() {
-    var activeCount = 0;
-    var lowStockCount = 0;
-    var outOfStockCount = 0;
+    var summary = {
+      total: products.length,
+      active: 0,
+      hidden: 0,
+      lowStock: 0,
+      outOfStock: 0,
+      variants: 0
+    };
 
     products.forEach(
       function (product) {
         if (product.active) {
-          activeCount += 1;
+          summary.active += 1;
+        } else {
+          summary.hidden += 1;
         }
 
         if (isLowStock(product)) {
-          lowStockCount += 1;
+          summary.lowStock += 1;
         }
 
         if (isOutOfStock(product)) {
-          outOfStockCount += 1;
+          summary.outOfStock += 1;
         }
+
+        summary.variants +=
+          product.variants.length;
       }
     );
 
-    var totalElement =
+    setText(
+      "total-products",
+      summary.total
+    );
+
+    setText(
+      "active-products",
+      summary.active
+    );
+
+    setText(
+      "hidden-products",
+      summary.hidden
+    );
+
+    setText(
+      "low-stock-products",
+      summary.lowStock
+    );
+
+    setText(
+      "out-of-stock-products",
+      summary.outOfStock
+    );
+
+    setText(
+      "total-product-variants",
+      summary.variants
+    );
+  }
+
+  // ==========================================================
+  // REFRESH BUTTON
+  // ==========================================================
+
+  function setRefreshButtonLoading(
+    loading
+  ) {
+    var refreshButton =
       getElement(
-        "total-products"
+        "refresh-products-button"
       );
 
-    var activeElement =
-      getElement(
-        "active-products"
-      );
-
-    var lowStockElement =
-      getElement(
-        "low-stock-products"
-      );
-
-    var outOfStockElement =
-      getElement(
-        "out-of-stock-products"
-      );
-
-    if (totalElement) {
-      totalElement.textContent =
-        String(products.length);
+    if (!refreshButton) {
+      return;
     }
 
-    if (activeElement) {
-      activeElement.textContent =
-        String(activeCount);
-    }
+    refreshButton.disabled =
+      Boolean(loading);
 
-    if (lowStockElement) {
-      lowStockElement.textContent =
-        String(lowStockCount);
-    }
+    refreshButton.setAttribute(
+      "aria-busy",
+      loading ? "true" : "false"
+    );
 
-    if (outOfStockElement) {
-      outOfStockElement.textContent =
-        String(outOfStockCount);
-    }
+    refreshButton.textContent =
+      loading
+        ? "Refreshing Products..."
+        : "Refresh Products";
   }
 
   // ==========================================================
@@ -964,17 +1279,28 @@
   // ==========================================================
 
   async function loadProducts() {
-    var productList =
-      getElement(
-        "productList"
-      );
+    if (productRequestActive) {
+      return false;
+    }
 
-    var refreshButton =
-      getElement(
-        "refresh-products-button"
-      );
+    var productList =
+      getElement("productList");
+
+    productRequestActive = true;
+
+    setRefreshButtonLoading(true);
+
+    showMessage(
+      "Loading products...",
+      "information"
+    );
 
     if (productList) {
+      productList.setAttribute(
+        "aria-busy",
+        "true"
+      );
+
       productList.replaceChildren(
         createElement(
           "p",
@@ -985,15 +1311,7 @@
     }
 
     try {
-      if (refreshButton) {
-        refreshButton.disabled =
-          true;
-
-        refreshButton.textContent =
-          "Refreshing...";
-      }
-
-      var response = await fetch(
+      var data = await requestJson(
         ADMIN_PRODUCTS_URL,
         {
           method: "GET",
@@ -1002,50 +1320,37 @@
         }
       );
 
-      var data =
-        await readResponse(
-          response
-        );
-
-      var productData;
-
-      if (Array.isArray(data)) {
-        productData = data;
-      } else if (
-        data &&
-        Array.isArray(data.products)
-      ) {
-        productData =
-          data.products;
-      } else {
-        productData = [];
-      }
-
       products =
-        productData
+        getProductList(data)
           .map(normalizeProduct)
-          .filter(
-            function (product) {
-              return product.id !== "";
-            }
-          )
-          .sort(
-            function (
-              firstProduct,
-              secondProduct
-            ) {
-              return firstProduct.name.localeCompare(
+          .filter(function (product) {
+            return Boolean(product.id);
+          })
+          .sort(function (
+            firstProduct,
+            secondProduct
+          ) {
+            return firstProduct.name
+              .localeCompare(
                 secondProduct.name
               );
-            }
-          );
+          });
 
       updateProductSummary();
       displayProducts();
-      clearMessage();
+
+      showMessage(
+        products.length === 1
+          ? "1 product loaded."
+          : products.length +
+            " products loaded.",
+        "success"
+      );
+
+      return true;
     } catch (error) {
       console.error(
-        "Products could not be loaded:",
+        "Products could not be loaded.",
         error
       );
 
@@ -1054,6 +1359,11 @@
       updateProductSummary();
 
       if (productList) {
+        productList.setAttribute(
+          "aria-busy",
+          "false"
+        );
+
         productList.replaceChildren(
           createElement(
             "p",
@@ -1064,23 +1374,22 @@
       }
 
       showMessage(
-        error.message ||
-        "Products could not be loaded.",
+        getRequestErrorMessage(
+          error,
+          "Products could not be loaded."
+        ),
         "error"
       );
-    } finally {
-      if (refreshButton) {
-        refreshButton.disabled =
-          false;
 
-        refreshButton.textContent =
-          "Refresh Products";
-      }
+      return false;
+    } finally {
+      productRequestActive = false;
+      setRefreshButtonLoading(false);
     }
   }
 
   // ==========================================================
-  // DELETE PRODUCT
+  // OPTIONAL DIRECT DELETE SUPPORT
   // ==========================================================
 
   async function deleteProduct(
@@ -1090,33 +1399,26 @@
   ) {
     var confirmed =
       window.confirm(
-        (
-          "Permanently delete the " +
-          "product \"" +
-          productName +
-          "\"?"
-        )
+        'Permanently delete the product "' +
+        productName +
+        '"?'
       );
 
     if (!confirmed) {
-      return;
+      return false;
+    }
+
+    if (deleteButton) {
+      deleteButton.disabled = true;
+      deleteButton.textContent =
+        "Deleting...";
     }
 
     try {
-      if (deleteButton) {
-        deleteButton.disabled =
-          true;
-
-        deleteButton.textContent =
-          "Deleting...";
-      }
-
-      var response = await fetch(
+      var data = await requestJson(
         PRODUCTS_URL +
         "/" +
-        encodeURIComponent(
-          productId
-        ),
+        encodeURIComponent(productId),
         {
           method: "DELETE",
           headers:
@@ -1124,48 +1426,101 @@
         }
       );
 
-      var data =
-        await readResponse(
-          response
-        );
-
-      products =
-        products.filter(
-          function (product) {
-            return (
-              product.id !==
-              productId
-            );
-          }
-        );
+      products = products.filter(
+        function (product) {
+          return product.id !== productId;
+        }
+      );
 
       updateProductSummary();
       displayProducts();
 
       showMessage(
-        data.message ||
-        "Product deleted successfully.",
+        getErrorMessage(
+          data.message,
+          "Product deleted successfully."
+        ),
         "success"
       );
+
+      return true;
     } catch (error) {
       console.error(
-        "Product deletion failed:",
+        "Product deletion failed.",
         error
       );
 
       showMessage(
-        error.message ||
-        "The product could not be deleted.",
+        getRequestErrorMessage(
+          error,
+          "The product could not be deleted."
+        ),
         "error"
       );
 
       if (deleteButton) {
-        deleteButton.disabled =
-          false;
-
+        deleteButton.disabled = false;
         deleteButton.textContent =
           "Delete";
       }
+
+      return false;
+    }
+  }
+
+  // ==========================================================
+  // EVENT CONNECTIONS
+  // ==========================================================
+
+  function connectLogoutButtons() {
+    [
+      "admin-logout-button",
+      "admin-navigation-logout-button"
+    ].forEach(function (elementId) {
+      var button = getElement(elementId);
+
+      if (button) {
+        button.addEventListener(
+          "click",
+          logoutAdmin
+        );
+      }
+    });
+  }
+
+  function connectProductControls() {
+    var searchBox =
+      getElement("searchBox");
+
+    var statusFilter =
+      getElement(
+        "product-status-filter"
+      );
+
+    var refreshButton =
+      getElement(
+        "refresh-products-button"
+      );
+
+    if (searchBox) {
+      searchBox.addEventListener(
+        "input",
+        displayProducts
+      );
+    }
+
+    if (statusFilter) {
+      statusFilter.addEventListener(
+        "change",
+        displayProducts
+      );
+    }
+
+    if (refreshButton) {
+      refreshButton.addEventListener(
+        "click",
+        loadProducts
+      );
     }
   }
 
@@ -1173,81 +1528,43 @@
   // PAGE STARTUP
   // ==========================================================
 
-  document.addEventListener(
-    "DOMContentLoaded",
-    async function () {
-      var validAdmin =
-        await verifyAdmin();
+  async function initializePage() {
+    connectLogoutButtons();
+    connectProductControls();
+    updateProductSummary();
 
-      if (!validAdmin) {
-        return;
-      }
+    var validAdmin =
+      await verifyAdmin();
 
-      var searchBox =
-        getElement(
-          "searchBox"
-        );
-
-      var statusFilter =
-        getElement(
-          "product-status-filter"
-        );
-
-      var refreshButton =
-        getElement(
-          "refresh-products-button"
-        );
-
-      var logoutButton =
-        getElement(
-          "admin-logout-button"
-        );
-
-      if (searchBox) {
-        searchBox.addEventListener(
-          "input",
-          displayProducts
-        );
-      }
-
-      if (statusFilter) {
-        statusFilter.addEventListener(
-          "change",
-          displayProducts
-        );
-      }
-
-      if (refreshButton) {
-        refreshButton.addEventListener(
-          "click",
-          loadProducts
-        );
-      }
-
-      if (logoutButton) {
-        logoutButton.addEventListener(
-          "click",
-          logoutAdmin
-        );
-      }
-
-      await loadProducts();
+    if (!validAdmin) {
+      return;
     }
-  );
+
+    await loadProducts();
+
+    console.log(
+      "MMC Product Management page initialized."
+    );
+  }
+
+  if (
+    document.readyState === "loading"
+  ) {
+    document.addEventListener(
+      "DOMContentLoaded",
+      initializePage
+    );
+  } else {
+    initializePage();
+  }
 
   // ==========================================================
   // OPTIONAL INLINE SUPPORT
   // ==========================================================
 
-  window.loadProducts =
-    loadProducts;
-
-  window.filterProducts =
-    displayProducts;
-
-  window.deleteProduct =
-    deleteProduct;
-
-  window.logoutAdmin =
-    logoutAdmin;
+  window.loadProducts = loadProducts;
+  window.filterProducts = displayProducts;
+  window.displayProducts = displayProducts;
+  window.deleteProduct = deleteProduct;
+  window.logoutAdmin = logoutAdmin;
 }());

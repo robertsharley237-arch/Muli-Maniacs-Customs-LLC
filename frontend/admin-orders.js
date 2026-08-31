@@ -1,29 +1,127 @@
 // ============================================================
 // MULTI-MANIACS CUSTOMS LLC
-// ADMIN ORDER MANAGEMENT
+// FILE: admin-orders.js
+// ADMINISTRATOR ORDER MANAGEMENT
+//
+// Frontend: Vercel
+// Backend: Express
+// Database: Neon PostgreSQL
+// Authentication: JWT
+// Payments: Stripe
 // ============================================================
 
 (function () {
   "use strict";
 
-  var ORDER_BACKEND_URL =
-    window.MMC_BACKEND_URL ||
-    window.location.origin;
+  // ==========================================================
+  // CONFIGURATION
+  // ==========================================================
+
+  var REQUEST_TIMEOUT_MILLISECONDS =
+    15000;
+
+  var orderRecords =
+    [];
+
+  var ordersRequestActive =
+    false;
+
+  // ==========================================================
+  // BACKEND URL
+  // ==========================================================
+
+  function removeTrailingSlashes(
+    value
+  ) {
+    return String(value || "")
+      .trim()
+      .replace(
+        /\/+$/,
+        ""
+      );
+  }
+
+  function getBackendUrl() {
+    if (
+      typeof window.MMC_BACKEND_URL ===
+        "string" &&
+      window.MMC_BACKEND_URL.trim()
+    ) {
+      return removeTrailingSlashes(
+        window.MMC_BACKEND_URL
+      );
+    }
+
+    var savedBackendUrl =
+      localStorage.getItem(
+        "MMC_BACKEND_URL"
+      );
+
+    if (
+      typeof savedBackendUrl ===
+        "string" &&
+      savedBackendUrl.trim()
+    ) {
+      return removeTrailingSlashes(
+        savedBackendUrl
+      );
+    }
+
+    if (
+      window.location.hostname ===
+        "localhost" ||
+      window.location.hostname ===
+        "127.0.0.1"
+    ) {
+      return "http://localhost:10000";
+    }
+
+    return removeTrailingSlashes(
+      window.location.origin
+    );
+  }
+
+  var BACKEND_URL =
+    getBackendUrl();
 
   var ADMIN_ORDERS_API =
-    ORDER_BACKEND_URL +
+    BACKEND_URL +
     "/admin/orders";
 
-  var orderRecords = [];
+  var ADMIN_SESSION_API =
+    BACKEND_URL +
+    "/admin/me";
 
   // ==========================================================
   // ELEMENT HELPERS
   // ==========================================================
 
-  function getElement(elementId) {
+  function getElement(
+    elementId
+  ) {
     return document.getElementById(
       elementId
     );
+  }
+
+  function setText(
+    elementId,
+    value
+  ) {
+    var element =
+      getElement(
+        elementId
+      );
+
+    if (!element) {
+      return;
+    }
+
+    element.textContent =
+      value === undefined ||
+      value === null
+        ? ""
+        : String(value);
   }
 
   function createOrderElement(
@@ -41,28 +139,40 @@
         className;
     }
 
-    if (text !== undefined) {
+    if (
+      text !== undefined &&
+      text !== null
+    ) {
       element.textContent =
-        text;
+        String(text);
     }
 
     return element;
   }
 
   // ==========================================================
-  // ADMIN AUTHENTICATION
+  // ADMINISTRATOR AUTHENTICATION
   // ==========================================================
 
   function getAdminToken() {
-    return localStorage.getItem(
-      "adminToken"
-    );
+    return String(
+      localStorage.getItem(
+        "adminToken"
+      ) ||
+      localStorage.getItem(
+        "MMC_ADMIN_TOKEN"
+      ) ||
+      ""
+    ).trim();
   }
 
   function getAdminHeaders(
     includeJson
   ) {
     var headers = {
+      Accept:
+        "application/json",
+
       Authorization:
         "Bearer " +
         getAdminToken()
@@ -82,19 +192,31 @@
     );
 
     localStorage.removeItem(
+      "MMC_ADMIN_TOKEN"
+    );
+
+    localStorage.removeItem(
       "adminUser"
     );
 
     localStorage.removeItem(
-      "MMC_ADMIN_TOKEN"
+      "admin_token"
+    );
+
+    localStorage.removeItem(
+      "token"
     );
   }
 
   function redirectToAdminLogin() {
     clearAdminSession();
 
-    window.location.href =
-      "admin-login.html";
+    window.location.replace(
+      "admin-login.html?return=" +
+      encodeURIComponent(
+        "admin-orders.html"
+      )
+    );
   }
 
   function logoutAdmin() {
@@ -102,53 +224,211 @@
   }
 
   // ==========================================================
+  // FETCH WITH TIMEOUT
+  // ==========================================================
+
+  async function fetchWithTimeout(
+    url,
+    options
+  ) {
+    var controller =
+      new AbortController();
+
+    var timeoutIdentifier =
+      window.setTimeout(
+        function () {
+          controller.abort();
+        },
+        REQUEST_TIMEOUT_MILLISECONDS
+      );
+
+    try {
+      return await fetch(
+        url,
+        Object.assign(
+          {},
+          options || {},
+          {
+            signal:
+              controller.signal
+          }
+        )
+      );
+    } finally {
+      window.clearTimeout(
+        timeoutIdentifier
+      );
+    }
+  }
+
+  // ==========================================================
   // SERVER RESPONSE
   // ==========================================================
 
-  async function readOrderResponse(
+  async function readResponse(
     response
   ) {
-    var data;
+    var responseText =
+      "";
 
     try {
-      data =
-        await response.json();
+      responseText =
+        await response.text();
     } catch (error) {
-      data = {
+      return {
         error:
-          "The server returned an unexpected response."
+          "The server response could not be read."
       };
     }
 
-    if (response.status === 401) {
+    if (!responseText) {
+      return {};
+    }
+
+    try {
+      return JSON.parse(
+        responseText
+      );
+    } catch (error) {
+      return {
+        error:
+          responseText
+      };
+    }
+  }
+
+  function getErrorMessage(
+    value,
+    fallbackMessage
+  ) {
+    if (
+      typeof value ===
+        "string" &&
+      value.trim()
+    ) {
+      return value.trim();
+    }
+
+    if (
+      value &&
+      typeof value ===
+        "object"
+    ) {
+      if (
+        typeof value.message ===
+          "string" &&
+        value.message.trim()
+      ) {
+        return value.message.trim();
+      }
+
+      if (
+        value.error !==
+        undefined
+      ) {
+        return getErrorMessage(
+          value.error,
+          fallbackMessage
+        );
+      }
+
+      if (
+        value.errors !==
+        undefined
+      ) {
+        return getErrorMessage(
+          value.errors,
+          fallbackMessage
+        );
+      }
+    }
+
+    return fallbackMessage;
+  }
+
+  function getRequestErrorMessage(
+    error,
+    fallbackMessage
+  ) {
+    if (
+      error &&
+      error.name ===
+        "AbortError"
+    ) {
+      return (
+        "The order request took too long. " +
+        "Check the backend connection and try again."
+      );
+    }
+
+    if (
+      error instanceof
+        TypeError
+    ) {
+      return (
+        "The order server could not be reached. " +
+        "Check the backend URL and CORS settings."
+      );
+    }
+
+    return getErrorMessage(
+      error,
+      fallbackMessage
+    );
+  }
+
+  async function requestJson(
+    url,
+    options
+  ) {
+    var response =
+      await fetchWithTimeout(
+        url,
+        options
+      );
+
+    var responseData =
+      await readResponse(
+        response
+      );
+
+    if (
+      response.status ===
+      401
+    ) {
       redirectToAdminLogin();
 
       throw new Error(
-        data.error ||
         "Your administrator session expired."
       );
     }
 
-    if (response.status === 403) {
+    if (
+      response.status ===
+      403
+    ) {
       throw new Error(
-        data.error ||
-        "You do not have permission to manage orders."
+        getErrorMessage(
+          responseData,
+          "You do not have permission to manage orders."
+        )
       );
     }
 
     if (!response.ok) {
       throw new Error(
-        data.error ||
-        data.message ||
-        (
-          "The request failed with status " +
-          response.status +
-          "."
+        getErrorMessage(
+          responseData,
+          (
+            "The order request failed with status " +
+            response.status +
+            "."
+          )
         )
       );
     }
 
-    return data;
+    return responseData;
   }
 
   // ==========================================================
@@ -169,7 +449,7 @@
     }
 
     messageBox.textContent =
-      message || "";
+      String(message || "");
 
     messageBox.classList.remove(
       "orders-error",
@@ -177,19 +457,46 @@
       "orders-information"
     );
 
-    if (messageType === "error") {
-      messageBox.classList.add(
-        "orders-error"
-      );
-    } else if (
-      messageType === "success"
+    messageBox.removeAttribute(
+      "role"
+    );
+
+    if (!message) {
+      return;
+    }
+
+    if (
+      messageType ===
+      "success"
     ) {
       messageBox.classList.add(
         "orders-success"
       );
-    } else {
+
+      messageBox.setAttribute(
+        "role",
+        "status"
+      );
+    } else if (
+      messageType ===
+      "information"
+    ) {
       messageBox.classList.add(
         "orders-information"
+      );
+
+      messageBox.setAttribute(
+        "role",
+        "status"
+      );
+    } else {
+      messageBox.classList.add(
+        "orders-error"
+      );
+
+      messageBox.setAttribute(
+        "role",
+        "alert"
       );
     }
   }
@@ -202,12 +509,20 @@
   }
 
   // ==========================================================
-  // VERIFY ADMINISTRATOR
+  // ADMINISTRATOR INFORMATION
   // ==========================================================
 
-  function formatAdminRole(role) {
-    return String(role || "")
-      .replace(/_/g, " ")
+  function formatAdminRole(
+    role
+  ) {
+    return String(
+      role ||
+      "Administrator"
+    )
+      .replace(
+        /_/g,
+        " "
+      )
       .replace(
         /\b\w/g,
         function (letter) {
@@ -216,73 +531,154 @@
       );
   }
 
+  function displayAdminInformation(
+    administrator
+  ) {
+    var username =
+      String(
+        administrator.username ||
+        administrator.name ||
+        administrator.email ||
+        "Administrator"
+      );
+
+    var role =
+      formatAdminRole(
+        administrator.role
+      );
+
+    [
+      "admin-username",
+      "admin-header-username"
+    ].forEach(
+      function (elementId) {
+        setText(
+          elementId,
+          username
+        );
+      }
+    );
+
+    [
+      "admin-role",
+      "admin-header-role"
+    ].forEach(
+      function (elementId) {
+        setText(
+          elementId,
+          role
+        );
+      }
+    );
+  }
+
   async function verifyAdminSession() {
     if (!getAdminToken()) {
       redirectToAdminLogin();
+
       return false;
     }
 
     try {
-      var response = await fetch(
-        ORDER_BACKEND_URL +
-        "/admin/me",
-        {
-          method: "GET",
-          headers:
-            getAdminHeaders(false)
-        }
-      );
+      var responseData =
+        await requestJson(
+          ADMIN_SESSION_API,
+          {
+            method:
+              "GET",
 
-      var data =
-        await readOrderResponse(
-          response
+            headers:
+              getAdminHeaders(
+                false
+              )
+          }
         );
 
-      var admin =
-        data.admin || {};
+      var administrator =
+        responseData.admin ||
+        responseData.user ||
+        responseData;
+
+      if (
+        !administrator ||
+        typeof administrator !==
+          "object"
+      ) {
+        throw new Error(
+          "The administrator account information was not returned."
+        );
+      }
 
       localStorage.setItem(
         "adminUser",
-        JSON.stringify(admin)
+        JSON.stringify(
+          administrator
+        )
       );
 
-      var usernameElement =
-        getElement(
-          "admin-username"
-        );
-
-      var roleElement =
-        getElement(
-          "admin-role"
-        );
-
-      if (usernameElement) {
-        usernameElement.textContent =
-          admin.username || "";
-      }
-
-      if (roleElement) {
-        roleElement.textContent =
-          formatAdminRole(
-            admin.role
-          );
-      }
+      displayAdminInformation(
+        administrator
+      );
 
       return true;
     } catch (error) {
       console.error(
-        "Administrator verification failed:",
+        "Administrator verification failed.",
         error
       );
 
       showOrderMessage(
-        error.message ||
-        "The administrator session could not be verified.",
+        getRequestErrorMessage(
+          error,
+          "The administrator session could not be verified."
+        ),
         "error"
       );
 
       return false;
     }
+  }
+
+  // ==========================================================
+  // NUMBER NORMALIZATION
+  // ==========================================================
+
+  function normalizeMoney(
+    value
+  ) {
+    var amount =
+      Number(value);
+
+    if (
+      !Number.isFinite(amount)
+    ) {
+      return 0;
+    }
+
+    return Math.max(
+      0,
+      Math.round(
+        amount * 100
+      ) / 100
+    );
+  }
+
+  function normalizeQuantity(
+    value
+  ) {
+    var quantity =
+      Number(value);
+
+    if (
+      !Number.isFinite(quantity)
+    ) {
+      return 1;
+    }
+
+    return Math.max(
+      1,
+      Math.floor(quantity)
+    );
   }
 
   // ==========================================================
@@ -293,10 +689,16 @@
     status
   ) {
     var normalizedStatus =
-      String(status || "pending")
+      String(
+        status ||
+        "pending"
+      )
         .trim()
         .toLowerCase()
-        .replace(/[ -]+/g, "_");
+        .replace(
+          /[ -]+/g,
+          "_"
+        );
 
     var validStatuses = [
       "pending",
@@ -310,7 +712,8 @@
     if (
       validStatuses.indexOf(
         normalizedStatus
-      ) === -1
+      ) ===
+      -1
     ) {
       return "pending";
     }
@@ -322,41 +725,65 @@
   // NORMALIZE ORDER ITEMS
   // ==========================================================
 
-  function normalizeOrderItem(item) {
+  function normalizeOrderItem(
+    item
+  ) {
+    var source =
+      item &&
+      typeof item ===
+        "object"
+        ? item
+        : {};
+
     return {
-      name: String(
-        item.name ||
-        item.productName ||
-        item.product_name ||
-        "Product"
-      ),
+      id:
+        String(
+          source.id ||
+          source._id ||
+          ""
+        ),
 
-      sku: String(
-        item.sku || ""
-      ),
+      productId:
+        String(
+          source.productId ||
+          source.product_id ||
+          ""
+        ),
 
-      variantName: String(
-        item.variantName ||
-        item.variant_name ||
-        ""
-      ),
+      name:
+        String(
+          source.name ||
+          source.productName ||
+          source.product_name ||
+          "Product"
+        ),
 
-      quantity: Math.max(
-        1,
-        Number(
-          item.quantity || 1
-        )
-      ),
+      sku:
+        String(
+          source.sku ||
+          ""
+        ),
 
-      price: Math.max(
-        0,
-        Number(
-          item.price ||
-          item.unitPrice ||
-          item.unit_price ||
+      variantName:
+        String(
+          source.variantName ||
+          source.variant_name ||
+          source.variant ||
+          ""
+        ),
+
+      quantity:
+        normalizeQuantity(
+          source.quantity
+        ),
+
+      price:
+        normalizeMoney(
+          source.price ||
+          source.unitPrice ||
+          source.unit_price ||
           0
         )
-      )
     };
   }
 
@@ -364,65 +791,160 @@
   // NORMALIZE ORDER
   // ==========================================================
 
-  function normalizeOrder(order) {
+  function normalizeOrder(
+    order
+  ) {
+    var source =
+      order &&
+      typeof order ===
+        "object"
+        ? order
+        : {};
+
     var rawItems;
 
-    if (Array.isArray(order.items)) {
-      rawItems = order.items;
-    } else if (
+    if (
       Array.isArray(
-        order.order_items
+        source.items
       )
     ) {
       rawItems =
-        order.order_items;
+        source.items;
+    } else if (
+      Array.isArray(
+        source.orderItems
+      )
+    ) {
+      rawItems =
+        source.orderItems;
+    } else if (
+      Array.isArray(
+        source.order_items
+      )
+    ) {
+      rawItems =
+        source.order_items;
     } else {
-      rawItems = [];
+      rawItems =
+        [];
     }
 
     return {
-      id: String(
-        order.id ||
-        order._id ||
-        ""
-      ),
+      id:
+        String(
+          source.id ||
+          source._id ||
+          source.orderId ||
+          source.order_id ||
+          ""
+        ),
 
-      email: String(
-        order.email ||
-        order.clientEmail ||
-        order.client_email ||
-        ""
-      ),
+      clientName:
+        String(
+          source.clientName ||
+          source.client_name ||
+          source.customerName ||
+          source.customer_name ||
+          source.name ||
+          ""
+        ),
 
-      total: Math.max(
-        0,
-        Number(
-          order.total ||
-          order.totalAmount ||
-          order.total_amount ||
+      email:
+        String(
+          source.email ||
+          source.clientEmail ||
+          source.client_email ||
+          source.customerEmail ||
+          source.customer_email ||
+          ""
+        ),
+
+      phone:
+        String(
+          source.phone ||
+          source.clientPhone ||
+          source.client_phone ||
+          source.customerPhone ||
+          source.customer_phone ||
+          ""
+        ),
+
+      total:
+        normalizeMoney(
+          source.total ||
+          source.totalAmount ||
+          source.total_amount ||
+          source.amountTotal ||
+          source.amount_total ||
           0
-        )
-      ),
+        ),
 
-      currency: String(
-        order.currency || "USD"
-      ).toUpperCase(),
+      currency:
+        String(
+          source.currency ||
+          "USD"
+        ).toUpperCase(),
 
       status:
         normalizeOrderStatus(
-          order.status ||
-          order.payment_status
+          source.status ||
+          source.orderStatus ||
+          source.order_status ||
+          source.paymentStatus ||
+          source.payment_status
         ),
 
-      stripeSessionId: String(
-        order.stripeSessionId ||
-        order.stripe_session_id ||
-        ""
-      ),
+      paymentStatus:
+        String(
+          source.paymentStatus ||
+          source.payment_status ||
+          ""
+        ),
+
+      stripeSessionId:
+        String(
+          source.stripeSessionId ||
+          source.stripe_session_id ||
+          source.checkoutSessionId ||
+          source.checkout_session_id ||
+          ""
+        ),
+
+      stripePaymentIntentId:
+        String(
+          source.stripePaymentIntentId ||
+          source.stripe_payment_intent_id ||
+          source.paymentIntentId ||
+          source.payment_intent_id ||
+          ""
+        ),
+
+      shippingAddress:
+        String(
+          source.shippingAddress ||
+          source.shipping_address ||
+          source.address ||
+          ""
+        ),
+
+      notes:
+        String(
+          source.notes ||
+          source.orderNotes ||
+          source.order_notes ||
+          ""
+        ),
 
       createdAt:
-        order.createdAt ||
-        order.created_at ||
+        source.createdAt ||
+        source.created_at ||
+        source.orderDate ||
+        source.order_date ||
+        null,
+
+      updatedAt:
+        source.updatedAt ||
+        source.updated_at ||
         null,
 
       items:
@@ -430,6 +952,39 @@
           normalizeOrderItem
         )
     };
+  }
+
+  function getOrderList(
+    responseData
+  ) {
+    if (
+      Array.isArray(
+        responseData
+      )
+    ) {
+      return responseData;
+    }
+
+    if (
+      responseData &&
+      Array.isArray(
+        responseData.orders
+      )
+    ) {
+      return responseData.orders;
+    }
+
+    if (
+      responseData &&
+      responseData.data &&
+      Array.isArray(
+        responseData.data.orders
+      )
+    ) {
+      return responseData.data.orders;
+    }
+
+    return [];
   }
 
   // ==========================================================
@@ -443,19 +998,28 @@
     var amount =
       Number(value);
 
-    if (!Number.isFinite(amount)) {
-      amount = 0;
+    if (
+      !Number.isFinite(amount)
+    ) {
+      amount =
+        0;
     }
+
+    var normalizedCurrency =
+      String(
+        currency ||
+        "USD"
+      ).toUpperCase();
 
     try {
       return new Intl.NumberFormat(
         "en-US",
         {
-          style: "currency",
+          style:
+            "currency",
+
           currency:
-            String(
-              currency || "USD"
-            ).toUpperCase()
+            normalizedCurrency
         }
       ).format(amount);
     } catch (error) {
@@ -466,7 +1030,9 @@
     }
   }
 
-  function formatOrderDate(value) {
+  function formatOrderDate(
+    value
+  ) {
     if (!value) {
       return "Date unavailable";
     }
@@ -475,21 +1041,46 @@
       new Date(value);
 
     if (
-      isNaN(
+      Number.isNaN(
         date.getTime()
       )
     ) {
       return "Date unavailable";
     }
 
-    return date.toLocaleString();
+    return new Intl.DateTimeFormat(
+      "en-US",
+      {
+        year:
+          "numeric",
+
+        month:
+          "short",
+
+        day:
+          "numeric",
+
+        hour:
+          "numeric",
+
+        minute:
+          "2-digit"
+      }
+    ).format(date);
   }
 
-  function formatOrderStatus(status) {
+  function formatOrderStatus(
+    status
+  ) {
     return String(
-      status || "pending"
+      normalizeOrderStatus(
+        status
+      )
     )
-      .replace(/_/g, " ")
+      .replace(
+        /_/g,
+        " "
+      )
       .replace(
         /\b\w/g,
         function (letter) {
@@ -503,7 +1094,8 @@
     fallback
   ) {
     var text =
-      String(value || "").trim();
+      String(value || "")
+        .trim();
 
     return (
       text ||
@@ -538,49 +1130,122 @@
       createOrderElement(
         "p",
         "",
-        safeOrderText(value)
+        safeOrderText(
+          value
+        )
       )
     );
 
     return item;
   }
 
-  function createEmailItem(email) {
+  function createEmailItem(
+    email
+  ) {
     var item =
       createOrderElement(
         "section",
         "order-information-item"
       );
 
-    var heading =
+    item.appendChild(
       createOrderElement(
         "h3",
         "",
         "Client Email"
-      );
+      )
+    );
 
     var paragraph =
-      document.createElement("p");
+      document.createElement(
+        "p"
+      );
 
-    item.appendChild(heading);
+    var cleanEmail =
+      String(email || "")
+        .trim();
 
-    if (email) {
+    if (cleanEmail) {
       var link =
-        document.createElement("a");
+        document.createElement(
+          "a"
+        );
 
       link.href =
-        "mailto:" + email;
+        "mailto:" +
+        cleanEmail;
 
       link.textContent =
-        email;
+        cleanEmail;
 
-      paragraph.appendChild(link);
+      paragraph.appendChild(
+        link
+      );
     } else {
       paragraph.textContent =
         "Not provided";
     }
 
-    item.appendChild(paragraph);
+    item.appendChild(
+      paragraph
+    );
+
+    return item;
+  }
+
+  function createPhoneItem(
+    phone
+  ) {
+    var item =
+      createOrderElement(
+        "section",
+        "order-information-item"
+      );
+
+    item.appendChild(
+      createOrderElement(
+        "h3",
+        "",
+        "Client Phone"
+      )
+    );
+
+    var paragraph =
+      document.createElement(
+        "p"
+      );
+
+    var cleanPhone =
+      String(phone || "")
+        .trim();
+
+    if (cleanPhone) {
+      var link =
+        document.createElement(
+          "a"
+        );
+
+      link.href =
+        "tel:" +
+        cleanPhone.replace(
+          /[^0-9+]/g,
+          ""
+        );
+
+      link.textContent =
+        cleanPhone;
+
+      paragraph.appendChild(
+        link
+      );
+    } else {
+      paragraph.textContent =
+        "Not provided";
+    }
+
+    item.appendChild(
+      paragraph
+    );
 
     return item;
   }
@@ -634,7 +1299,9 @@
           );
 
         var information =
-          document.createElement("div");
+          document.createElement(
+            "div"
+          );
 
         information.appendChild(
           createOrderElement(
@@ -711,7 +1378,48 @@
       }
     );
 
-    section.appendChild(list);
+    section.appendChild(
+      list
+    );
+
+    return section;
+  }
+
+  // ==========================================================
+  // ORDER NOTES
+  // ==========================================================
+
+  function createOrderNotes(
+    notes
+  ) {
+    if (
+      !String(notes || "")
+        .trim()
+    ) {
+      return null;
+    }
+
+    var section =
+      createOrderElement(
+        "section",
+        "order-notes"
+      );
+
+    section.appendChild(
+      createOrderElement(
+        "h3",
+        "",
+        "Order Notes"
+      )
+    );
+
+    section.appendChild(
+      createOrderElement(
+        "p",
+        "",
+        notes
+      )
+    );
 
     return section;
   }
@@ -720,25 +1428,57 @@
   // STATUS SELECT
   // ==========================================================
 
-  function createStatusSelect(order) {
+  function createStatusSelect(
+    order
+  ) {
     var select =
       document.createElement(
         "select"
       );
 
+    var safeOrderId =
+      order.id.replace(
+        /[^a-zA-Z0-9_-]/g,
+        "-"
+      );
+
+    select.id =
+      "order-status-" +
+      safeOrderId;
+
     select.setAttribute(
       "aria-label",
-      "Status for order " +
-      order.id
+      (
+        "Status for order " +
+        order.id
+      )
     );
 
     var statusOptions = [
-      ["pending", "Pending"],
-      ["paid", "Paid"],
-      ["processing", "Processing"],
-      ["completed", "Completed"],
-      ["cancelled", "Cancelled"],
-      ["refunded", "Refunded"]
+      [
+        "pending",
+        "Pending"
+      ],
+      [
+        "paid",
+        "Paid"
+      ],
+      [
+        "processing",
+        "Processing"
+      ],
+      [
+        "completed",
+        "Completed"
+      ],
+      [
+        "cancelled",
+        "Cancelled"
+      ],
+      [
+        "refunded",
+        "Refunded"
+      ]
     ];
 
     statusOptions.forEach(
@@ -761,7 +1501,9 @@
     );
 
     select.value =
-      order.status;
+      normalizeOrderStatus(
+        order.status
+      );
 
     return select;
   }
@@ -770,12 +1512,17 @@
   // CREATE ORDER CARD
   // ==========================================================
 
-  function createOrderCard(order) {
+  function createOrderCard(
+    order
+  ) {
     var card =
       createOrderElement(
         "article",
         "order-card"
       );
+
+    card.dataset.orderId =
+      order.id;
 
     var cardHeader =
       createOrderElement(
@@ -784,7 +1531,9 @@
       );
 
     var headingGroup =
-      document.createElement("div");
+      document.createElement(
+        "div"
+      );
 
     headingGroup.appendChild(
       createOrderElement(
@@ -815,7 +1564,10 @@
         "span",
         (
           "order-status status-" +
-          order.status
+          order.status.replace(
+            /_/g,
+            "-"
+          )
         ),
         formatOrderStatus(
           order.status
@@ -843,8 +1595,21 @@
       );
 
     informationGrid.appendChild(
+      createInformationItem(
+        "Client Name",
+        order.clientName
+      )
+    );
+
+    informationGrid.appendChild(
       createEmailItem(
         order.email
+      )
+    );
+
+    informationGrid.appendChild(
+      createPhoneItem(
+        order.phone
       )
     );
 
@@ -867,9 +1632,37 @@
 
     informationGrid.appendChild(
       createInformationItem(
+        "Payment Status",
+        safeOrderText(
+          order.paymentStatus,
+          formatOrderStatus(
+            order.status
+          )
+        )
+      )
+    );
+
+    informationGrid.appendChild(
+      createInformationItem(
         "Stripe Session",
         order.stripeSessionId ||
         "Not available"
+      )
+    );
+
+    informationGrid.appendChild(
+      createInformationItem(
+        "Payment Intent",
+        order.stripePaymentIntentId ||
+        "Not available"
+      )
+    );
+
+    informationGrid.appendChild(
+      createInformationItem(
+        "Shipping Address",
+        order.shippingAddress ||
+        "Not provided"
       )
     );
 
@@ -884,6 +1677,17 @@
       )
     );
 
+    var notesSection =
+      createOrderNotes(
+        order.notes
+      );
+
+    if (notesSection) {
+      cardBody.appendChild(
+        notesSection
+      );
+    }
+
     var cardActions =
       createOrderElement(
         "footer",
@@ -891,7 +1695,19 @@
       );
 
     var statusSelect =
-      createStatusSelect(order);
+      createStatusSelect(
+        order
+      );
+
+    var statusLabel =
+      createOrderElement(
+        "label",
+        "",
+        "Order Status:"
+      );
+
+    statusLabel.htmlFor =
+      statusSelect.id;
 
     var updateButton =
       createOrderElement(
@@ -912,6 +1728,10 @@
           updateButton
         );
       }
+    );
+
+    cardActions.appendChild(
+      statusLabel
     );
 
     cardActions.appendChild(
@@ -964,9 +1784,15 @@
 
     var searchableText = [
       order.id,
+      order.clientName,
       order.email,
+      order.phone,
       order.status,
+      order.paymentStatus,
       order.stripeSessionId,
+      order.stripePaymentIntentId,
+      order.shippingAddress,
+      order.notes,
       itemText
     ]
       .join(" ")
@@ -975,7 +1801,8 @@
     return (
       searchableText.indexOf(
         searchText
-      ) >= 0
+      ) >=
+      0
     );
   }
 
@@ -1005,7 +1832,8 @@
     return orderRecords.filter(
       function (order) {
         var statusMatches =
-          selectedStatus === "all" ||
+          selectedStatus ===
+            "all" ||
           order.status ===
             selectedStatus;
 
@@ -1039,10 +1867,18 @@
 
     orderList.replaceChildren();
 
-    if (!filteredOrders.length) {
+    orderList.setAttribute(
+      "aria-busy",
+      "false"
+    );
+
+    if (
+      filteredOrders.length ===
+      0
+    ) {
       var emptyMessage =
-        orderRecords.length
-          ? "No orders match the selected filters."
+        orderRecords.length > 0
+          ? "No orders match the selected search and status filters."
           : "No client orders have been found.";
 
       orderList.appendChild(
@@ -1059,7 +1895,9 @@
     filteredOrders.forEach(
       function (order) {
         orderList.appendChild(
-          createOrderCard(order)
+          createOrderCard(
+            order
+          )
         );
       }
     );
@@ -1070,37 +1908,525 @@
   // ==========================================================
 
   function updateOrderSummary() {
-    var paidCount = 0;
-    var processingCount = 0;
-    var totalRevenue = 0;
+    var summary = {
+      total:
+        orderRecords.length,
+
+      pending:
+        0,
+
+      paid:
+        0,
+
+      processing:
+        0,
+
+      completed:
+        0,
+
+      cancelled:
+        0,
+
+      refunded:
+        0,
+
+      revenue:
+        0
+    };
 
     orderRecords.forEach(
       function (order) {
-        if (order.status === "paid") {
-          paidCount++;
-          totalRevenue += order.total;
-        } else if (
-          order.status === "processing"
+        if (
+          order.status ===
+          "pending"
         ) {
-          processingCount++;
+          summary.pending +=
+            1;
         }
-    });
 
-    var paidElement = getElement('orders-paid-count');
-    var processingElement = getElement('orders-processing-count');
-    var revenueElement = getElement('orders-total-revenue');
+        if (
+          order.status ===
+          "paid"
+        ) {
+          summary.paid +=
+            1;
+        }
 
-    if (paidElement) {
-      paidElement.textContent = String(paidCount);
+        if (
+          order.status ===
+          "processing"
+        ) {
+          summary.processing +=
+            1;
+        }
+
+        if (
+          order.status ===
+          "completed"
+        ) {
+          summary.completed +=
+            1;
+        }
+
+        if (
+          order.status ===
+          "cancelled"
+        ) {
+          summary.cancelled +=
+            1;
+        }
+
+        if (
+          order.status ===
+          "refunded"
+        ) {
+          summary.refunded +=
+            1;
+        }
+
+        if (
+          order.status ===
+            "paid" ||
+          order.status ===
+            "processing" ||
+          order.status ===
+            "completed"
+        ) {
+          summary.revenue +=
+            normalizeMoney(
+              order.total
+            );
+        }
+      }
+    );
+
+    setText(
+      "total-orders",
+      summary.total
+    );
+
+    setText(
+      "pending-orders",
+      summary.pending
+    );
+
+    setText(
+      "paid-orders",
+      summary.paid
+    );
+
+    setText(
+      "processing-orders",
+      summary.processing
+    );
+
+    setText(
+      "completed-orders",
+      summary.completed
+    );
+
+    setText(
+      "cancelled-orders",
+      summary.cancelled
+    );
+
+    setText(
+      "refunded-orders",
+      summary.refunded
+    );
+
+    setText(
+      "total-order-revenue",
+      formatCurrency(
+        summary.revenue,
+        "USD"
+      )
+    );
+  }
+
+  // ==========================================================
+  // REFRESH BUTTON
+  // ==========================================================
+
+  function setRefreshButtonLoading(
+    loading
+  ) {
+    var refreshButton =
+      getElement(
+        "refresh-orders-button"
+      );
+
+    if (!refreshButton) {
+      return;
     }
 
-    if (processingElement) {
-      processingElement.textContent = String(processingCount);
+    refreshButton.disabled =
+      Boolean(loading);
+
+    refreshButton.setAttribute(
+      "aria-busy",
+      loading
+        ? "true"
+        : "false"
+    );
+
+    refreshButton.textContent =
+      loading
+        ? "Refreshing Orders..."
+        : "Refresh Orders";
+  }
+
+  // ==========================================================
+  // LOAD ORDERS
+  // ==========================================================
+
+  async function loadOrders() {
+    if (ordersRequestActive) {
+      return false;
     }
 
-    if (revenueElement) {
-      revenueElement.textContent = formatCurrency(totalRevenue, 'USD');
+    var orderList =
+      getElement(
+        "orderList"
+      );
+
+    ordersRequestActive =
+      true;
+
+    setRefreshButtonLoading(
+      true
+    );
+
+    showOrderMessage(
+      "Loading client orders...",
+      "information"
+    );
+
+    if (orderList) {
+      orderList.setAttribute(
+        "aria-busy",
+        "true"
+      );
+
+      orderList.replaceChildren(
+        createOrderElement(
+          "p",
+          "order-list-loading",
+          "Loading client orders..."
+        )
+      );
+    }
+
+    try {
+      var responseData =
+        await requestJson(
+          ADMIN_ORDERS_API,
+          {
+            method:
+              "GET",
+
+            headers:
+              getAdminHeaders(
+                false
+              )
+          }
+        );
+
+      orderRecords =
+        getOrderList(
+          responseData
+        )
+          .map(
+            normalizeOrder
+          )
+          .filter(
+            function (order) {
+              return Boolean(
+                order.id
+              );
+            }
+          )
+          .sort(
+            function (
+              firstOrder,
+              secondOrder
+            ) {
+              var firstTime =
+                new Date(
+                  firstOrder.createdAt ||
+                  0
+                ).getTime();
+
+              var secondTime =
+                new Date(
+                  secondOrder.createdAt ||
+                  0
+                ).getTime();
+
+              if (
+                !Number.isFinite(
+                  firstTime
+                )
+              ) {
+                firstTime =
+                  0;
+              }
+
+              if (
+                !Number.isFinite(
+                  secondTime
+                )
+              ) {
+                secondTime =
+                  0;
+              }
+
+              return (
+                secondTime -
+                firstTime
+              );
+            }
+          );
+
+      updateOrderSummary();
+      renderOrders();
+
+      showOrderMessage(
+        orderRecords.length ===
+          1
+          ? "1 client order loaded."
+          : (
+              orderRecords.length +
+              " client orders loaded."
+            ),
+        "success"
+      );
+
+      return true;
+    } catch (error) {
+      console.error(
+        "Client orders could not be loaded.",
+        error
+      );
+
+      orderRecords =
+        [];
+
+      updateOrderSummary();
+
+      if (orderList) {
+        orderList.setAttribute(
+          "aria-busy",
+          "false"
+        );
+
+        orderList.replaceChildren(
+          createOrderElement(
+            "p",
+            "order-list-empty",
+            "Client orders could not be loaded."
+          )
+        );
+      }
+
+      showOrderMessage(
+        getRequestErrorMessage(
+          error,
+          "Client orders could not be loaded."
+        ),
+        "error"
+      );
+
+      return false;
+    } finally {
+      ordersRequestActive =
+        false;
+
+      setRefreshButtonLoading(
+        false
+      );
     }
   }
 
+  // ==========================================================
+  // UPDATE ORDER STATUS
+  // ==========================================================
+
+  async function updateOrderStatus(
+    orderId,
+    newStatus,
+    updateButton
+  ) {
+    var normalizedStatus =
+      normalizeOrderStatus(
+        newStatus
+      );
+
+    var selectedOrder =
+      orderRecords.find(
+        function (order) {
+          return (
+            order.id ===
+            orderId
+          );
+        }
+      );
+
+    if (!selectedOrder) {
+      showOrderMessage(
+        "The selected order could not be found.",
+        "error"
+      );
+
+      return false;
+    }
+
+    var previousStatus =
+      selectedOrder.status;
+
+    if (
+      previousStatus ===
+      normalizedStatus
+    ) {
+      showOrderMessage(
+        "The order already has that status.",
+        "information"
+      );
+
+      return false;
+    }
+
+    if (updateButton) {
+      updateButton.disabled =
+        true;
+    }
+
+    try {
+      await requestJson(
+        ADMIN_ORDERS_API +
+        "/" +
+        orderId,
+        {
+          method:
+            "PATCH",
+
+          headers:
+            getAdminHeaders(
+              true
+            ),
+
+          body:
+            JSON.stringify(
+              {
+                status:
+                  normalizedStatus
+              }
+            )
+        }
+      );
+
+      selectedOrder.status =
+        normalizedStatus;
+
+      updateOrderSummary();
+      renderOrders();
+
+      showOrderMessage(
+        "The order status has been updated.",
+        "success"
+      );
+
+      return true;
+    } catch (error) {
+      console.error(
+        "Order status could not be updated.",
+        error
+      );
+
+      showOrderMessage(
+        getRequestErrorMessage(
+          error,
+          "The order status could not be updated."
+        ),
+        "error"
+      );
+
+      return false;
+    } finally {
+      if (updateButton) {
+        updateButton.disabled =
+          false;
+      }
+    }
+  }
+
+  // ==========================================================
+  // EVENT LISTENERS
+  // ==========================================================
+
+  function addOrderEventListeners() {
+    var refreshButton =
+      getElement(
+        "refresh-orders-button"
+      );
+
+    if (refreshButton) {
+      refreshButton.addEventListener(
+        "click",
+        loadOrders
+      );
+    }
+
+    var searchInput =
+      getElement(
+        "order-search"
+      );
+
+    if (searchInput) {
+      searchInput.addEventListener(
+        "input",
+        renderOrders
+      );
+    }
+
+    var statusFilter =
+      getElement(
+        "order-status-filter"
+      );
+
+    if (statusFilter) {
+      statusFilter.addEventListener(
+        "change",
+        renderOrders
+      );
+    }
+  }
+
+  // ==========================================================
+  // INITIALIZATION
+  // ==========================================================
+
+  async function initializeOrdersPage() {
+    var verified =
+      await verifyAdminSession();
+
+    if (!verified) {
+      return;
+    }
+
+    addOrderEventListeners();
+    await loadOrders();
+  }
+
+  if (
+    document.readyState ===
+    "loading"
+  ) {
+    document.addEventListener(
+      "DOMContentLoaded",
+      initializeOrdersPage
+    );
+  } else {
+    initializeOrdersPage();
+  }
 })();

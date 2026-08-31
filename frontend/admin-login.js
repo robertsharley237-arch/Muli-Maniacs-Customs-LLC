@@ -37,6 +37,9 @@
     "token"
   ];
 
+  var loginRequestActive =
+    false;
+
   // ==========================================================
   // BACKEND URL
   // ==========================================================
@@ -53,12 +56,6 @@
   }
 
   function getBackendUrl() {
-    /*
-     * Production:
-     * config.js sets window.MMC_BACKEND_URL to the public
-     * Vercel backend address.
-     */
-
     if (
       typeof window.MMC_BACKEND_URL ===
         "string" &&
@@ -68,10 +65,6 @@
         window.MMC_BACKEND_URL
       );
     }
-
-    /*
-     * Optional localStorage override for temporary testing.
-     */
 
     var savedBackendUrl =
       localStorage.getItem(
@@ -88,12 +81,6 @@
       );
     }
 
-    /*
-     * Local development:
-     * Frontend normally uses port 3000.
-     * Backend normally uses port 10000.
-     */
-
     if (
       window.location.hostname ===
         "localhost" ||
@@ -107,11 +94,6 @@
         ":10000"
       );
     }
-
-    /*
-     * This fallback supports a same-domain deployment.
-     * Separate Vercel projects should use config.js instead.
-     */
 
     return removeTrailingSlashes(
       window.location.origin
@@ -233,7 +215,8 @@
   ) {
     var fallback =
       String(
-        fallbackMessage || ""
+        fallbackMessage ||
+        ""
       ).trim();
 
     if (
@@ -290,8 +273,7 @@
           "string" &&
         errorValue.message.trim()
       ) {
-        return errorValue.message
-          .trim();
+        return errorValue.message.trim();
       }
 
       if (
@@ -310,14 +292,12 @@
       }
 
       if (
-        errorValue
-          .validationErrors !==
+        errorValue.validationErrors !==
         undefined
       ) {
         var validationMessage =
           normalizeErrorMessage(
-            errorValue
-              .validationErrors,
+            errorValue.validationErrors,
             ""
           );
 
@@ -366,7 +346,8 @@
           .filter(Boolean);
 
       if (
-        objectMessages.length > 0
+        objectMessages.length >
+        0
       ) {
         return objectMessages.join(
           " "
@@ -446,15 +427,15 @@
       "login-information"
     );
 
+    messageElement.removeAttribute(
+      "role"
+    );
+
+    messageElement.removeAttribute(
+      "aria-label"
+    );
+
     if (!normalizedMessage) {
-      messageElement.removeAttribute(
-        "role"
-      );
-
-      messageElement.removeAttribute(
-        "aria-label"
-      );
-
       return;
     }
 
@@ -500,8 +481,28 @@
   }
 
   // ==========================================================
-  // LOGIN BUTTON STATE
+  // LOGIN FORM STATE
   // ==========================================================
+
+  function setLoginFormDisabled(
+    disabled
+  ) {
+    var usernameInput =
+      getUsernameInput();
+
+    var passwordInput =
+      getPasswordInput();
+
+    if (usernameInput) {
+      usernameInput.disabled =
+        Boolean(disabled);
+    }
+
+    if (passwordInput) {
+      passwordInput.disabled =
+        Boolean(disabled);
+    }
+  }
 
   function setLoginButtonLoading(
     button,
@@ -512,8 +513,7 @@
     }
 
     if (
-      !button.dataset
-        .originalText
+      !button.dataset.originalText
     ) {
       button.dataset.originalText =
         button.textContent.trim() ||
@@ -540,8 +540,7 @@
     button.textContent =
       loading
         ? "Logging In..."
-        : button.dataset
-            .originalText;
+        : button.dataset.originalText;
   }
 
   // ==========================================================
@@ -572,13 +571,14 @@
   ) {
     localStorage.setItem(
       ADMIN_TOKEN_KEY,
-      token
+      String(token)
     );
 
     localStorage.setItem(
       ADMIN_USER_KEY,
       JSON.stringify(
-        administrator || {}
+        administrator ||
+        {}
       )
     );
 
@@ -592,9 +592,12 @@
   }
 
   function getSavedAdminToken() {
-    return localStorage.getItem(
-      ADMIN_TOKEN_KEY
-    );
+    return String(
+      localStorage.getItem(
+        ADMIN_TOKEN_KEY
+      ) ||
+      ""
+    ).trim();
   }
 
   // ==========================================================
@@ -616,20 +619,18 @@
         REQUEST_TIMEOUT_MILLISECONDS
       );
 
-    var requestOptions =
-      Object.assign(
-        {},
-        options || {},
-        {
-          signal:
-            controller.signal
-        }
-      );
-
     try {
       return await fetch(
         url,
-        requestOptions
+        Object.assign(
+          {},
+          options ||
+          {},
+          {
+            signal:
+              controller.signal
+          }
+        )
       );
     } finally {
       window.clearTimeout(
@@ -725,16 +726,73 @@
   }
 
   // ==========================================================
+  // SAFE RETURN PAGE
+  // ==========================================================
+
+  function getReturnPage() {
+    var urlParameters =
+      new URLSearchParams(
+        window.location.search
+      );
+
+    var requestedPage =
+      String(
+        urlParameters.get(
+          "return"
+        ) ||
+        ""
+      ).trim();
+
+    if (!requestedPage) {
+      return ADMIN_DASHBOARD_PAGE;
+    }
+
+    if (
+      requestedPage.indexOf(
+        "://"
+      ) !==
+        -1 ||
+      requestedPage.indexOf(
+        "//"
+      ) ===
+        0 ||
+      requestedPage.indexOf(
+        "\\"
+      ) !==
+        -1 ||
+      requestedPage.indexOf(
+        ".."
+      ) !==
+        -1
+    ) {
+      return ADMIN_DASHBOARD_PAGE;
+    }
+
+    if (
+      !/^admin-[a-z0-9-]+\.html(?:\?.*)?$/i.test(
+        requestedPage
+      )
+    ) {
+      return ADMIN_DASHBOARD_PAGE;
+    }
+
+    return requestedPage;
+  }
+
+  // ==========================================================
   // DASHBOARD REDIRECTION
   // ==========================================================
 
   function redirectToDashboard(
     delay
   ) {
+    var returnPage =
+      getReturnPage();
+
     window.setTimeout(
       function () {
         window.location.assign(
-          ADMIN_DASHBOARD_PAGE
+          returnPage
         );
       },
       Number(delay || 0)
@@ -780,6 +838,13 @@
         : "true"
     );
 
+    visibilityButton.setAttribute(
+      "aria-label",
+      passwordIsVisible
+        ? "Show password"
+        : "Hide password"
+    );
+
     passwordInput.focus();
   }
 
@@ -803,6 +868,11 @@
       .visibilityConnected =
       "true";
 
+    visibilityButton.setAttribute(
+      "aria-label",
+      "Show password"
+    );
+
     visibilityButton.addEventListener(
       "click",
       togglePasswordVisibility
@@ -818,6 +888,10 @@
   ) {
     if (event) {
       event.preventDefault();
+    }
+
+    if (loginRequestActive) {
+      return;
     }
 
     var usernameInput =
@@ -848,8 +922,7 @@
     }
 
     var username =
-      usernameInput.value
-        .trim();
+      usernameInput.value.trim();
 
     var password =
       passwordInput.value;
@@ -857,6 +930,17 @@
     if (!username) {
       showLoginMessage(
         "Please enter your administrator username.",
+        "error"
+      );
+
+      usernameInput.focus();
+
+      return;
+    }
+
+    if (username.length > 100) {
+      showLoginMessage(
+        "The administrator username cannot exceed 100 characters.",
         "error"
       );
 
@@ -876,14 +960,32 @@
       return;
     }
 
-    try {
-      clearLoginMessage();
-
-      setLoginButtonLoading(
-        loginButton,
-        true
+    if (password.length > 250) {
+      showLoginMessage(
+        "The administrator password cannot exceed 250 characters.",
+        "error"
       );
 
+      passwordInput.focus();
+
+      return;
+    }
+
+    loginRequestActive =
+      true;
+
+    clearLoginMessage();
+
+    setLoginButtonLoading(
+      loginButton,
+      true
+    );
+
+    setLoginFormDisabled(
+      true
+    );
+
+    try {
       var response =
         await fetchWithTimeout(
           ADMIN_LOGIN_URL,
@@ -921,8 +1023,12 @@
             responseData.error ||
             responseData.message ||
             responseData,
-            response.status === 401 ||
-            response.status === 403
+            (
+              response.status ===
+                401 ||
+              response.status ===
+                403
+            )
               ? "The username or password is incorrect."
               : "Administrator login failed."
           );
@@ -942,19 +1048,28 @@
         throw loginError;
       }
 
-      if (
-        typeof responseData.token !==
-          "string" ||
-        !responseData.token.trim()
-      ) {
+      var token =
+        String(
+          responseData.token ||
+          responseData.accessToken ||
+          responseData.access_token ||
+          ""
+        ).trim();
+
+      var administrator =
+        responseData.admin ||
+        responseData.user ||
+        null;
+
+      if (!token) {
         throw new Error(
           "The backend did not provide an administrator token."
         );
       }
 
       if (
-        !responseData.admin ||
-        typeof responseData.admin !==
+        !administrator ||
+        typeof administrator !==
           "object"
       ) {
         throw new Error(
@@ -963,15 +1078,15 @@
       }
 
       saveAdminLogin(
-        responseData.token.trim(),
-        responseData.admin
+        token,
+        administrator
       );
 
       passwordInput.value =
         "";
 
       showLoginMessage(
-        "Login successful. Redirecting to the administrator dashboard...",
+        "Login successful. Redirecting to the administrator system...",
         "success"
       );
 
@@ -993,8 +1108,15 @@
         "error"
       );
     } finally {
+      loginRequestActive =
+        false;
+
       setLoginButtonLoading(
         loginButton,
+        false
+      );
+
+      setLoginFormDisabled(
         false
       );
     }
@@ -1008,10 +1130,7 @@
     var savedToken =
       getSavedAdminToken();
 
-    if (
-      !savedToken ||
-      !String(savedToken).trim()
-    ) {
+    if (!savedToken) {
       return false;
     }
 
@@ -1045,8 +1164,10 @@
         );
 
       if (
-        response.status === 401 ||
-        response.status === 403
+        response.status ===
+          401 ||
+        response.status ===
+          403
       ) {
         clearSavedAdminLogin();
         clearLoginMessage();
@@ -1066,9 +1187,14 @@
         return false;
       }
 
+      var administrator =
+        responseData.admin ||
+        responseData.user ||
+        null;
+
       if (
-        !responseData.admin ||
-        typeof responseData.admin !==
+        !administrator ||
+        typeof administrator !==
           "object"
       ) {
         clearSavedAdminLogin();
@@ -1080,7 +1206,7 @@
       localStorage.setItem(
         ADMIN_USER_KEY,
         JSON.stringify(
-          responseData.admin
+          administrator
         )
       );
 
@@ -1099,12 +1225,6 @@
         "Existing administrator session check failed:",
         error
       );
-
-      /*
-       * Keep the token after a temporary connection problem.
-       * Remove the token only after a confirmed unauthorized
-       * response.
-       */
 
       clearLoginMessage();
 
@@ -1168,17 +1288,39 @@
 
     configurePasswordVisibility();
 
-    if (loginForm) {
+    if (
+      loginForm &&
+      loginForm.dataset
+        .loginConnected !==
+        "true"
+    ) {
+      loginForm.dataset
+        .loginConnected =
+        "true";
+
       loginForm.addEventListener(
         "submit",
         adminLogin
       );
-    } else if (loginButton) {
+    } else if (
+      !loginForm &&
+      loginButton &&
+      loginButton.dataset
+        .loginConnected !==
+        "true"
+    ) {
+      loginButton.dataset
+        .loginConnected =
+        "true";
+
       loginButton.addEventListener(
         "click",
         adminLogin
       );
-    } else {
+    } else if (
+      !loginForm &&
+      !loginButton
+    ) {
       console.error(
         "The administrator login form and login button could not be found."
       );
@@ -1190,20 +1332,12 @@
       usernameInput.focus();
     }
 
-    console.log(
-      "MMC administrator login initialized."
-    );
-
-    console.log(
-      "Administrator backend URL:",
-      BACKEND_URL
-    );
-
     if (
       !BACKEND_URL ||
-      BACKEND_URL.includes(
+      BACKEND_URL.indexOf(
         "YOUR-BACKEND-PROJECT"
-      )
+      ) !==
+        -1
     ) {
       showLoginMessage(
         "The Vercel backend URL has not been configured in config.js.",
@@ -1213,12 +1347,16 @@
       return;
     }
 
+    console.log(
+      "MMC administrator login initialized."
+    );
+
     var backendAvailable =
       await checkBackendStatus();
 
     if (!backendAvailable) {
       showLoginMessage(
-        "The backend could not be reached. Confirm that the Vercel backend deployment is available and that config.js contains the correct backend URL.",
+        "The backend health check could not be completed. You may still try to log in.",
         "information"
       );
     }

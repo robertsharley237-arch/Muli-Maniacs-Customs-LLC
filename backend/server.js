@@ -22,62 +22,51 @@ require("dotenv").config();
 // DEPENDENCIES
 // ============================================================
 
-const express =
-  require("express");
-
-const cors =
-  require("cors");
-
-const db =
-  require("./db");
+const express = require("express");
+const cors = require("cors");
+const db = require("./db");
 
 // ============================================================
 // ROUTES
 // ============================================================
 
-const checkoutRoutes =
-  require("./routes/CheckoutRoutes");
-
-const adminRoutes =
-  require("./routes/AdminRoutes");
-
-const categoryRoutes =
-  require("./routes/CategoryRoutes");
-
-const clientIntakeRoutes =
-  require("./routes/ClientIntakeRoutes");
-
-const orderRoutes =
-  require("./routes/OrderRoutes");
-
-const productRoutes =
-  require("./routes/ProductRoutes");
-
-const settingsRoutes =
-  require("./routes/SettingsRoutes");
-
-const uploadRoutes =
-  require("./routes/UploadRoutes");
+const checkoutRoutes = require("./routes/CheckoutRoutes");
+const adminRoutes = require("./routes/AdminRoutes");
+const categoryRoutes = require("./routes/CategoryRoutes");
+const clientIntakeRoutes = require("./routes/ClientIntakeRoutes");
+const orderRoutes = require("./routes/OrderRoutes");
+const productRoutes = require("./routes/ProductRoutes");
+const settingsRoutes = require("./routes/SettingsRoutes");
+const uploadRoutes = require("./routes/UploadRoutes");
 
 // ============================================================
 // EXPRESS APPLICATION
 // ============================================================
 
-const app =
-  express();
+const app = express();
 
 // ============================================================
 // SERVER SETTINGS
 // ============================================================
 
-app.disable(
-  "x-powered-by"
-);
+app.disable("x-powered-by");
 
-app.set(
-  "trust proxy",
-  1
-);
+app.set("trust proxy", 1);
+
+// ============================================================
+// FAVICON
+//
+// Browsers automatically request /favicon.ico.
+// This route intentionally returns 204 No Content.
+//
+// IMPORTANT:
+// This is placed before database-dependent middleware so a
+// favicon request does not require a database connection.
+// ============================================================
+
+app.get("/favicon.ico", function (request, response) {
+  return response.status(204).end();
+});
 
 // ============================================================
 // ENVIRONMENT CHECK
@@ -105,33 +94,25 @@ function checkEnvironmentVariables() {
   const missingRequired =
     REQUIRED_ENVIRONMENT_VARIABLES.filter(
       function (variableName) {
-        return !process.env[
-          variableName
-        ];
+        return !process.env[variableName];
       }
     );
 
   const missingRecommended =
     RECOMMENDED_ENVIRONMENT_VARIABLES.filter(
       function (variableName) {
-        return !process.env[
-          variableName
-        ];
+        return !process.env[variableName];
       }
     );
 
-  if (
-    missingRequired.length > 0
-  ) {
+  if (missingRequired.length > 0) {
     console.error(
       "Missing required environment variables:",
       missingRequired.join(", ")
     );
   }
 
-  if (
-    missingRecommended.length > 0
-  ) {
+  if (missingRecommended.length > 0) {
     console.warn(
       "Missing optional or recommended environment variables:",
       missingRecommended.join(", ")
@@ -139,16 +120,12 @@ function checkEnvironmentVariables() {
   }
 
   return {
-    missingRequired:
-      missingRequired,
-
-    missingRecommended:
-      missingRecommended
+    missingRequired: missingRequired,
+    missingRecommended: missingRecommended
   };
 }
 
-const environmentStatus =
-  checkEnvironmentVariables();
+const environmentStatus = checkEnvironmentVariables();
 
 // ============================================================
 // CORS CONFIGURATION
@@ -157,10 +134,7 @@ const environmentStatus =
 function normalizeOrigin(value) {
   return String(value || "")
     .trim()
-    .replace(
-      /\/+$/,
-      ""
-    );
+    .replace(/\/+$/, "");
 }
 
 function getAllowedOrigins() {
@@ -184,29 +158,20 @@ function getAllowedOrigins() {
         .forEach(
           function (origin) {
             const normalizedOrigin =
-              normalizeOrigin(
-                origin
-              );
+              normalizeOrigin(origin);
 
             if (
               normalizedOrigin &&
-              !origins.includes(
-                normalizedOrigin
-              )
+              !origins.includes(normalizedOrigin)
             ) {
-              origins.push(
-                normalizedOrigin
-              );
+              origins.push(normalizedOrigin);
             }
           }
         );
     }
   );
 
-  if (
-    process.env.NODE_ENV !==
-    "production"
-  ) {
+  if (process.env.NODE_ENV !== "production") {
     [
       "http://localhost:3000",
       "http://localhost:5000",
@@ -214,14 +179,8 @@ function getAllowedOrigins() {
       "http://127.0.0.1:5000"
     ].forEach(
       function (origin) {
-        if (
-          !origins.includes(
-            origin
-          )
-        ) {
-          origins.push(
-            origin
-          );
+        if (!origins.includes(origin)) {
+          origins.push(origin);
         }
       }
     );
@@ -230,77 +189,54 @@ function getAllowedOrigins() {
   return origins;
 }
 
-const allowedOrigins =
-  getAllowedOrigins();
+const allowedOrigins = getAllowedOrigins();
 
 const corsOptions = {
-  origin:
-    function (
-      requestOrigin,
-      callback
+  origin: function (
+    requestOrigin,
+    callback
+  ) {
+    /*
+     * Requests from servers, terminal tools, health checks,
+     * mobile applications, and same-origin pages may not
+     * include an Origin header.
+     */
+
+    if (!requestOrigin) {
+      callback(null, true);
+      return;
+    }
+
+    const normalizedOrigin =
+      normalizeOrigin(requestOrigin);
+
+    /*
+     * During local development, allow requests if no origins
+     * were configured. Production should define FRONTEND_URL.
+     */
+
+    if (
+      allowedOrigins.length === 0 &&
+      process.env.NODE_ENV !== "production"
     ) {
-      /*
-       * Requests from servers, terminal tools, health checks,
-       * mobile applications, and same-origin pages may not
-       * include an Origin header.
-       */
+      callback(null, true);
+      return;
+    }
 
-      if (!requestOrigin) {
-        callback(
-          null,
-          true
-        );
+    if (allowedOrigins.includes(normalizedOrigin)) {
+      callback(null, true);
+      return;
+    }
 
-        return;
-      }
+    const error = new Error(
+      "This website origin is not allowed to access the MMC API."
+    );
 
-      const normalizedOrigin =
-        normalizeOrigin(
-          requestOrigin
-        );
+    error.statusCode = 403;
+    error.code = "CORS_ORIGIN_BLOCKED";
 
-      /*
-       * During local development, allow requests if no origins
-       * were configured. Production should define FRONTEND_URL.
-       */
-
-      if (
-        allowedOrigins.length === 0 &&
-        process.env.NODE_ENV !==
-          "production"
-      ) {
-        callback(
-          null,
-          true
-        );
-
-        return;
-      }
-
-      if (
-        allowedOrigins.includes(
-          normalizedOrigin
-        )
-      ) {
-        callback(
-          null,
-          true
-        );
-
-        return;
-      }
-
-      const error =
-        new Error(
-          "This website origin is not allowed to access the MMC API."
-        );
-
-      error.statusCode = 403;
-      error.code =
-        "CORS_ORIGIN_BLOCKED";
-
-      callback(error);
-    },
+    callback(error);
+  },
 
   methods: [
     "GET",
@@ -322,24 +258,16 @@ const corsOptions = {
     "Content-Length"
   ],
 
-  credentials:
-    false,
+  credentials: false,
 
-  maxAge:
-    86400,
+  maxAge: 86400,
 
-  optionsSuccessStatus:
-    204
+  optionsSuccessStatus: 204
 };
 
-app.use(
-  cors(corsOptions)
-);
+app.use(cors(corsOptions));
 
-app.options(
-  "*",
-  cors(corsOptions)
-);
+app.options("*", cors(corsOptions));
 
 // ============================================================
 // CHECKOUT AND STRIPE WEBHOOK ROUTES
@@ -357,10 +285,7 @@ app.options(
 // It must be mounted before the global JSON middleware.
 // ============================================================
 
-app.use(
-  "/",
-  checkoutRoutes
-);
+app.use("/", checkoutRoutes);
 
 // ============================================================
 // GLOBAL BODY PARSERS
@@ -370,24 +295,16 @@ app.use(
 
 app.use(
   express.json({
-    limit:
-      "2mb",
-
-    strict:
-      true
+    limit: "2mb",
+    strict: true
   })
 );
 
 app.use(
   express.urlencoded({
-    extended:
-      true,
-
-    limit:
-      "2mb",
-
-    parameterLimit:
-      1000
+    extended: true,
+    limit: "2mb",
+    parameterLimit: 1000
   })
 );
 
@@ -401,8 +318,7 @@ app.use(
     response,
     next
   ) {
-    request.requestStartedAt =
-      Date.now();
+    request.requestStartedAt = Date.now();
 
     response.setHeader(
       "X-Content-Type-Options",
@@ -433,11 +349,9 @@ async function requireDatabase(
   next
 ) {
   if (
-    environmentStatus
-      .missingRequired
-      .includes(
-        "DATABASE_URL"
-      )
+    environmentStatus.missingRequired.includes(
+      "DATABASE_URL"
+    )
   ) {
     return response
       .status(503)
@@ -451,9 +365,7 @@ async function requireDatabase(
   }
 
   try {
-    await db.query(
-      "SELECT 1"
-    );
+    await db.query("SELECT 1");
 
     next();
   } catch (error) {
@@ -501,8 +413,7 @@ app.get(
         "online",
 
       timestamp:
-        new Date()
-          .toISOString()
+        new Date().toISOString()
     });
   }
 );
@@ -517,18 +428,14 @@ app.get(
     request,
     response
   ) {
-    const startedAt =
-      Date.now();
+    const startedAt = Date.now();
 
     try {
       const result =
-        await db.query(
-          `
-            SELECT
-              NOW()
-                AS database_time
-          `
-        );
+        await db.query(`
+          SELECT
+            NOW() AS database_time
+        `);
 
       return response.json({
         status:
@@ -541,12 +448,10 @@ app.get(
           "connected",
 
         databaseTime:
-          result.rows[0]
-            .database_time,
+          result.rows[0].database_time,
 
         responseTimeMilliseconds:
-          Date.now() -
-          startedAt
+          Date.now() - startedAt
       });
     } catch (error) {
       console.error(
@@ -567,8 +472,7 @@ app.get(
             "disconnected",
 
           responseTimeMilliseconds:
-            Date.now() -
-            startedAt
+            Date.now() - startedAt
         });
     }
   }
@@ -590,48 +494,37 @@ app.get(
     return response.json({
       databaseConfigured:
         Boolean(
-          process.env
-            .DATABASE_URL
+          process.env.DATABASE_URL
         ),
 
       frontendConfigured:
         Boolean(
-          process.env
-            .FRONTEND_URL ||
-          process.env
-            .PUBLIC_FRONTEND_URL ||
-          process.env
-            .SITE_URL
+          process.env.FRONTEND_URL ||
+          process.env.PUBLIC_FRONTEND_URL ||
+          process.env.SITE_URL
         ),
 
       stripeConfigured:
         Boolean(
-          process.env
-            .STRIPE_SECRET_KEY
+          process.env.STRIPE_SECRET_KEY
         ),
 
       stripeWebhookConfigured:
         Boolean(
-          process.env
-            .STRIPE_WEBHOOK_SECRET
+          process.env.STRIPE_WEBHOOK_SECRET
         ),
 
       cloudinaryConfigured:
         Boolean(
-          process.env
-            .CLOUDINARY_CLOUD_NAME &&
-          process.env
-            .CLOUDINARY_API_KEY &&
-          process.env
-            .CLOUDINARY_API_SECRET
+          process.env.CLOUDINARY_CLOUD_NAME &&
+          process.env.CLOUDINARY_API_KEY &&
+          process.env.CLOUDINARY_API_SECRET
         ),
 
       intakeEmailConfigured:
         Boolean(
-          process.env
-            .INTAKE_EMAIL_USER &&
-          process.env
-            .INTAKE_EMAIL_PASS
+          process.env.INTAKE_EMAIL_USER &&
+          process.env.INTAKE_EMAIL_PASS
         )
     });
   }
@@ -641,9 +534,7 @@ app.get(
 // DATABASE-DEPENDENT ROUTES
 // ============================================================
 
-app.use(
-  requireDatabase
-);
+app.use(requireDatabase);
 
 // ============================================================
 // ADMINISTRATOR ROUTES
@@ -794,9 +685,7 @@ app.use(
       error
     );
 
-    if (
-      response.headersSent
-    ) {
+    if (response.headersSent) {
       return next(error);
     }
 
@@ -873,8 +762,7 @@ app.use(
 // VERCEL EXPORT
 // ============================================================
 
-module.exports =
-  app;
+module.exports = app;
 
 // ============================================================
 // LOCAL DEVELOPMENT SERVER

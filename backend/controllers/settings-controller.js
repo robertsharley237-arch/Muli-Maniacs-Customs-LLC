@@ -14,9 +14,9 @@ const db = require("../db");
 
 const DEFAULT_SETTINGS = {
   storeName: "Multi-Maniacs Customs LLC",
-  contactPhone1: "",
-  contactPhone2: "",
-  contactEmail: "",
+  contactPhone1: "(606)212-4695",
+  contactPhone2: "(606)220-0185",
+  contactEmail: "multimaniacscustoms@gmail.com",
   businessLocation: "Essie, Kentucky",
   taxRate: 0,
   storeOpen: true,
@@ -47,13 +47,13 @@ function formatSettings(row) {
       DEFAULT_SETTINGS.storeName,
 
     contactPhone1:
-      row.contact_phone_1 || "",
+      row.contact_phone_1 || DEFAULT_SETTINGS.contactPhone1,
 
     contactPhone2:
-      row.contact_phone_2 || "",
+      row.contact_phone_2 || DEFAULT_SETTINGS.contactPhone2,
 
     contactEmail:
-      row.contact_email || "",
+      row.contact_email || DEFAULT_SETTINGS.contactEmail,
 
     businessLocation:
       row.business_location ||

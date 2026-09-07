@@ -4,15 +4,17 @@
 // HOMEPAGE MINI CART
 //
 // Purpose:
-// - Display a mini cart on the homepage
-// - Update all cart-count badges
-// - Display up to three cart selections
-// - Show quantities, variants, prices, and subtotal
-// - Link clients to the shop, cart, and checkout pages
+// - Display homepage mini cart
+// - Update cart badges
+// - Display cart selections
+// - Show quantities, variants, prices, subtotal
+// - Link customers to cart and checkout
 // ============================================================
 
 (function () {
+
   "use strict";
+
 
   // ==========================================================
   // CONFIGURATION
@@ -24,6 +26,8 @@
   var MAXIMUM_VISIBLE_ITEMS =
     3;
 
+
+
   // ==========================================================
   // ELEMENT HELPERS
   // ==========================================================
@@ -31,25 +35,34 @@
   function getElement(
     elementId
   ) {
+
     return document.getElementById(
       elementId
     );
+
   }
+
+
 
   function createTextElement(
     tagName,
     className,
     text
   ) {
+
     var element =
       document.createElement(
         tagName
       );
 
+
     if (className) {
+
       element.className =
         className;
+
     }
+
 
     element.textContent =
       text === undefined ||
@@ -57,148 +70,205 @@
         ? ""
         : String(text);
 
+
     return element;
+
   }
+
+
 
   function createActionLink(
     destination,
     className,
     text
   ) {
+
     var link =
       document.createElement(
         "a"
       );
 
+
     link.href =
       destination;
+
 
     link.className =
       className;
 
+
     link.textContent =
       text;
 
+
     return link;
+
   }
 
+
+
   // ==========================================================
-  // CART VALUE HELPERS
+  // CART ITEM HELPERS
   // ==========================================================
 
   function getItemQuantity(
     item
   ) {
+
     var quantity =
       Number(
         item &&
         item.quantity
       );
 
+
     if (
-      !Number.isInteger(quantity) ||
+      !Number.isFinite(quantity) ||
       quantity < 1
     ) {
+
       return 1;
+
     }
 
-    return quantity;
+
+    return Math.floor(
+      quantity
+    );
+
   }
+
+
 
   function getItemPrice(
     item
   ) {
+
     var price =
       Number(
         item &&
         item.price
       );
 
+
     if (
       !Number.isFinite(price) ||
       price < 0
     ) {
+
       return 0;
+
     }
 
+
     return price;
+
   }
+
+
 
   function getItemName(
     item
   ) {
-    if (
-      !item ||
-      !item.name
-    ) {
-      return "Custom Product";
-    }
 
-    return String(
+    return (
+      item &&
       item.name
-    );
+    )
+
+      ? String(
+          item.name
+        )
+
+      : "Custom Product";
+
   }
+
+
 
   function getItemVariantName(
     item
   ) {
+
     if (
-      !item ||
-      !item.variantName
+      !item
     ) {
+
       return "";
+
     }
 
+
     return String(
-      item.variantName
+      item.variantName ||
+      item.variant ||
+      ""
     );
+
   }
+
+
 
   function getItemSku(
     item
   ) {
-    if (
-      !item ||
-      !item.sku
-    ) {
-      return "";
-    }
 
-    return String(
+    return (
+      item &&
       item.sku
-    );
+    )
+
+      ? String(
+          item.sku
+        )
+
+      : "";
+
   }
+
+
 
   function getItemImage(
     item
   ) {
-    if (
-      !item ||
-      !item.image
-    ) {
-      return "";
-    }
 
-    return String(
+    return (
+      item &&
       item.image
-    );
+    )
+
+      ? String(
+          item.image
+        )
+
+      : "";
+
   }
 
+
+
   // ==========================================================
-  // CURRENCY FORMATTING
+  // CURRENCY FORMAT
   // ==========================================================
 
   function formatCurrency(
     value
   ) {
+
     var amount =
-      Number(value);
+      Number(
+        value
+      );
+
 
     if (
       !Number.isFinite(amount)
     ) {
+
       amount = 0;
+
     }
+
 
     return new Intl.NumberFormat(
       "en-US",
@@ -209,620 +279,831 @@
         currency:
           "USD"
       }
-    ).format(amount);
+    ).format(
+      amount
+    );
+
   }
-
   // ==========================================================
-  // LOAD THE SAVED CART
-  // ==========================================================
+// LOAD STORED CART
+// ==========================================================
 
-  function loadStoredCart() {
-    try {
-      var savedCart =
-        localStorage.getItem(
-          CART_STORAGE_KEY
-        );
+function loadStoredCart() {
 
-      if (!savedCart) {
-        return [];
-      }
+  try {
 
-      var parsedCart =
-        JSON.parse(
-          savedCart
-        );
-
-      if (
-        !Array.isArray(
-          parsedCart
-        )
-      ) {
-        console.warn(
-          "The saved MMC cart is not a valid array."
-        );
-
-        return [];
-      }
-
-      return parsedCart.filter(
-        function (item) {
-          return (
-            item &&
-            typeof item ===
-              "object"
-          );
-        }
+    var savedCart =
+      localStorage.getItem(
+        CART_STORAGE_KEY
       );
-    } catch (error) {
-      console.error(
-        "The homepage mini cart could not load the saved cart:",
-        error
-      );
+
+
+    if (!savedCart) {
 
       return [];
+
     }
-  }
 
-  // ==========================================================
-  // CART TOTALS
-  // ==========================================================
 
-  function getTotalQuantity(
-    cart
-  ) {
-    return cart.reduce(
-      function (
-        total,
-        item
-      ) {
+    var parsedCart =
+      JSON.parse(
+        savedCart
+      );
+
+
+    if (
+      !Array.isArray(
+        parsedCart
+      )
+    ) {
+
+      return [];
+
+    }
+
+
+    return parsedCart.filter(
+      function(item){
+
         return (
-          total +
-          getItemQuantity(
-            item
-          )
+          item &&
+          typeof item === "object"
         );
-      },
-      0
+
+      }
     );
+
+
+  } catch(error) {
+
+
+    console.error(
+      "MMC cart loading failed:",
+      error
+    );
+
+
+    return [];
+
   }
 
-  function getCartSubtotal(
-    cart
-  ) {
-    return cart.reduce(
-      function (
-        total,
-        item
-      ) {
-        return (
-          total +
+}
+
+
+
+// ==========================================================
+// CART TOTALS
+// ==========================================================
+
+function getTotalQuantity(
+  cart
+) {
+
+  return cart.reduce(
+    function(
+      total,
+      item
+    ){
+
+      return (
+        total +
+        getItemQuantity(
+          item
+        )
+      );
+
+    },
+    0
+  );
+
+}
+
+
+
+function getCartSubtotal(
+  cart
+) {
+
+  return cart.reduce(
+    function(
+      total,
+      item
+    ){
+
+      return (
+        total +
+        (
           getItemPrice(
             item
           ) *
           getItemQuantity(
             item
           )
-        );
-      },
-      0
+        )
+      );
+
+    },
+    0
+  );
+
+}
+
+
+
+// ==========================================================
+// UPDATE CART BADGES
+// ==========================================================
+
+function updateCartCount(
+  totalQuantity
+) {
+
+
+  var badges =
+    document.querySelectorAll(
+      "#cart-count, [data-cart-count]"
     );
-  }
 
-  // ==========================================================
-  // CART-COUNT BADGES
-  // ==========================================================
 
-  function updateCartCount(
-    totalQuantity
-  ) {
-    var cartBadges =
-      document.querySelectorAll(
-        "#cart-count, " +
-        "[data-cart-count]"
-      );
 
-    var accessibleLabel =
-      String(totalQuantity) +
-      (
-        totalQuantity === 1
-          ? " item in cart"
-          : " items in cart"
-      );
+  var label =
+    totalQuantity === 1
 
-    cartBadges.forEach(
-      function (badge) {
-        badge.textContent =
-          String(
-            totalQuantity
-          );
+      ? "1 item in cart"
 
-        badge.setAttribute(
-          "aria-label",
-          accessibleLabel
+      : String(
+          totalQuantity
+        ) +
+        " items in cart";
+
+
+
+  badges.forEach(
+    function(
+      badge
+    ){
+
+      badge.textContent =
+        String(
+          totalQuantity
         );
 
-        badge.dataset.cartQuantity =
-          String(
-            totalQuantity
-          );
-      }
-    );
-  }
 
-  // ==========================================================
-  // MINI-CART IMAGE
-  // ==========================================================
-
-  function createMiniCartImage(
-    item
-  ) {
-    var imageUrl =
-      getItemImage(
-        item
+      badge.setAttribute(
+        "aria-label",
+        label
       );
 
-    if (!imageUrl) {
-      return null;
+
+      badge.dataset.cartQuantity =
+        String(
+          totalQuantity
+        );
+
     }
+  );
 
-    var imageContainer =
-      document.createElement(
-        "div"
-      );
+}
 
-    imageContainer.className =
-      "mini-cart-item-image-container";
 
-    var image =
-      document.createElement(
-        "img"
-      );
 
-    image.className =
-      "mini-cart-item-image";
+// ==========================================================
+// MINI CART IMAGE
+// ==========================================================
 
-    image.src =
-      imageUrl;
+function createMiniCartImage(
+  item
+) {
 
-    image.alt =
-      getItemName(item);
-
-    image.loading =
-      "lazy";
-
-    image.addEventListener(
-      "error",
-      function () {
-        imageContainer.remove();
-      }
+  var imageUrl =
+    getItemImage(
+      item
     );
 
-    imageContainer.appendChild(
+
+  if (
+    !imageUrl
+  ) {
+
+    return null;
+
+  }
+
+
+
+  var wrapper =
+    document.createElement(
+      "div"
+    );
+
+
+  wrapper.className =
+    "mini-cart-item-image-container";
+
+
+
+  var image =
+    document.createElement(
+      "img"
+    );
+
+
+  image.className =
+    "mini-cart-item-image";
+
+
+  image.src =
+    imageUrl;
+
+
+  image.alt =
+    getItemName(
+      item
+    );
+
+
+  image.loading =
+    "lazy";
+
+
+
+  image.onerror =
+    function(){
+
+      wrapper.remove();
+
+    };
+
+
+
+  wrapper.appendChild(
+    image
+  );
+
+
+  return wrapper;
+
+}
+
+
+
+// ==========================================================
+// CREATE MINI CART ITEM
+// ==========================================================
+
+function createMiniCartItem(
+  item
+) {
+
+  var article =
+    document.createElement(
+      "article"
+    );
+
+
+  article.className =
+    "mini-cart-item";
+
+
+
+  var image =
+    createMiniCartImage(
+      item
+    );
+
+
+
+  if(image){
+
+    article.appendChild(
       image
     );
 
-    return imageContainer;
   }
 
-  // ==========================================================
-  // CREATE A MINI-CART ITEM
-  // ==========================================================
 
-  function createMiniCartItem(
-    item
-  ) {
-    var itemContainer =
-      document.createElement(
-        "article"
-      );
 
-    itemContainer.className =
-      "mini-cart-item";
+  var content =
+    document.createElement(
+      "div"
+    );
 
-    var imageContainer =
-      createMiniCartImage(
+
+  content.className =
+    "mini-cart-item-content";
+
+
+
+  var quantity =
+    getItemQuantity(
+      item
+    );
+
+
+  var price =
+    getItemPrice(
+      item
+    );
+
+
+  var variant =
+    getItemVariantName(
+      item
+    );
+
+
+  var sku =
+    getItemSku(
+      item
+    );
+
+
+
+  content.appendChild(
+    createTextElement(
+      "h3",
+      "mini-cart-item-name",
+      getItemName(
         item
-      );
-
-    if (imageContainer) {
-      itemContainer.appendChild(
-        imageContainer
-      );
-    }
-
-    var itemContent =
-      document.createElement(
-        "div"
-      );
-
-    itemContent.className =
-      "mini-cart-item-content";
-
-    var quantity =
-      getItemQuantity(
-        item
-      );
-
-    var price =
-      getItemPrice(
-        item
-      );
-
-    var variantName =
-      getItemVariantName(
-        item
-      );
-
-    var sku =
-      getItemSku(
-        item
-      );
-
-    itemContent.appendChild(
-      createTextElement(
-        "h3",
-        "mini-cart-item-name",
-        getItemName(item)
       )
-    );
+    )
+  );
 
-    if (variantName) {
-      itemContent.appendChild(
-        createTextElement(
-          "p",
-          "mini-cart-item-variant",
-          "Variant: " +
-          variantName
-        )
-      );
-    }
 
-    if (sku) {
-      itemContent.appendChild(
-        createTextElement(
-          "p",
-          "mini-cart-item-sku",
-          "SKU: " +
-          sku
-        )
-      );
-    }
 
-    itemContent.appendChild(
+  if(variant){
+
+    content.appendChild(
       createTextElement(
         "p",
-        "mini-cart-item-details",
-        String(quantity) +
-        " x " +
-        formatCurrency(price)
+        "mini-cart-item-variant",
+        "Variant: " +
+        variant
       )
     );
 
-    itemContent.appendChild(
+  }
+
+
+
+  if(sku){
+
+    content.appendChild(
       createTextElement(
         "p",
-        "mini-cart-item-total",
-        "Item total: " +
-        formatCurrency(
-          price * quantity
-        )
+        "mini-cart-item-sku",
+        "SKU: " +
+        sku
       )
     );
 
-    itemContainer.appendChild(
-      itemContent
-    );
-
-    return itemContainer;
   }
 
-  // ==========================================================
-  // EMPTY CART DISPLAY
-  // ==========================================================
 
-  function displayEmptyMiniCart(
-    container
-  ) {
-    var emptyState =
-      document.createElement(
-        "div"
-      );
 
-    emptyState.className =
-      "mini-cart-empty-state";
-
-    emptyState.appendChild(
-      createTextElement(
-        "p",
-        "mini-cart-empty",
-        "Your cart is currently empty."
+  content.appendChild(
+    createTextElement(
+      "p",
+      "mini-cart-item-details",
+      quantity +
+      " × " +
+      formatCurrency(
+        price
       )
-    );
+    )
+  );
 
-    emptyState.appendChild(
-      createActionLink(
-        "shop.html",
-        "mini-cart-link",
-        "Browse the Shop"
+
+
+  content.appendChild(
+    createTextElement(
+      "p",
+      "mini-cart-item-total",
+      "Total: " +
+      formatCurrency(
+        price * quantity
       )
+    )
+  );
+
+
+
+  article.appendChild(
+    content
+  );
+
+
+
+  return article;
+
+}
+// ==========================================================
+// EMPTY CART DISPLAY
+// ==========================================================
+
+function displayEmptyMiniCart(
+  container
+) {
+
+  var emptyState =
+    document.createElement(
+      "div"
     );
 
-    container.appendChild(
-      emptyState
-    );
-  }
 
-  // ==========================================================
-  // ADDITIONAL CART ITEMS
-  // ==========================================================
+  emptyState.className =
+    "mini-cart-empty-state";
 
-  function displayAdditionalItems(
-    container,
-    cart
-  ) {
-    if (
-      cart.length <=
-      MAXIMUM_VISIBLE_ITEMS
-    ) {
-      return;
-    }
 
-    var hiddenItemCount =
-      cart.length -
-      MAXIMUM_VISIBLE_ITEMS;
 
-    var message =
-      "+" +
-      String(
-        hiddenItemCount
-      ) +
-      (
-        hiddenItemCount === 1
-          ? " more cart selection"
-          : " more cart selections"
-      );
+  emptyState.appendChild(
+    createTextElement(
+      "p",
+      "mini-cart-empty",
+      "Your cart is currently empty."
+    )
+  );
 
-    container.appendChild(
-      createTextElement(
-        "p",
-        "mini-cart-more-items",
-        message
-      )
-    );
-  }
 
-  // ==========================================================
-  // MINI-CART SUMMARY
-  // ==========================================================
 
-  function displayMiniCartSummary(
-    container,
-    cart
-  ) {
-    var totalQuantity =
-      getTotalQuantity(
-        cart
-      );
+  emptyState.appendChild(
+    createActionLink(
+      "shop.html",
+      "mini-cart-link",
+      "Browse the Shop"
+    )
+  );
 
-    var subtotal =
-      getCartSubtotal(
-        cart
-      );
 
-    var summary =
-      document.createElement(
-        "div"
-      );
 
-    summary.className =
-      "mini-cart-summary";
+  container.appendChild(
+    emptyState
+  );
 
-    summary.appendChild(
-      createTextElement(
-        "p",
-        "mini-cart-quantity",
-        totalQuantity === 1
-          ? "1 item in your cart."
-          : String(
-              totalQuantity
-            ) +
-            " items in your cart."
-      )
-    );
+}
 
-    summary.appendChild(
-      createTextElement(
-        "p",
-        "mini-cart-subtotal",
-        "Subtotal: " +
-        formatCurrency(
-          subtotal
-        )
-      )
-    );
 
-    var actionContainer =
-      document.createElement(
-        "div"
-      );
 
-    actionContainer.className =
-      "mini-cart-actions";
+// ==========================================================
+// ADDITIONAL ITEMS MESSAGE
+// ==========================================================
 
-    actionContainer.appendChild(
-      createActionLink(
-        "cart.html",
-        "mini-cart-link",
-        "View Full Cart"
-      )
-    );
-
-    actionContainer.appendChild(
-      createActionLink(
-        "checkout.html",
-        "mini-cart-checkout-link",
-        "Continue to Checkout"
-      )
-    );
-
-    summary.appendChild(
-      actionContainer
-    );
-
-    container.appendChild(
-      summary
-    );
-  }
-
-  // ==========================================================
-  // RENDER THE HOMEPAGE MINI CART
-  // ==========================================================
-
-  function renderMiniCart() {
-    var miniCartContainer =
-      getElement(
-        "miniCartItems"
-      );
-
-    var cart =
-      loadStoredCart();
-
-    var totalQuantity =
-      getTotalQuantity(
-        cart
-      );
-
-    updateCartCount(
-      totalQuantity
-    );
-
-    if (!miniCartContainer) {
-      return;
-    }
-
-    miniCartContainer.replaceChildren();
-
-    if (
-      cart.length === 0
-    ) {
-      displayEmptyMiniCart(
-        miniCartContainer
-      );
-
-      return;
-    }
-
-    var visibleItems =
-      cart.slice(
-        0,
-        MAXIMUM_VISIBLE_ITEMS
-      );
-
-    var visibleItemsContainer =
-      document.createElement(
-        "div"
-      );
-
-    visibleItemsContainer.className =
-      "mini-cart-visible-items";
-
-    visibleItems.forEach(
-      function (item) {
-        visibleItemsContainer.appendChild(
-          createMiniCartItem(
-            item
-          )
-        );
-      }
-    );
-
-    miniCartContainer.appendChild(
-      visibleItemsContainer
-    );
-
-    displayAdditionalItems(
-      miniCartContainer,
-      cart
-    );
-
-    displayMiniCartSummary(
-      miniCartContainer,
-      cart
-    );
-  }
-
-  // ==========================================================
-  // CART UPDATE EVENTS
-  // ==========================================================
-
-  function handleStorageChange(
-    event
-  ) {
-    if (
-      event.key ===
-      CART_STORAGE_KEY
-    ) {
-      renderMiniCart();
-    }
-  }
-
-  function handleCartUpdated() {
-    renderMiniCart();
-  }
-
-  // ==========================================================
-  // INITIALIZE HOMEPAGE
-  // ==========================================================
-
-  function initializeHomepage() {
-    renderMiniCart();
-
-    document.addEventListener(
-      "cartUpdated",
-      handleCartUpdated
-    );
-
-    window.addEventListener(
-      "mmc-cart-updated",
-      handleCartUpdated
-    );
-
-    window.addEventListener(
-      "storage",
-      handleStorageChange
-    );
-
-    console.log(
-      "MMC homepage mini cart initialized."
-    );
-  }
-
-  // ==========================================================
-  // STARTUP
-  // ==========================================================
+function displayAdditionalItems(
+  container,
+  cart
+) {
 
   if (
-    document.readyState ===
-    "loading"
+    cart.length <=
+    MAXIMUM_VISIBLE_ITEMS
   ) {
-    document.addEventListener(
-      "DOMContentLoaded",
-      initializeHomepage
-    );
-  } else {
-    initializeHomepage();
+
+    return;
+
   }
 
-  // ==========================================================
-  // GLOBAL SUPPORT
-  // ==========================================================
 
-  window.renderMiniCart =
-    renderMiniCart;
 
-  window.refreshMiniCart =
-    renderMiniCart;
+  var extraItems =
+    cart.length -
+    MAXIMUM_VISIBLE_ITEMS;
 
-  window.updateHomepageCartCount =
-    updateCartCount;
-}());
+
+
+  container.appendChild(
+    createTextElement(
+      "p",
+      "mini-cart-more-items",
+      "+" +
+      extraItems +
+      (
+        extraItems === 1
+          ? " more cart selection"
+          : " more cart selections"
+      )
+    )
+  );
+
+}
+
+
+
+// ==========================================================
+// MINI CART SUMMARY
+// ==========================================================
+
+function displayMiniCartSummary(
+  container,
+  cart
+) {
+
+  var quantity =
+    getTotalQuantity(
+      cart
+    );
+
+
+  var subtotal =
+    getCartSubtotal(
+      cart
+    );
+
+
+
+  var summary =
+    document.createElement(
+      "div"
+    );
+
+
+  summary.className =
+    "mini-cart-summary";
+
+
+
+  summary.appendChild(
+    createTextElement(
+      "p",
+      "mini-cart-quantity",
+      quantity === 1
+        ? "1 item in your cart."
+        : quantity +
+          " items in your cart."
+    )
+  );
+
+
+
+  summary.appendChild(
+    createTextElement(
+      "p",
+      "mini-cart-subtotal",
+      "Subtotal: " +
+      formatCurrency(
+        subtotal
+      )
+    )
+  );
+
+
+
+  var actions =
+    document.createElement(
+      "div"
+    );
+
+
+  actions.className =
+    "mini-cart-actions";
+
+
+
+  actions.appendChild(
+    createActionLink(
+      "cart.html",
+      "mini-cart-link",
+      "View Full Cart"
+    )
+  );
+
+
+
+  actions.appendChild(
+    createActionLink(
+      "checkout.html",
+      "mini-cart-checkout-link",
+      "Continue to Checkout"
+    )
+  );
+
+
+
+  summary.appendChild(
+    actions
+  );
+
+
+
+  container.appendChild(
+    summary
+  );
+
+}
+
+
+
+// ==========================================================
+// RENDER HOMEPAGE MINI CART
+// ==========================================================
+
+function renderMiniCart(){
+
+  var container =
+    getElement(
+      "miniCartItems"
+    );
+
+
+  var cart =
+    loadStoredCart();
+
+
+
+  var totalQuantity =
+    getTotalQuantity(
+      cart
+    );
+
+
+
+  updateCartCount(
+    totalQuantity
+  );
+
+
+
+  if(
+    !container
+  ){
+
+    return;
+
+  }
+
+
+
+  container.replaceChildren();
+
+
+
+  if(
+    cart.length === 0
+  ){
+
+    displayEmptyMiniCart(
+      container
+    );
+
+
+    return;
+
+  }
+
+
+
+  var visibleItems =
+    cart.slice(
+      0,
+      MAXIMUM_VISIBLE_ITEMS
+    );
+
+
+
+  var itemsWrapper =
+    document.createElement(
+      "div"
+    );
+
+
+  itemsWrapper.className =
+    "mini-cart-visible-items";
+
+
+
+  visibleItems.forEach(
+    function(item){
+
+      itemsWrapper.appendChild(
+        createMiniCartItem(
+          item
+        )
+      );
+
+    }
+  );
+
+
+
+  container.appendChild(
+    itemsWrapper
+  );
+
+
+
+  displayAdditionalItems(
+    container,
+    cart
+  );
+
+
+
+  displayMiniCartSummary(
+    container,
+    cart
+  );
+
+}
+
+
+
+// ==========================================================
+// CART EVENTS
+// ==========================================================
+
+function handleStorageChange(
+  event
+){
+
+  if(
+    event.key ===
+    CART_STORAGE_KEY
+  ){
+
+    renderMiniCart();
+
+  }
+
+}
+
+
+
+function handleCartUpdated(){
+
+  renderMiniCart();
+
+}
+
+
+
+// ==========================================================
+// INITIALIZATION
+// ==========================================================
+
+function initializeHomepage(){
+
+  renderMiniCart();
+
+
+
+  document.addEventListener(
+    "cartUpdated",
+    handleCartUpdated
+  );
+
+
+
+  window.addEventListener(
+    "mmc-cart-updated",
+    handleCartUpdated
+  );
+
+
+
+  window.addEventListener(
+    "storage",
+    handleStorageChange
+  );
+
+}
+
+
+
+// ==========================================================
+// PAGE STARTUP
+// ==========================================================
+
+if(
+  document.readyState ===
+  "loading"
+){
+
+  document.addEventListener(
+    "DOMContentLoaded",
+    initializeHomepage
+  );
+
+} else {
+
+  initializeHomepage();
+
+}
+
+
+
+// ==========================================================
+// GLOBAL SUPPORT
+// ==========================================================
+
+window.renderMiniCart =
+  renderMiniCart;
+
+
+window.refreshMiniCart =
+  renderMiniCart;
+
+
+window.updateHomepageCartCount =
+  updateCartCount;
+
+
+})();

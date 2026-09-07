@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
 
@@ -10,7 +11,7 @@
 
   <meta
     name="description"
-    content="Learn about Multi-Maniacs Customs LLC, a multi-industry customization shop serving clients throughout the United States."
+    content="Learn about Multi-Maniacs Customs LLC, a multi-industry customization shop creating custom products, creative builds, and personalized projects for local and nationwide clients."
   >
 
   <meta
@@ -28,12 +29,13 @@
   >
 
   <style>
+
     /* ========================================================
        MMC ABOUT PAGE
        Page-specific layout only.
        Shared colors, header, footer, forms, and buttons come
        from style.css.
-       ======================================================== */
+    ========================================================= */
 
     .about-page {
       width: calc(100% - 32px);
@@ -41,256 +43,445 @@
       margin: 34px auto;
     }
 
+
     .about-hero,
     .about-section,
     .about-callout {
+
       position: relative;
       overflow: hidden;
+
       margin-bottom: 28px;
       padding: 28px;
+
       color: var(--mmc-black, #000000);
-      background: rgba(255, 255, 255, 0.94);
-      border: 3px solid var(--mmc-black, #000000);
-      border-radius: 16px;
+
+      background:
+        rgba(255, 255, 255, 0.94);
+
+      border:
+        3px solid var(--mmc-black, #000000);
+
+      border-radius:
+        16px;
+
       box-shadow:
-        0 14px 34px rgba(0, 0, 0, 0.38),
-        0 0 0 4px rgba(255, 255, 255, 0.25);
+
+        0 14px 34px rgba(0,0,0,0.38),
+
+        0 0 0 4px rgba(255,255,255,0.25);
     }
+
 
     .about-hero {
-      padding: 42px 30px;
-      text-align: center;
+
+      padding:
+        42px 30px;
+
+      text-align:
+        center;
     }
+
 
     .about-eyebrow {
-      margin: 0 0 8px;
-      color: #72007c;
-      font-size: 14px;
-      font-weight: 900;
-      letter-spacing: 0.09em;
-      text-transform: uppercase;
+
+      margin:
+        0 0 8px;
+
+      color:
+        #72007c;
+
+      font-size:
+        14px;
+
+      font-weight:
+        900;
+
+      letter-spacing:
+        0.09em;
+
+      text-transform:
+        uppercase;
     }
+
 
     .about-heading {
-      max-width: 900px;
-      margin: 0 auto 18px;
-      color: var(--mmc-black, #000000);
-      font-size: clamp(36px, 7vw, 58px);
-      line-height: 1.08;
+
+      max-width:
+        900px;
+
+      margin:
+        0 auto 18px;
+
+      color:
+        var(--mmc-black,#000000);
+
+      font-size:
+        clamp(36px,7vw,58px);
+
+      line-height:
+        1.08;
     }
 
+
     .about-introduction {
-      max-width: 850px;
-      margin: 0 auto;
-      color: var(--mmc-muted-text, #333333);
-      font-size: 18px;
-      line-height: 1.7;
+
+      max-width:
+        850px;
+
+      margin:
+        0 auto;
+
+      color:
+        var(--mmc-muted-text,#333333);
+
+      font-size:
+        18px;
+
+      line-height:
+        1.7;
     }
+
 
     .about-section h2,
     .about-callout h2 {
-      margin: 0 0 14px;
-      color: var(--mmc-black, #000000);
-      text-align: center;
+
+      margin:
+        0 0 14px;
+
+      color:
+        var(--mmc-black,#000000);
+
+      text-align:
+        center;
     }
+
 
     .about-section-description,
     .about-callout > p {
-      max-width: 900px;
-      margin: 0 auto 24px;
-      color: var(--mmc-muted-text, #333333);
-      line-height: 1.7;
-      text-align: center;
+
+      max-width:
+        900px;
+
+      margin:
+        0 auto 24px;
+
+      color:
+        var(--mmc-muted-text,#333333);
+
+      line-height:
+        1.7;
+
+      text-align:
+        center;
     }
+
 
     .about-grid {
-      display: grid;
+
+      display:
+        grid;
+
       grid-template-columns:
-        repeat(auto-fit, minmax(230px, 1fr));
-      gap: 20px;
+        repeat(auto-fit,minmax(230px,1fr));
+
+      gap:
+        20px;
     }
+
 
     .about-card {
-      padding: 22px;
-      color: var(--mmc-black, #000000);
-      background: rgba(255, 255, 255, 0.96);
-      border: 3px solid var(--mmc-black, #000000);
-      border-radius: 14px;
+
+      padding:
+        22px;
+
+      color:
+        var(--mmc-black,#000000);
+
+      background:
+        rgba(255,255,255,0.96);
+
+      border:
+        3px solid var(--mmc-black,#000000);
+
+      border-radius:
+        14px;
+
       box-shadow:
-        0 10px 24px rgba(0, 0, 0, 0.3);
+        0 10px 24px rgba(0,0,0,0.30);
+
       transition:
-        transform 0.2s ease,
-        box-shadow 0.2s ease;
+        transform .2s ease,
+        box-shadow .2s ease;
     }
+
 
     .about-card:hover {
-      transform: translateY(-4px);
+
+      transform:
+        translateY(-4px);
+
       box-shadow:
-        0 15px 30px rgba(0, 0, 0, 0.4),
-        0 0 16px rgba(255, 20, 147, 0.35);
+
+        0 15px 30px rgba(0,0,0,.40),
+
+        0 0 16px rgba(255,20,147,.35);
     }
+
 
     .about-card-icon {
-      display: block;
-      margin-bottom: 12px;
-      font-size: 34px;
+
+      display:
+        block;
+
+      margin-bottom:
+        12px;
+
+      font-size:
+        34px;
     }
+
 
     .about-card h3 {
-      margin: 0 0 10px;
-      color: var(--mmc-black, #000000);
+
+      margin:
+        0 0 10px;
+
+      color:
+        var(--mmc-black,#000000);
     }
+
 
     .about-card p {
-      margin: 0;
-      color: var(--mmc-muted-text, #333333);
-      line-height: 1.65;
+
+      margin:
+        0;
+
+      color:
+        var(--mmc-muted-text,#333333);
+
+      line-height:
+        1.65;
     }
+
 
     .about-values-list {
-      display: grid;
+
+      display:
+        grid;
+
       grid-template-columns:
-        repeat(auto-fit, minmax(250px, 1fr));
-      gap: 18px;
-      margin: 0;
-      padding: 0;
-      list-style: none;
+        repeat(auto-fit,minmax(250px,1fr));
+
+      gap:
+        18px;
+
+      margin:
+        0;
+
+      padding:
+        0;
+
+      list-style:
+        none;
     }
+
 
     .about-values-list li {
-      padding: 20px;
-      color: var(--mmc-muted-text, #333333);
-      background: rgba(255, 255, 255, 0.96);
-      border: 3px solid var(--mmc-black, #000000);
-      border-radius: 12px;
-      line-height: 1.65;
+
+      padding:
+        20px;
+
+      color:
+        var(--mmc-muted-text,#333333);
+
+      background:
+        rgba(255,255,255,.96);
+
+      border:
+        3px solid var(--mmc-black,#000000);
+
+      border-radius:
+        12px;
+
+      line-height:
+        1.65;
+
       box-shadow:
-        0 9px 20px rgba(0, 0, 0, 0.24);
+        0 9px 20px rgba(0,0,0,.24);
     }
+
 
     .about-values-list strong {
-      display: block;
-      margin-bottom: 7px;
-      color: var(--mmc-black, #000000);
-      font-size: 18px;
+
+      display:
+        block;
+
+      margin-bottom:
+        7px;
+
+      color:
+        var(--mmc-black,#000000);
+
+      font-size:
+        18px;
     }
+
 
     .about-callout {
-      text-align: center;
+
+      text-align:
+        center;
     }
+
 
     .about-actions {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
-      gap: 14px;
-      margin-top: 24px;
+
+      display:
+        flex;
+
+      flex-wrap:
+        wrap;
+
+      justify-content:
+        center;
+
+      gap:
+        14px;
+
+      margin-top:
+        24px;
     }
 
-    @media (max-width: 700px) {
+
+    @media(max-width:700px){
+
       .about-page {
-        width: calc(100% - 24px);
-        margin: 22px auto;
+
+        width:
+          calc(100% - 24px);
+
+        margin:
+          22px auto;
       }
+
 
       .about-hero,
       .about-section,
       .about-callout {
-        padding: 22px 16px;
+
+        padding:
+          22px 16px;
       }
 
-      .about-hero {
-        padding-top: 30px;
-        padding-bottom: 30px;
-      }
 
       .about-actions {
-        flex-direction: column;
+
+        flex-direction:
+          column;
       }
 
-      .about-actions .primary-action,
-      .about-actions .secondary-action {
-        width: 100%;
-      }
     }
+
   </style>
 
-  <!--
-    config.js loads the public Vercel backend address.
-    It must load before other scripts that may contact the API.
-  -->
 
   <script
     src="config.js"
     defer
   ></script>
 
+
   <script
     src="navigation.js"
     defer
   ></script>
 
+
   <script
     src="cart.js"
     defer
   ></script>
+
+
 </head>
 
+
 <body>
-  #main-content
-    Skip to main content
-  </a>
 
-  <!-- ========================================================
-       SHARED WEBSITE HEADER
-       ======================================================== -->
 
-  <header class="top-header">
-    <div class="header-content">
-      <a
-        class="site-logo-link"
-        href="index.html"
-        aria-label="Go to the Multi-Maniacs Customs homepage"
+<a
+  href="#main-content"
+  class="skip-link"
+>
+  Skip to main content
+</a>
+
+
+<!-- ========================================================
+     SHARED WEBSITE HEADER
+======================================================== -->
+
+
+<header class="top-header">
+
+  <div class="header-content">
+
+
+    <a
+      class="site-logo-link"
+      href="index.html"
+      aria-label="Go to the Multi-Maniacs Customs homepage"
+    >
+
+      <img
+        src="images/mmc-logo.png"
+        alt="Multi-Maniacs Customs LLC Logo"
       >
-        images/mmc-logo.png
-      </a>
 
-      <div class="site-branding">
-        <p class="site-heading">
-          Multi-Maniacs Customs LLC
-        </p>
+    </a>
 
-        <p class="site-tagline">
-          Custom Possibilities Across Industries
-        </p>
 
-        <nav
-          class="header-buttons"
-          aria-label="Main website navigation"
+    <div class="site-branding">
+
+
+      <p class="site-heading">
+        Multi-Maniacs Customs LLC
+      </p>
+
+
+      <p class="site-tagline">
+        Custom Possibilities Across Industries
+      </p>
+
+
+      <nav
+        class="header-buttons"
+        aria-label="Main website navigation"
+      >
+
+        <a href="index.html">
+          Home
+        </a>
+
+        <a
+          href="about.html"
+          aria-current="page"
         >
-          <a href="index.html">
-            Home
-          </a>
+          About
+        </a>
 
-          <a
-            href="about.html"
-            aria-current="page"
-          >
-            About
-          </a>
+        <a href="services.html">
+          Services
+        </a>
 
-          <a href="services.html">
-            Services
-          </a>
+        <a href="gallery.html">
+          Gallery
+        </a>
 
-          <a href="gallery.html">
-            Gallery
-          </a>
-
-          <a href="shop.html">
-            Shop
-          </a>
-
+        <a href="shop.html">
+          Shop
+        </a>
           <a
             class="cart-navigation-link"
             href="cart.html"
@@ -305,15 +496,19 @@
             >
               0
             </span>
+
           </a>
+
 
           <a href="contact.html">
             Contact
           </a>
 
+
           <a href="client-intake.html">
             Client Intake
           </a>
+
 
           <a
             id="admin-navigation-button"
@@ -323,466 +518,835 @@
           >
             Admin
           </a>
+
+
         </nav>
+
+
       </div>
+
+
     </div>
+
+
   </header>
 
-  <!-- ========================================================
-       ABOUT PAGE CONTENT
-       ======================================================== -->
 
-  <main
-    id="main-content"
-    class="about-page"
+
+<!-- ========================================================
+     ABOUT PAGE CONTENT
+======================================================== -->
+
+
+<main
+  id="main-content"
+  class="about-page"
+>
+
+
+
+<!-- ========================================================
+     ABOUT HERO
+======================================================== -->
+
+
+<section
+  class="about-hero"
+  aria-labelledby="about-heading"
+>
+
+
+  <div
+    class="tie-dye-color-bar"
+    aria-hidden="true"
+  ></div>
+
+
+  <p class="about-eyebrow">
+    Meet Multi-Maniacs Customs
+  </p>
+
+
+  <h1
+    id="about-heading"
+    class="about-heading"
   >
-    <!-- ======================================================
-         ABOUT HERO
-         ====================================================== -->
+    About Multi-Maniacs Customs LLC
+  </h1>
 
-    <section
-      class="about-hero"
-      aria-labelledby="about-heading"
+
+  <p class="about-introduction">
+
+    Multi-Maniacs Customs LLC is a multi-industry
+    customization shop based in Essie, Kentucky,
+    serving clients throughout the United States.
+
+    MMC creates custom products, personalized builds,
+    creative designs, and one-of-a-kind projects
+    developed around each client’s individual vision.
+
+  </p>
+
+
+
+  <div class="about-actions">
+
+
+    <a
+      class="primary-action"
+      href="client-intake.html"
     >
-      <div
-        class="tie-dye-color-bar"
-        aria-hidden="true"
-      ></div>
+      Start a Client Intake Request
+    </a>
 
-      <p class="about-eyebrow">
-        Meet Multi-Maniacs Customs
-      </p>
 
-      <h1
-        id="about-heading"
-        class="about-heading"
-      >
-        About Multi-Maniacs Customs LLC
-      </h1>
-
-      <p class="about-introduction">
-        Multi-Maniacs Customs LLC is a multi-industry
-        customization shop based in Essie, Kentucky, serving
-        clients throughout the United States. MMC creates custom
-        products, personalized builds, creative designs, and
-        one-of-a-kind projects developed around each client’s
-        individual vision.
-      </p>
-
-      <div class="about-actions">
-        <a
-          class="primary-action"
-          href="client-intake.html"
-        >
-          Start a Client Intake Request
-        </a>
-
-        <a
-          class="secondary-action"
-          href="services.html"
-        >
-          Explore Our Services
-        </a>
-      </div>
-    </section>
-
-    <!-- ======================================================
-         MISSION
-         ====================================================== -->
-
-    <section
-      class="about-section"
-      aria-labelledby="mission-heading"
+    <a
+      class="secondary-action"
+      href="services.html"
     >
-      <div
-        class="tie-dye-color-bar"
-        aria-hidden="true"
-      ></div>
-
-      <p class="section-eyebrow">
-        Creativity With Purpose
-      </p>
-
-      <h2 id="mission-heading">
-        Our Mission
-      </h2>
-
-      <p class="about-section-description">
-        The mission of Multi-Maniacs Customs is to bring bold
-        ideas, personal visions, and unique concepts to life
-        through thoughtful planning, quality custom work,
-        attention to detail, and a strong commitment to
-        creativity.
-      </p>
-    </section>
-
-    <!-- ======================================================
-         MULTI-INDUSTRY CUSTOMIZATION
-         ====================================================== -->
-
-    <section
-      class="about-section"
-      aria-labelledby="customization-heading"
-    >
-      <div
-        class="tie-dye-color-bar"
-        aria-hidden="true"
-      ></div>
-
-      <p class="section-eyebrow">
-        More Than One Category
-      </p>
-
-      <h2 id="customization-heading">
-        A Multi-Industry Customization Shop
-      </h2>
-
-      <p class="about-section-description">
-        MMC is not limited to one type of product, material,
-        service, or industry. Each request is reviewed
-        individually so the project can be approached according
-        to its purpose, size, materials, design requirements,
-        budget, timeline, and customization needs.
-      </p>
-
-      <div class="about-grid">
-        <article class="about-card">
-          <span
-            class="about-card-icon"
-            aria-hidden="true"
-          >
-            🎨
-          </span>
-
-          <h3>
-            Personalized Products
-          </h3>
-
-          <p>
-            Custom products based on names, colors, wording,
-            themes, events, branding, and personal preferences.
-          </p>
-        </article>
-
-        <article class="about-card">
-          <span
-            class="about-card-icon"
-            aria-hidden="true"
-          >
-            🛠️
-          </span>
-
-          <h3>
-            Custom Builds
-          </h3>
-
-          <p>
-            Creative builds, decor, displays, signs, accessories,
-            equipment, and custom elements designed for a
-            specific purpose.
-          </p>
-        </article>
-
-        <article class="about-card">
-          <span
-            class="about-card-icon"
-            aria-hidden="true"
-          >
-            💡
-          </span>
-
-          <h3>
-            Unique Requests
-          </h3>
-
-          <p>
-            Projects that do not fit into a standard product or
-            service category can be reviewed through the client
-            intake system.
-          </p>
-        </article>
-      </div>
-    </section>
-
-    <!-- ======================================================
-         CLIENTS
-         ====================================================== -->
-
-    <section
-      class="about-section"
-      aria-labelledby="clients-heading"
-    >
-      <div
-        class="tie-dye-color-bar"
-        aria-hidden="true"
-      ></div>
-
-      <p class="section-eyebrow">
-        Who MMC Serves
-      </p>
-
-      <h2 id="clients-heading">
-        Who We Work With
-      </h2>
-
-      <p class="about-section-description">
-        Multi-Maniacs Customs works with individuals, small
-        businesses, organizations, enthusiasts, event planners,
-        and clients who need something that is not readily
-        available off the shelf. Whether the request is personal,
-        professional, decorative, functional, promotional, or
-        experimental, the client intake system provides a place
-        to explain the idea.
-      </p>
-    </section>
-
-    <!-- ======================================================
-         VALUES
-         ====================================================== -->
-
-    <section
-      class="about-section"
-      aria-labelledby="values-heading"
-    >
-      <div
-        class="tie-dye-color-bar"
-        aria-hidden="true"
-      ></div>
-
-      <p class="section-eyebrow">
-        What Guides Our Work
-      </p>
-
-      <h2 id="values-heading">
-        Our Values
-      </h2>
-
-      <p class="about-section-description">
-        MMC’s approach is built around communication,
-        flexibility, quality, collaboration, and respect for
-        each client’s individual project goals.
-      </p>
-
-      <ul class="about-values-list">
-        <li>
-          <strong>
-            Client-Centered Service
-          </strong>
-
-          Each project starts with understanding the client’s
-          purpose, expectations, preferences, and goals.
-        </li>
-
-        <li>
-          <strong>
-            Creativity
-          </strong>
-
-          MMC welcomes unusual ideas and looks for practical ways
-          to turn concepts into custom results.
-        </li>
-
-        <li>
-          <strong>
-            Quality
-          </strong>
-
-          Materials, design choices, production methods, and
-          finishing details are considered carefully for each
-          project.
-        </li>
-
-        <li>
-          <strong>
-            Clear Communication
-          </strong>
-
-          Project scope, options, pricing, timelines, and possible
-          limitations should be discussed before custom work
-          moves forward.
-        </li>
-
-        <li>
-          <strong>
-            Flexibility
-          </strong>
-
-          Every request is different, so the process can be
-          adapted to the project rather than forcing every client
-          into the same standard option.
-        </li>
-
-        <li>
-          <strong>
-            Collaboration
-          </strong>
-
-          Custom work is strongest when the client’s vision and
-          MMC’s creative and technical experience work together.
-        </li>
-      </ul>
-    </section>
-
-    <!-- ======================================================
-         CLIENT INTAKE CALL TO ACTION
-         ====================================================== -->
-
-    <section
-      class="about-callout"
-      aria-labelledby="client-intake-heading"
-    >
-      <div
-        class="tie-dye-color-bar"
-        aria-hidden="true"
-      ></div>
-
-      <p class="section-eyebrow">
-        Turn Your Idea Into a Project
-      </p>
-
-      <h2 id="client-intake-heading">
-        Have a Custom Project in Mind?
-      </h2>
-
-      <p>
-        Use the client intake system to provide project details,
-        preferred colors, materials, measurements, quantities,
-        budget information, timeline preferences, and optional
-        reference images.
-      </p>
-
-      <div class="about-actions">
-        <a
-          class="primary-action"
-          href="client-intake.html"
-        >
-          Start a Client Intake Request
-        </a>
-
-        <a
-          class="secondary-action"
-          href="contact.html"
-        >
-          Contact MMC
-        </a>
-      </div>
-    </section>
-  </main>
-
-  <!-- ========================================================
-       SHARED BLACK FOOTER
-       ======================================================== -->
-
-  <footer class="site-footer">
-    images/mmc-logo.png
-
-    <p>
-      <strong>
-        Multi-Maniacs Customs LLC
-      </strong>
-    </p>
-
-    <p>
-      Multi-industry customization, creative builds, and
-      personalized client projects.
-    </p>
-
-    <p>
-      Essie, Kentucky | Clients accepted throughout the United
-      States
-    </p>
-
-    <p>
-      Phone:
-
-      tel:+16062200185
-        (606) 220-0185
-      </a>
-
-      <span aria-hidden="true">
-        |
-      </span>
-
-      tel:+16062124695
-        (606) 212-4695
-      </a>
-    </p>
-
-    <p>
-      Email:
-
-      <a href="mailto:multimaniacscustoms@gmail.com">
-        multimaniacscustoms@gmail.com
-      </a>
-    </p>
-
-    <p>
-      <a
-        href="https://www.facebook.com/profile.php?id=61576404930589"
-        target="_blank"
-        rel="noopener noreferrer"
-      >
-        Visit the MMC Facebook Page
-      </a>
-    </p>
-
-    <nav
-      class="footer-navigation"
-      aria-label="Footer navigation"
-    >
-      <a href="index.html">
-        Home
-      </a>
-
-      <a
-        href="about.html"
-        aria-current="page"
-      >
-        About
-      </a>
-
-      <a href="services.html">
-        Services
-      </a>
-
-      <a href="gallery.html">
-        Gallery
-      </a>
-
-      <a href="shop.html">
-        Shop
-      </a>
-
-      <a href="cart.html">
-        Cart
-      </a>
-
-      <a href="contact.html">
-        Contact
-      </a>
-
-      <a href="client-intake.html">
-        Client Intake
-      </a>
-
-      <a
-        href="admin-login.html"
-        data-admin-navigation
-      >
-        Admin
-      </a>
-    </nav>
-
-    <p class="footer-copyright">
-      &copy; 2026 Multi-Maniacs Customs LLC. All rights reserved.
-    </p>
-  </footer>
-
-  <noscript>
-    <div class="noscript-message">
-      JavaScript must be enabled to use the shopping cart and
-      other interactive website features.
-    </div>
-  </noscript>
+      Explore Our Services
+    </a>
+
+
+  </div>
+
+
+
+</section>
+
+
+
+
+
+<!-- ========================================================
+     MISSION
+======================================================== -->
+
+
+<section
+  class="about-section"
+  aria-labelledby="mission-heading"
+>
+
+
+<div
+  class="tie-dye-color-bar"
+  aria-hidden="true"
+></div>
+
+
+
+<p class="section-eyebrow">
+  Creativity With Purpose
+</p>
+
+
+
+<h2 id="mission-heading">
+  Our Mission
+</h2>
+
+
+
+<p class="about-section-description">
+
+  The mission of Multi-Maniacs Customs is to bring
+  bold ideas, personal visions, and unique concepts
+  to life through thoughtful planning, quality custom
+  work, attention to detail, and a strong commitment
+  to creativity.
+
+</p>
+
+
+</section>
+
+
+
+
+
+<!-- ========================================================
+     MULTI-INDUSTRY CUSTOMIZATION
+======================================================== -->
+
+
+<section
+  class="about-section"
+  aria-labelledby="customization-heading"
+>
+
+
+
+<div
+  class="tie-dye-color-bar"
+  aria-hidden="true"
+></div>
+
+
+
+<p class="section-eyebrow">
+  More Than One Category
+</p>
+
+
+
+
+<h2 id="customization-heading">
+
+  A Multi-Industry Customization Shop
+
+</h2>
+
+
+
+
+<p class="about-section-description">
+
+  MMC is not limited to one type of product,
+  material, service, or industry.
+
+  Each request is reviewed individually so the
+  project can be approached according to its purpose,
+  size, materials, design requirements, budget,
+  timeline, and customization needs.
+
+</p>
+
+
+
+
+<div class="about-grid">
+
+
+
+<article class="about-card">
+
+
+<span
+  class="about-card-icon"
+  aria-hidden="true"
+>
+  🎨
+</span>
+
+
+
+<h3>
+  Personalized Products
+</h3>
+
+
+
+<p>
+
+  Custom products based on names, colors,
+  wording, themes, events, branding,
+  and personal preferences.
+
+</p>
+
+
+
+</article>
+
+
+
+
+
+<article class="about-card">
+
+
+<span
+  class="about-card-icon"
+  aria-hidden="true"
+>
+  🛠️
+</span>
+
+
+
+<h3>
+  Custom Builds
+</h3>
+
+
+
+<p>
+
+  Creative builds, decor, displays,
+  signs, accessories, equipment,
+  and custom elements designed
+  for a specific purpose.
+
+</p>
+
+
+
+</article>
+
+
+
+
+
+<article class="about-card">
+
+
+<span
+  class="about-card-icon"
+  aria-hidden="true"
+>
+  💡
+</span>
+
+
+
+<h3>
+  Unique Requests
+</h3>
+
+
+
+<p>
+
+  Projects that do not fit into a
+  standard product or service category
+  can be reviewed through the client
+  intake system.
+
+</p>
+
+
+
+</article>
+
+
+
+</div>
+
+
+
+</section>
+
+
+
+
+
+<!-- ========================================================
+     CLIENTS
+======================================================== -->
+
+
+<section
+  class="about-section"
+  aria-labelledby="clients-heading"
+>
+
+
+<div
+  class="tie-dye-color-bar"
+  aria-hidden="true"
+></div>
+
+
+
+<p class="section-eyebrow">
+  Who MMC Serves
+</p>
+
+
+
+
+<h2 id="clients-heading">
+  Who We Work With
+</h2>
+
+
+
+
+<p class="about-section-description">
+
+  Multi-Maniacs Customs works with individuals,
+  small businesses, organizations, enthusiasts,
+  event planners, and clients who need something
+  that is not readily available off the shelf.
+
+  Whether the request is personal, professional,
+  decorative, functional, promotional, or
+  experimental, the client intake system provides
+  a place to explain the idea.
+
+</p>
+
+
+
+</section>
+<!-- ========================================================
+     VALUES
+======================================================== -->
+
+
+<section
+  class="about-section"
+  aria-labelledby="values-heading"
+>
+
+
+<div
+  class="tie-dye-color-bar"
+  aria-hidden="true"
+></div>
+
+
+
+<p class="section-eyebrow">
+  What Guides Our Work
+</p>
+
+
+
+
+<h2 id="values-heading">
+  Our Values
+</h2>
+
+
+
+
+<p class="about-section-description">
+
+  MMC’s approach is built around communication,
+  flexibility, quality, collaboration, and respect
+  for each client’s individual project goals.
+
+</p>
+
+
+
+
+<ul class="about-values-list">
+
+
+
+<li>
+
+<strong>
+  Client-Centered Service
+</strong>
+
+
+Each project starts with understanding the
+client’s purpose, expectations, preferences,
+and goals.
+
+
+</li>
+
+
+
+
+<li>
+
+<strong>
+  Creativity
+</strong>
+
+
+MMC welcomes unusual ideas and looks for
+practical ways to turn concepts into
+custom results.
+
+
+</li>
+
+
+
+
+<li>
+
+<strong>
+  Quality
+</strong>
+
+
+Materials, design choices, production methods,
+and finishing details are considered carefully
+for each project.
+
+
+</li>
+
+
+
+
+<li>
+
+<strong>
+  Clear Communication
+</strong>
+
+
+Project scope, options, pricing, timelines,
+and possible limitations should be discussed
+before custom work moves forward.
+
+
+</li>
+
+
+
+
+<li>
+
+<strong>
+  Flexibility
+</strong>
+
+
+Every request is different, so the process
+can be adapted to the project rather than
+forcing every client into the same standard
+option.
+
+
+</li>
+
+
+
+
+<li>
+
+<strong>
+  Collaboration
+</strong>
+
+
+Custom work is strongest when the client’s
+vision and MMC’s creative and technical
+experience work together.
+
+
+</li>
+
+
+
+
+</ul>
+
+
+
+</section>
+
+
+
+
+
+<!-- ========================================================
+     CLIENT INTAKE CALL TO ACTION
+======================================================== -->
+
+
+<section
+  class="about-callout"
+  aria-labelledby="client-intake-heading"
+>
+
+
+
+<div
+  class="tie-dye-color-bar"
+  aria-hidden="true"
+></div>
+
+
+
+
+<p class="section-eyebrow">
+  Turn Your Idea Into a Project
+</p>
+
+
+
+
+<h2 id="client-intake-heading">
+
+  Have a Custom Project in Mind?
+
+</h2>
+
+
+
+
+<p>
+
+  Use the client intake system to provide
+  project details, preferred colors, materials,
+  measurements, quantities, budget information,
+  timeline preferences, and optional reference
+  images.
+
+</p>
+
+
+
+
+<div class="about-actions">
+
+
+
+<a
+  class="primary-action"
+  href="client-intake.html"
+>
+
+  Start a Client Intake Request
+
+</a>
+
+
+
+
+<a
+  class="secondary-action"
+  href="contact.html"
+>
+
+  Contact MMC
+
+</a>
+
+
+
+</div>
+
+
+
+
+</section>
+
+
+
+
+
+</main>
+
+
+
+
+
+<!-- ========================================================
+     SHARED BLACK FOOTER
+======================================================== -->
+
+
+<footer class="site-footer">
+
+
+
+<img
+  src="images/mmc-logo.png"
+  alt="Multi-Maniacs Customs LLC Logo"
+>
+
+
+
+
+<p>
+
+<strong>
+  Multi-Maniacs Customs LLC
+</strong>
+
+</p>
+
+
+
+
+<p>
+
+  Multi-industry customization,
+  creative builds, and personalized
+  client projects.
+
+</p>
+
+
+
+
+<p>
+
+  Essie, Kentucky |
+  Clients accepted throughout
+  the United States
+
+</p>
+
+
+
+
+<p>
+
+  Phone:
+
+  <a href="tel:+16062200185">
+    (606) 220-0185
+  </a>
+
+
+  <span aria-hidden="true">
+    |
+  </span>
+
+
+  <a href="tel:+16062124695">
+    (606) 212-4695
+  </a>
+
+
+</p>
+
+
+
+
+<p>
+
+Email:
+
+<a href="mailto:multimaniacscustoms@gmail.com">
+
+  multimaniacscustoms@gmail.com
+
+</a>
+
+
+</p>
+
+
+
+
+<p>
+
+<a
+  href="https://www.facebook.com/profile.php?id=61576404930589"
+  target="_blank"
+  rel="noopener noreferrer"
+>
+
+  Visit the MMC Facebook Page
+
+</a>
+
+
+</p>
+
+
+
+
+
+<nav
+  class="footer-navigation"
+  aria-label="Footer navigation"
+>
+
+
+
+<a href="index.html">
+  Home
+</a>
+
+
+
+<a
+  href="about.html"
+  aria-current="page"
+>
+  About
+</a>
+
+
+
+<a href="services.html">
+  Services
+</a>
+
+
+
+<a href="gallery.html">
+  Gallery
+</a>
+
+
+
+<a href="shop.html">
+  Shop
+</a>
+
+
+
+<a href="cart.html">
+  Cart
+</a>
+
+
+
+<a href="contact.html">
+  Contact
+</a>
+
+
+
+<a href="client-intake.html">
+  Client Intake
+</a>
+
+
+
+<a
+  href="admin-login.html"
+  data-admin-navigation
+>
+  Admin
+</a>
+
+
+
+</nav>
+
+
+
+
+
+<p class="footer-copyright">
+
+  &copy; 2026 Multi-Maniacs Customs LLC.
+  All rights reserved.
+
+</p>
+
+
+
+
+</footer>
+
+
+
+
+
+<noscript>
+
+<div class="noscript-message">
+
+  JavaScript must be enabled to use the
+  shopping cart and other interactive
+  website features.
+
+</div>
+
+
+</noscript>
+
+
+
+
 </body>
+
 </html>

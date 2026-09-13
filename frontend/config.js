@@ -29,7 +29,7 @@
    */
 
   var PRODUCTION_BACKEND_URL =
-    "https://multi-maniacs-customs-backend.vercel.app";
+    "https://multi-maniacscustoms-backend.vercel.app";
 
   /*
    * Local backend used while developing the website locally.

@@ -442,12 +442,152 @@
       }
     }
   </style>
+  <script src="config.js" defer></script>
+  <script src="navigation.js" defer></script>
+  <script src="admin-add-category.js" defer></script>
 </head>
-<body class="add-category-page">
+<body class="admin-page">
+  <a class="skip-link" href="#main-content">Skip to main content</a>
+
+  <header class="admin-header">
+    <div class="admin-header-content">
+      <a class="admin-logo-link" href="admin-dashboard.html" aria-label="Go to the MMC administrator dashboard">
+        <img class="admin-header-logo" src="images/mmc-logo.png" alt="Multi-Maniacs Customs LLC Logo">
+        <span class="admin-branding">
+          <span class="admin-site-heading">Multi-Maniacs Customs LLC</span>
+          <span class="admin-site-tagline">Administrator System</span>
+        </span>
+      </a>
+      <div class="admin-header-account" aria-label="Administrator account">
+        <span>Signed in as</span>
+        <strong id="admin-header-username">Loading...</strong>
+        <span id="admin-header-role" class="admin-user-role">Loading...</span>
+      </div>
+    </div>
+  </header>
+
+  <nav class="admin-navigation" aria-label="Administrator navigation">
+    <div class="admin-navigation-content">
+      <a href="admin-dashboard.html">Dashboard</a>
+      <a href="admin-products.html">Products</a>
+      <a href="admin-categories.html">Categories</a>
+      <a href="admin-add-category.html" aria-current="page">Add Category</a>
+      <a href="admin-edit-category.html">Edit Category</a>
+      <a href="admin-delete-category.html">Delete Category</a>
+      <a href="index.html">View Website</a>
+      <button id="admin-navigation-logout-button" class="admin-logout-button" type="button">Log Out</button>
+    </div>
+  </nav>
+
+  <main id="main-content" class="add-category-page">
   <div class="add-category-container">
-    <h1 class="add-category-heading">
+    <h1 id="add-category-heading" class="add-category-heading">
       Add New Product Category
     </h1>
     <p class="add-category-description">
       Create a new product category for Multi-Maniacs Customs LLC. Fill out the form below to add a category, including its name, description, and an optional image. You can also specify whether the category should be visible to customers or hidden from view.
     </p>
+    <div class="admin-account-bar" aria-label="Administrator account">
+      <div>
+        <p>Signed in as <strong id="admin-username">Loading...</strong></p>
+        <p>Role: <strong id="admin-role">Loading...</strong></p>
+      </div>
+      <div class="admin-account-actions">
+        <a class="small-action-button" href="admin-categories.html">Manage Categories</a>
+        <button id="admin-logout-button" class="small-action-button logout-action-button" type="button">Log Out</button>
+      </div>
+    </div>
+
+    <form id="add-category-form" class="add-category-form">
+      <div class="form-field">
+        <label for="category-name">
+          Category name <span class="required-marker" aria-hidden="true">*</span>
+        </label>
+        <input id="category-name" name="name" type="text" minlength="2" maxlength="100" autocomplete="off" required>
+      </div>
+
+      <div class="form-field">
+        <label for="category-slug">
+          Category tag <span class="required-marker" aria-hidden="true">*</span>
+        </label>
+        <input
+          id="category-slug"
+          name="slug"
+          type="text"
+          minlength="2"
+          maxlength="100"
+          pattern="[a-z0-9]+(-[a-z0-9]+)*"
+          aria-describedby="category-slug-help"
+          required
+        >
+        <p id="category-slug-help" class="field-help">
+          Generated from the category name; lowercase letters, numbers, and hyphens only.
+        </p>
+      </div>
+
+      <div class="form-field">
+        <label for="category-description">Description</label>
+        <textarea
+          id="category-description"
+          name="description"
+          maxlength="1000"
+          aria-describedby="category-description-count"
+        ></textarea>
+        <p id="category-description-count" class="character-count">0 of 1,000 characters</p>
+      </div>
+
+      <div class="form-field">
+        <label for="category-image">Category image URL</label>
+        <input
+          id="category-image"
+          name="image"
+          type="url"
+          inputmode="url"
+          placeholder="https://example.com/category-image.jpg"
+        >
+        <p class="field-help">Optional. Enter a public HTTP or HTTPS image address.</p>
+      </div>
+
+      <div id="category-image-preview-container" class="category-image-preview-container" hidden>
+        <h2>Image preview</h2>
+        <img
+          id="category-image-preview"
+          class="category-image-preview"
+          alt="Category image preview"
+        >
+      </div>
+
+      <div class="form-row">
+        <div class="form-field">
+          <label for="category-sort-order">Display order</label>
+          <input id="category-sort-order" name="sortOrder" type="number" min="0" step="1" value="0">
+        </div>
+        <div class="form-field">
+          <label for="category-color">Category color</label>
+          <input id="category-color" name="color" type="color" value="#ff1493">
+        </div>
+      </div>
+
+      <div class="checkbox-field">
+        <input id="category-active" name="active" type="checkbox" checked>
+        <label for="category-active">Make this category visible to customers</label>
+      </div>
+      <div class="checkbox-field">
+        <input id="category-featured" name="featured" type="checkbox">
+        <label for="category-featured">Feature this category in the shop</label>
+      </div>
+
+      <button id="add-category-button" class="add-category-button" type="submit">
+        Create Category
+      </button>
+    </form>
+
+    <p id="category-message" class="category-message" aria-live="polite"></p>
+    <div class="page-actions">
+      <a class="return-button" href="admin-categories.html">Return to Categories</a>
+      <a class="return-button" href="admin-dashboard.html">Admin Dashboard</a>
+    </div>
+  </div>
+  </main>
+</body>
+</html>

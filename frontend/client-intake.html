@@ -32,9 +32,9 @@
       --intake-muted-text: #cccccc;
       --intake-input-background: #ffffff;
       --intake-input-text: #111111;
-      --intake-button: #d32f2f;
-      --intake-button-hover: #b71c1c;
-      --intake-focus: #ef5350;
+      --intake-button: #ff1493;
+      --intake-button-hover: #8a00ff;
+      --intake-focus: #00eaff;
       --intake-error: #ff7676;
       --intake-success: #79d77c;
       --intake-information: #90caf9;
@@ -52,7 +52,7 @@
       min-height: 100vh;
       margin: 0;
       color: var(--intake-text);
-      background: var(--intake-page-background);
+      background-color: transparent;
       font-family: Arial, Helvetica, sans-serif;
     }
 
@@ -271,9 +271,16 @@
       width: 100%;
       min-height: 52px;
       padding: 13px;
-      color: #ffffff;
-      background: var(--intake-button);
-      border: none;
+      color: var(--mmc-black);
+      background:
+        linear-gradient(
+          135deg,
+          var(--mmc-hot-pink),
+          var(--mmc-yellow),
+          var(--mmc-green),
+          var(--mmc-cyan)
+        );
+      border: 2px solid var(--mmc-black);
       border-radius: 8px;
       font: inherit;
       font-size: 17px;
@@ -286,12 +293,12 @@
     }
 
     .submit-intake-button:hover:not(:disabled) {
-      background: var(--intake-button-hover);
+      filter: saturate(1.25) brightness(1.05);
       transform: translateY(-1px);
     }
 
     .submit-intake-button:focus-visible {
-      outline: 3px solid var(--intake-focus);
+      outline: 3px solid var(--mmc-cyan);
       outline-offset: 3px;
     }
 
@@ -374,20 +381,39 @@
     defer
   ></script>
 
-  client-intake.jsscript>
+  <script
+    src="client-intake.js"
+    defer
+  ></script>
 </head>
 
 <body>
-  <header class="site-header">
-    <div class="site-header-content">
-      <h1 class="site-title">
-        Multi-Maniacs Customs LLC
-      </h1>
-
-      <nav
-        class="site-navigation"
-        aria-label="Main website navigation"
+  <header class="top-header">
+    <div class="header-content">
+      <a
+        class="site-logo-link"
+        href="index.html"
+        aria-label="Go to the Multi-Maniacs Customs homepage"
       >
+        <img
+          class="site-logo"
+          src="images/mmc-logo.png"
+          alt="Multi-Maniacs Customs LLC Logo"
+        >
+      </a>
+
+      <div class="site-branding">
+        <h1 class="site-heading">
+          Multi-Maniacs Customs LLC
+        </h1>
+        <p class="site-tagline">
+          Custom Possibilities Across Industries
+        </p>
+
+        <nav
+          class="header-buttons"
+          aria-label="Main website navigation"
+        >
         <a href="index.html">
           Home
         </a>
@@ -422,7 +448,8 @@
         <a href="contact.html">
           Contact
         </a>
-      </nav>
+        </nav>
+      </div>
     </div>
   </header>
 

@@ -32,10 +32,10 @@
       --contact-muted: #cccccc;
       --contact-input-background: #ffffff;
       --contact-input-text: #111111;
-      --contact-button: #d32f2f;
-      --contact-button-hover: #b71c1c;
-      --contact-button-disabled: #743838;
-      --contact-focus: #ef5350;
+      --contact-button: #ff1493;
+      --contact-button-hover: #8a00ff;
+      --contact-button-disabled: #743867;
+      --contact-focus: #00eaff;
       --contact-error: #ff7676;
       --contact-success: #79d77c;
       --contact-information: #90caf9;
@@ -53,14 +53,26 @@
       min-height: 100vh;
       margin: 0;
       color: var(--contact-text);
-      background: var(--contact-background);
+      background-color: transparent;
       font-family: Arial, Helvetica, sans-serif;
     }
 
     .top-header {
       padding: 18px 20px;
       background: var(--contact-header);
-      border-bottom: 1px solid var(--contact-border);
+      border-bottom: 4px solid transparent;
+      border-image:
+        linear-gradient(
+          90deg,
+          var(--mmc-hot-pink),
+          var(--mmc-purple),
+          var(--mmc-cyan),
+          var(--mmc-green),
+          var(--mmc-yellow),
+          var(--mmc-orange),
+          var(--mmc-hot-pink)
+        )
+        1;
     }
 
     .header-content {
@@ -99,13 +111,29 @@
 
     .header-buttons a:hover,
     .header-buttons a:focus {
-      background: #333333;
+      color: var(--mmc-black);
+      background:
+        linear-gradient(
+          135deg,
+          var(--mmc-hot-pink),
+          var(--mmc-yellow),
+          var(--mmc-green),
+          var(--mmc-cyan)
+        );
       transform: translateY(-1px);
     }
 
     .header-buttons a[aria-current="page"] {
-      background: var(--contact-button);
-      border-color: var(--contact-button);
+      color: var(--mmc-black);
+      background:
+        linear-gradient(
+          135deg,
+          var(--mmc-hot-pink),
+          var(--mmc-yellow),
+          var(--mmc-lime),
+          var(--mmc-cyan)
+        );
+      border-color: var(--mmc-white);
     }
 
     .admin-navigation-link {
@@ -237,9 +265,16 @@
       width: 100%;
       min-height: 52px;
       padding: 13px;
-      color: #ffffff;
-      background: var(--contact-button);
-      border: none;
+      color: var(--mmc-black);
+      background:
+        linear-gradient(
+          135deg,
+          var(--mmc-hot-pink),
+          var(--mmc-yellow),
+          var(--mmc-green),
+          var(--mmc-cyan)
+        );
+      border: 2px solid var(--mmc-black);
       border-radius: 8px;
       font: inherit;
       font-size: 17px;
@@ -252,18 +287,18 @@
     }
 
     .contact-submit-button:hover:not(:disabled) {
-      background: var(--contact-button-hover);
+      filter: saturate(1.25) brightness(1.05);
       transform: translateY(-1px);
     }
 
     .contact-submit-button:focus-visible {
-      outline: 3px solid var(--contact-focus);
+      outline: 3px solid var(--mmc-cyan);
       outline-offset: 3px;
     }
 
     .contact-submit-button:disabled {
-      background: var(--contact-button-disabled);
       cursor: wait;
+      filter: grayscale(0.65);
       opacity: 0.7;
     }
 
@@ -404,20 +439,39 @@
     defer
   ></script>
 
-  contact.jsscript>
+  <script
+    src="contact.js"
+    defer
+  ></script>
 </head>
 
 <body>
   <header class="top-header">
     <div class="header-content">
-      <h1 class="site-heading">
-        Multi-Maniacs Customs LLC
-      </h1>
-
-      <nav
-        class="header-buttons"
-        aria-label="Main website navigation"
+      <a
+        class="site-logo-link"
+        href="index.html"
+        aria-label="Go to the Multi-Maniacs Customs homepage"
       >
+        <img
+          class="site-logo"
+          src="images/mmc-logo.png"
+          alt="Multi-Maniacs Customs LLC Logo"
+        >
+      </a>
+
+      <div class="site-branding">
+        <h1 class="site-heading">
+          Multi-Maniacs Customs LLC
+        </h1>
+        <p class="site-tagline">
+          Custom Possibilities Across Industries
+        </p>
+
+        <nav
+          class="header-buttons"
+          aria-label="Main website navigation"
+        >
         <a href="index.html">
           <span
             class="icon"
@@ -511,7 +565,8 @@
 
           Admin
         </a>
-      </nav>
+        </nav>
+      </div>
 
       <section
         class="mini-cart"

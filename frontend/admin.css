@@ -15,12 +15,12 @@
   --admin-medium-gray: #555555;
   --admin-light-gray: #dddddd;
   --admin-white: #ffffff;
-  --admin-off-white: #ffffdf8;
+  --admin-off-white: #fffdf8;
 
   --admin-pink: #ff1493;
   --admin-magenta: #ef00ff;
   --admin-purple: #8a00ff;
-  --admin-blue: #0007bff;
+  --admin-blue: #0007bf;
   --admin-cyan: #00eaff;
   --admin-green: #34e600;
   --admin-lime: #a8ff00;
@@ -33,7 +33,7 @@
   --admin-muted: #333333;
   --admin-border: #000000;
   --admin-shadow: rgba(0, 0, 0, 0.38);
-  --admin-focus: #0002bff;
+  --admin-focus: #0002bf;
 
   --admin-success-text: #106b17;
   --admin-warning-text: #8a4000;
@@ -237,12 +237,9 @@ textarea:focus-visible {
 }
 
 .admin-content-wrapper {
-  display: grid;
-  grid-template-columns:
-    260px
-    minmax(0, 1fr);
+  display: flex;
+  flex-direction: column;
   gap: 24px;
-  align-items: start;
 }
 
 .admin-page-content {
@@ -430,8 +427,8 @@ textarea:focus-visible {
    ============================================================ */
 
 .admin-sidebar {
-  position: sticky;
-  top: 20px;
+  position: static;
+  width: 100%;
   overflow: hidden;
   color: var(--admin-white);
   background: var(--admin-black);
@@ -454,7 +451,8 @@ textarea:focus-visible {
 }
 
 .admin-sidebar-navigation {
-  display: grid;
+  display: flex;
+  flex-wrap: wrap;
   gap: 7px;
   padding: 14px;
 }
@@ -462,7 +460,7 @@ textarea:focus-visible {
 .admin-sidebar-navigation a,
 .admin-sidebar-navigation button {
   display: flex;
-  width: 100%;
+  width: auto;
   min-height: 40px;
   align-items: center;
   gap: 8px;

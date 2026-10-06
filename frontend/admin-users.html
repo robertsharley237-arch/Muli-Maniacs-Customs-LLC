@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#000000">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="description" content="Manage authorized Multi-Maniacs Customs administrators.">
+  <title>Administrators | Multi-Maniacs Customs LLC</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="admin.css">
+  <style>
+    .users-page {
+      width: calc(100% - 32px);
+      max-width: 1200px;
+      margin: 34px auto;
+    }
+
+    .users-container {
+      padding: 30px;
+      color: var(--admin-black);
+      background: var(--admin-panel);
+      border: 3px solid var(--admin-black);
+      border-radius: 16px;
+      box-shadow: var(--admin-panel-shadow);
+    }
+
+    .users-container h1,
+    .users-container h2 {
+      color: var(--admin-black);
+    }
+
+    .users-heading,
+    .users-description {
+      text-align: center;
+    }
+
+    .users-description {
+      max-width: 760px;
+      margin: 0 auto 24px;
+      color: var(--admin-muted);
+      line-height: 1.6;
+    }
+
+    .users-account-bar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      margin-bottom: 22px;
+      padding: 16px;
+      color: var(--admin-white);
+      background: var(--admin-black);
+      border-radius: 10px;
+    }
+
+    .users-account-bar p {
+      margin: 4px 0;
+    }
+
+    .users-account-bar strong {
+      color: var(--admin-cyan);
+    }
+
+    .users-account-actions,
+    .user-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .users-section {
+      margin-top: 22px;
+      padding: 20px;
+      background: var(--admin-off-white);
+      border: 2px solid var(--admin-black);
+      border-radius: 12px;
+    }
+
+    .users-section h2 {
+      margin-top: 0;
+    }
+
+    .users-form-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+      gap: 14px;
+    }
+
+    .users-form-grid label {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      font-weight: 700;
+    }
+
+    .users-form-grid input,
+    .users-form-grid select,
+    .user-row select {
+      min-height: 42px;
+      width: 100%;
+      padding: 8px 10px;
+      color: var(--admin-black);
+      background: var(--admin-white);
+      border: 2px solid var(--admin-black);
+      border-radius: 6px;
+      font: inherit;
+    }
+
+    .users-table-wrap {
+      overflow-x: auto;
+    }
+
+    .users-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .users-table th,
+    .users-table td {
+      padding: 11px;
+      border-bottom: 1px solid #777;
+      text-align: left;
+      vertical-align: middle;
+    }
+
+    .users-table th {
+      color: var(--admin-white);
+      background: var(--admin-black);
+    }
+
+    .users-table select {
+      min-width: 145px;
+    }
+
+    .user-status {
+      font-weight: 800;
+    }
+
+    .users-message {
+      margin: 16px 0;
+      padding: 12px 14px;
+      border-radius: 7px;
+      font-weight: 700;
+    }
+
+    .users-message[hidden],
+    .users-management[hidden] {
+      display: none;
+    }
+
+    .users-error {
+      color: #8b001b;
+      background: #ffe8ed;
+      border: 2px solid #b00024;
+    }
+
+    .users-success {
+      color: #105b18;
+      background: #e9f8e9;
+      border: 2px solid #25802c;
+    }
+
+    .users-information {
+      color: #003d82;
+      background: #eaf4ff;
+      border: 2px solid #1768ad;
+    }
+
+    .users-footer {
+      margin-top: 20px;
+      text-align: center;
+    }
+
+    @media (max-width: 640px) {
+      .users-container {
+        padding: 18px;
+      }
+
+      .users-section {
+        padding: 14px;
+      }
+
+      .users-table th,
+      .users-table td {
+        padding: 8px;
+      }
+
+      .users-account-actions,
+      .user-actions {
+        width: 100%;
+      }
+    }
+  </style>
+  <script src="config.js" defer></script>
+  <script src="navigation.js" defer></script>
+  <script src="admin-users.js" defer></script>
+</head>
+<body class="admin-page">
+  <a class="skip-link" href="#main-content">Skip to main content</a>
+
+  <header class="admin-header">
+    <div class="admin-header-content">
+      <a class="admin-logo-link" href="admin-dashboard.html" aria-label="Go to the MMC administrator dashboard">
+        <img class="site-logo" src="images/mmc-logo.png" alt="Multi-Maniacs Customs LLC">
+        <span class="admin-branding">
+          <span class="admin-site-heading">Multi-Maniacs Customs LLC</span>
+          <span class="admin-site-tagline">Administrator System</span>
+        </span>
+      </a>
+      <div class="admin-header-account" aria-label="Administrator account">
+        <span>Signed in as</span>
+        <strong id="admin-header-username">Loading...</strong>
+        <span id="admin-header-role" class="admin-user-role">Loading...</span>
+      </div>
+    </div>
+  </header>
+
+  <nav class="admin-navigation" aria-label="Administrator navigation">
+    <div class="admin-navigation-content">
+      <a href="admin-dashboard.html">Dashboard</a>
+      <a href="admin-products.html">Products</a>
+      <a href="admin-add-product.html">Add Product</a>
+      <a href="admin-edit-product.html">Edit Product</a>
+      <a href="admin-delete-product.html">Delete Product</a>
+      <a href="admin-add-category.html">Add Category</a>
+      <a href="admin-edit-category.html">Edit Category</a>
+      <a href="admin-delete-category.html">Delete Category</a>
+      <a href="admin-inventory.html">Inventory</a>
+      <a href="admin-orders.html">Orders</a>
+      <a href="admin-intake.html">Client Intake</a>
+      <a href="admin-settings.html">Settings</a>
+      <a href="admin-users.html" aria-current="page">Administrators</a>
+      <a href="index.html">View Website</a>
+      <a href="shop.html">View Shop</a>
+      <button id="admin-navigation-logout-button" class="admin-logout-button" type="button">Log Out</button>
+    </div>
+  </nav>
+
+  <main id="main-content" class="users-page">
+    <section class="users-container" aria-labelledby="users-heading">
+      <p class="admin-section-eyebrow">Authorized Access</p>
+      <h1 id="users-heading" class="users-heading">Administrator Management</h1>
+      <p class="users-description">
+        Create administrator accounts, manage access, and reset credentials.
+        These controls are available to super administrators only.
+      </p>
+
+      <div class="users-account-bar">
+        <div>
+          <p>Signed in as: <strong id="admin-username">Loading...</strong></p>
+          <p>Role: <strong id="admin-role">Loading...</strong></p>
+        </div>
+        <div class="users-account-actions">
+          <a class="small-action-button" href="admin-dashboard.html">Dashboard</a>
+          <a class="small-action-button" href="admin-settings.html">Settings</a>
+          <button id="admin-logout-button" class="small-action-button logout-action-button" type="button">Log Out</button>
+        </div>
+      </div>
+
+      <div id="users-message" class="users-message" role="status" aria-live="polite" hidden></div>
+
+      <div id="users-management" class="users-management" hidden>
+        <section class="users-section" aria-labelledby="create-user-heading">
+          <h2 id="create-user-heading">Create Administrator</h2>
+          <p>Usernames must be at least 3 characters and use letters, numbers, periods, underscores, or hyphens. Passwords must be at least 12 characters and include lowercase, uppercase, number, and special characters.</p>
+          <form id="create-user-form">
+            <div class="users-form-grid">
+              <label>
+                Username
+                <input name="username" type="text" minlength="3" maxlength="100" autocomplete="off" required>
+              </label>
+              <label>
+                Temporary password
+                <input name="password" type="password" minlength="12" autocomplete="new-password" required>
+              </label>
+              <label>
+                Role
+                <select name="role">
+                  <option value="admin">Administrator</option>
+                  <option value="super_admin">Super administrator</option>
+                </select>
+              </label>
+            </div>
+            <div class="page-actions">
+              <button class="small-action-button" type="submit">Create Administrator</button>
+            </div>
+          </form>
+        </section>
+
+        <section class="users-section" aria-labelledby="user-list-heading">
+          <h2 id="user-list-heading">Current Administrators</h2>
+          <div class="users-table-wrap">
+            <table class="users-table">
+              <thead>
+                <tr>
+                  <th scope="col">Username</th>
+                  <th scope="col">Role</th>
+                  <th scope="col">Access</th>
+                  <th scope="col">Last login</th>
+                  <th scope="col">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="users-table-body">
+                <tr><td colspan="5">Loading administrators...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="users-section" aria-labelledby="password-heading">
+          <h2 id="password-heading">Reset Administrator Password</h2>
+          <form id="reset-password-form">
+            <div class="users-form-grid">
+              <label>
+                Administrator
+                <select id="reset-user-id" name="administratorId" required>
+                  <option value="">Select an administrator</option>
+                </select>
+              </label>
+              <label>
+                New password
+                <input name="newPassword" type="password" minlength="12" autocomplete="new-password" required>
+              </label>
+            </div>
+            <div class="page-actions">
+              <button class="small-action-button" type="submit">Reset Password</button>
+              <button id="reload-users-button" class="small-action-button" type="button">Refresh List</button>
+            </div>
+          </form>
+        </section>
+      </div>
+    </section>
+  </main>
+
+  <footer class="admin-footer">
+    <p><strong>Multi-Maniacs Customs LLC Administrator System</strong></p>
+    <p>Administrator accounts and access are protected by super administrator authorization.</p>
+    <p class="users-footer">&copy; 2026 Multi-Maniacs Customs LLC. All rights reserved.</p>
+  </footer>
+</body>
+</html>

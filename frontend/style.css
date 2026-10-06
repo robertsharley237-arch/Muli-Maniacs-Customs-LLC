@@ -211,9 +211,10 @@ textarea:focus-visible {
   width: 100%;
   max-width: 1200px;
   margin: 0 auto;
-  grid-template-columns: auto minmax(0, 1fr);
-  gap: 20px;
-  align-items: center;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 12px;
+  justify-items: center;
+  text-align: center;
 }
 
 /* ============================================================
@@ -224,6 +225,7 @@ textarea:focus-visible {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  margin: 0 auto;
   text-decoration: none;
 }
 
@@ -244,6 +246,7 @@ textarea:focus-visible {
 }
 
 .site-branding {
+  width: 100%;
   min-width: 0;
 }
 
@@ -265,6 +268,7 @@ textarea:focus-visible {
 .header-buttons {
   display: flex;
   flex-wrap: wrap;
+  justify-content: center;
   gap: 9px;
   align-items: center;
 }

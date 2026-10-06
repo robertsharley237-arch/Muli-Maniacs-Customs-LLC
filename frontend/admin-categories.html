@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#000000">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="description" content="View and manage Multi-Maniacs Customs product categories.">
+  <title>Categories | Multi-Maniacs Customs LLC</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="admin.css">
+  <style>
+    .categories-page {
+      width: calc(100% - 32px);
+      max-width: 1150px;
+      margin: 34px auto;
+    }
+
+    .categories-container {
+      padding: 30px;
+      color: var(--admin-black);
+      background: var(--admin-panel);
+      border: 3px solid var(--admin-black);
+      border-radius: 16px;
+      box-shadow: var(--admin-panel-shadow);
+    }
+
+    .categories-heading,
+    .categories-description {
+      text-align: center;
+    }
+
+    .categories-description {
+      max-width: 760px;
+      margin: 0 auto 24px;
+      color: var(--admin-muted);
+      line-height: 1.6;
+    }
+
+    .categories-account-bar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      margin-bottom: 22px;
+      padding: 16px;
+      color: var(--admin-white);
+      background: var(--admin-black);
+      border-radius: 10px;
+    }
+
+    .categories-account-bar p {
+      margin: 4px 0;
+    }
+
+    .categories-account-bar strong {
+      color: var(--admin-cyan);
+    }
+
+    .categories-account-actions,
+    .category-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .categories-section {
+      margin-top: 22px;
+      padding: 20px;
+      background: var(--admin-off-white);
+      border: 2px solid var(--admin-black);
+      border-radius: 12px;
+    }
+
+    .categories-table-wrap {
+      overflow-x: auto;
+    }
+
+    .categories-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .categories-table th,
+    .categories-table td {
+      padding: 11px;
+      border-bottom: 1px solid #777;
+      text-align: left;
+      vertical-align: middle;
+    }
+
+    .categories-table th {
+      color: var(--admin-white);
+      background: var(--admin-black);
+    }
+
+    .categories-message {
+      margin: 16px 0;
+      padding: 12px 14px;
+      border: 2px solid #1768ad;
+      border-radius: 7px;
+      color: #003d82;
+      background: #eaf4ff;
+      font-weight: 700;
+    }
+
+    .categories-message[hidden] {
+      display: none;
+    }
+
+    .categories-message.error {
+      color: #8b001b;
+      background: #ffe8ed;
+      border-color: #b00024;
+    }
+
+    .categories-message.success {
+      color: #105b18;
+      background: #e9f8e9;
+      border-color: #25802c;
+    }
+
+    @media (max-width: 640px) {
+      .categories-container,
+      .categories-section {
+        padding: 16px;
+      }
+
+      .categories-table th,
+      .categories-table td {
+        padding: 8px;
+      }
+    }
+  </style>
+  <script src="config.js" defer></script>
+  <script src="navigation.js" defer></script>
+  <script src="admin-categories.js" defer></script>
+</head>
+<body class="admin-page">
+  <a class="skip-link" href="#main-content">Skip to main content</a>
+
+  <header class="admin-header">
+    <div class="admin-header-content">
+      <a class="admin-logo-link" href="admin-dashboard.html" aria-label="Go to the MMC administrator dashboard">
+        <img class="site-logo" src="images/mmc-logo.png" alt="Multi-Maniacs Customs LLC Logo">
+        <span class="admin-branding">
+          <span class="admin-site-heading">Multi-Maniacs Customs LLC</span>
+          <span class="admin-site-tagline">Administrator System</span>
+        </span>
+      </a>
+      <div class="admin-header-account" aria-label="Administrator account">
+        <span>Signed in as</span>
+        <strong id="admin-header-username">Loading...</strong>
+        <span id="admin-header-role" class="admin-user-role">Loading...</span>
+      </div>
+    </div>
+  </header>
+
+  <nav class="admin-navigation" aria-label="Administrator navigation">
+    <div class="admin-navigation-content">
+      <a href="admin-dashboard.html">Dashboard</a>
+      <a href="admin-products.html">Products</a>
+      <a href="admin-add-product.html">Add Product</a>
+      <a href="admin-edit-product.html">Edit Product</a>
+      <a href="admin-delete-product.html">Delete Product</a>
+      <a href="admin-categories.html" aria-current="page">Categories</a>
+      <a href="admin-add-category.html">Add Category</a>
+      <a href="admin-edit-category.html">Edit Category</a>
+      <a href="admin-delete-category.html">Delete Category</a>
+      <a href="admin-inventory.html">Inventory</a>
+      <a href="admin-orders.html">Orders</a>
+      <a href="admin-intake.html">Client Intake</a>
+      <a href="admin-settings.html">Settings</a>
+      <a href="admin-users.html">Administrators</a>
+      <a href="index.html">View Website</a>
+      <a href="shop.html">View Shop</a>
+      <button id="admin-navigation-logout-button" class="admin-logout-button" type="button">Log Out</button>
+    </div>
+  </nav>
+
+  <main id="main-content" class="categories-page">
+    <section class="categories-container" aria-labelledby="categories-heading">
+      <p class="admin-section-eyebrow">Product Organization</p>
+      <h1 id="categories-heading" class="categories-heading">Manage Categories</h1>
+      <p class="categories-description">
+        View active and inactive product categories. Use the category tools to add,
+        edit, activate, deactivate, or remove a category.
+      </p>
+
+      <div class="categories-account-bar">
+        <div>
+          <p>Signed in as: <strong id="admin-username">Loading...</strong></p>
+          <p>Role: <strong id="admin-role">Loading...</strong></p>
+        </div>
+        <div class="categories-account-actions">
+          <a class="small-action-button" href="admin-dashboard.html">Dashboard</a>
+          <a class="small-action-button" href="admin-add-category.html">Add Category</a>
+          <button id="admin-logout-button" class="small-action-button logout-action-button" type="button">Log Out</button>
+        </div>
+      </div>
+
+      <div id="categories-message" class="categories-message" role="status" aria-live="polite" hidden></div>
+
+      <section class="categories-section" aria-labelledby="category-list-heading">
+        <h2 id="category-list-heading">All Categories</h2>
+        <div class="categories-table-wrap">
+          <table class="categories-table">
+            <thead>
+              <tr>
+                <th scope="col">Name</th>
+                <th scope="col">Slug</th>
+                <th scope="col">Status</th>
+                <th scope="col">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="categories-table-body">
+              <tr><td colspan="4">Loading categories...</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="page-actions">
+          <button id="reload-categories-button" class="small-action-button" type="button">Refresh List</button>
+        </div>
+      </section>
+    </section>
+  </main>
+
+  <footer class="admin-footer">
+    <p><strong>Multi-Maniacs Customs LLC Administrator System</strong></p>
+    <p>Category changes affect how products are organized in the online shop.</p>
+    <p>&copy; 2026 Multi-Maniacs Customs LLC. All rights reserved.</p>
+  </footer>
+</body>
+</html>

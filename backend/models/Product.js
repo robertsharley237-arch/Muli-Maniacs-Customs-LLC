@@ -306,6 +306,20 @@ function normalizeVariant(
         sourceVariant.imagePublicId ||
         sourceVariant.image_public_id,
         500
+      ),
+
+    cjProductId:
+      cleanText(
+        sourceVariant.cjProductId ||
+        sourceVariant.cj_product_id,
+        200
+      ),
+
+    cjVariantId:
+      cleanText(
+        sourceVariant.cjVariantId ||
+        sourceVariant.cj_variant_id,
+        200
       )
   };
 }
@@ -1429,6 +1443,130 @@ async function runTransaction(
   }
 }
 
+async function updateCjProductInventory(
+  productId,
+  stockByVariantId
+) {
+  const normalizedId =
+    normalizeProductId(
+      productId
+    );
+
+  if (
+    !stockByVariantId ||
+    typeof stockByVariantId !== "object"
+  ) {
+    throw new TypeError(
+      "CJ variant stock must be provided as a map."
+    );
+  }
+
+  await db.withTransaction(
+    async function (client) {
+      const result =
+        await client.query(
+          `
+            SELECT
+              id,
+              variants
+            FROM products
+            WHERE id = $1
+            FOR UPDATE
+          `,
+          [
+            normalizedId
+          ]
+        );
+
+      if (result.rows.length === 0) {
+        const error =
+          new Error(
+            "Product not found."
+          );
+
+        error.statusCode = 404;
+        error.code =
+          "PRODUCT_NOT_FOUND";
+
+        throw error;
+      }
+
+      const variants =
+        parseVariants(
+          result.rows[0].variants
+        );
+
+      if (
+        variants.length === 0 ||
+        variants.some(
+          function (variant) {
+            return !variant.cjVariantId;
+          }
+        )
+      ) {
+        const error =
+          new Error(
+            "This product does not have a complete CJ variant mapping."
+          );
+
+        error.statusCode = 409;
+        error.code =
+          "CJ_VARIANT_MAPPING_MISSING";
+
+        throw error;
+      }
+
+      variants.forEach(
+        function (variant) {
+          const stock =
+            stockByVariantId[
+              variant.cjVariantId
+            ];
+
+          if (
+            !Number.isInteger(stock) ||
+            stock < 0
+          ) {
+            const error =
+              new Error(
+                "CJ inventory is missing or invalid for variant " +
+                variant.sku +
+                "."
+              );
+
+            error.statusCode = 422;
+            error.code =
+              "CJ_VARIANT_INVENTORY_MISSING";
+
+            throw error;
+          }
+
+          variant.stock = stock;
+        }
+      );
+
+      await client.query(
+        `
+          UPDATE products
+          SET
+            variants = $1::JSONB,
+            updated_at = NOW()
+          WHERE id = $2
+        `,
+        [
+          JSON.stringify(variants),
+          normalizedId
+        ]
+      );
+    }
+  );
+
+  return getProductById(
+    normalizedId,
+    true
+  );
+}
+
 // ============================================================
 // UPDATE VARIANT STOCK
 // ============================================================
@@ -1635,6 +1773,9 @@ module.exports = {
 
   updateProductStock:
     updateProductStock,
+
+  updateCjProductInventory:
+    updateCjProductInventory,
 
   updateVariantStock:
     updateVariantStock,

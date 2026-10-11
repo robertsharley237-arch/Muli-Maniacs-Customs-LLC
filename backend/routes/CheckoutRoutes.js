@@ -483,6 +483,10 @@ async function buildVerifiedItems(
 
     let variantName = "";
 
+    let cjProductId = "";
+
+    let cjVariantId = "";
+
 
     let availableStock =
       Number(product.stock || 0);
@@ -542,6 +546,16 @@ async function buildVerifiedItems(
       itemSku =
         variant.sku ||
         product.sku;
+
+      cjProductId =
+        String(
+          variant.cjProductId || ""
+        );
+
+      cjVariantId =
+        String(
+          variant.cjVariantId || ""
+        );
 
 
       itemImage =
@@ -670,6 +684,11 @@ async function buildVerifiedItems(
       variantName:
         variantName,
 
+      cjProductId:
+        cjProductId || "",
+
+      cjVariantId:
+        cjVariantId || "",
 
       image:
         itemImage,

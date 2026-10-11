@@ -278,6 +278,20 @@ function normalizeOrderItem(
         150
       ),
 
+    cjProductId:
+      cleanText(
+        input.cjProductId ||
+        input.cj_product_id,
+        200
+      ),
+
+    cjVariantId:
+      cleanText(
+        input.cjVariantId ||
+        input.cj_variant_id,
+        200
+      ),
+
     image:
       cleanText(
         input.image,

@@ -115,6 +115,9 @@
   var ADMIN_PRODUCTS_URL =
     BACKEND_URL + "/admin/products";
 
+  var CJ_PRODUCTS_URL =
+    BACKEND_URL + "/admin/cj/products";
+
   var PRODUCTS_URL =
     BACKEND_URL + "/products";
 
@@ -578,6 +581,14 @@
 
       image: String(
         source.image || ""
+      ),
+
+      cjProductId: String(
+        source.cjProductId || ""
+      ),
+
+      cjVariantId: String(
+        source.cjVariantId || ""
       )
     };
   }
@@ -817,6 +828,182 @@
     );
   }
 
+  function createCjDraftPriceForm(product) {
+    var form =
+      createElement(
+        "form",
+        "cj-draft-price-form"
+      );
+
+    form.appendChild(
+      createElement(
+        "h3",
+        "",
+        "Set selling prices before publishing"
+      )
+    );
+
+    var priceInputs = [];
+
+    product.variants.forEach(
+      function (variant, index) {
+        var label =
+          createElement(
+            "label",
+            "cj-draft-price-row"
+          );
+
+        label.appendChild(
+          createElement(
+            "span",
+            "",
+            variant.name +
+              " (" +
+              variant.sku +
+              ")"
+          )
+        );
+
+        var input =
+          createElement("input");
+
+        input.type = "number";
+        input.min = "0.01";
+        input.step = "0.01";
+        input.required = true;
+        input.inputMode = "decimal";
+        input.setAttribute(
+          "aria-label",
+          "Selling price for " +
+            variant.name
+        );
+
+        label.appendChild(input);
+        form.appendChild(label);
+
+        priceInputs.push({
+          input: input,
+          variant: variant,
+          index: index
+        });
+      }
+    );
+
+    var submitButton =
+      createElement(
+        "button",
+        "",
+        "Save Prices and Publish"
+      );
+
+    submitButton.type = "submit";
+    form.appendChild(submitButton);
+
+    form.addEventListener(
+      "submit",
+      async function (event) {
+        event.preventDefault();
+
+        var updatedVariants =
+          product.variants.map(
+            function (variant) {
+              return Object.assign(
+                {},
+                variant
+              );
+            }
+          );
+
+        for (
+          var index = 0;
+          index < priceInputs.length;
+          index += 1
+        ) {
+          var price =
+            Number(
+              priceInputs[index]
+                .input.value
+            );
+
+          if (
+            !Number.isFinite(price) ||
+            price <= 0
+          ) {
+            showMessage(
+              "Enter a selling price greater than zero for every variant.",
+              "error"
+            );
+            return;
+          }
+
+          updatedVariants[
+            priceInputs[index].index
+          ].price =
+            Math.round(price * 100) / 100;
+        }
+
+        var prices =
+          updatedVariants.map(
+            function (variant) {
+              return variant.price;
+            }
+          );
+
+        submitButton.disabled = true;
+        submitButton.textContent =
+          "Saving Prices...";
+
+        try {
+          await requestJson(
+            PRODUCTS_URL +
+              "/" +
+              encodeURIComponent(product.id),
+            {
+              method: "PUT",
+              headers:
+                getAdminHeaders(true),
+              body: JSON.stringify({
+                price: Math.min.apply(
+                  null,
+                  prices
+                ),
+                variants:
+                  updatedVariants,
+                active: true
+              })
+            }
+          );
+
+          await loadProducts();
+
+          showMessage(
+            "Variant prices saved and the product is now published.",
+            "success"
+          );
+        } catch (error) {
+          console.error(
+            "CJ draft pricing failed.",
+            error
+          );
+
+          showMessage(
+            getRequestErrorMessage(
+              error,
+              "The CJ draft could not be priced and published."
+            ),
+            "error"
+          );
+
+          submitButton.disabled = false;
+          submitButton.textContent =
+            "Save Prices and Publish";
+        }
+      }
+    );
+
+    return form;
+  }
+
   // ==========================================================
   // PRODUCT CARD
   // ==========================================================
@@ -963,6 +1150,56 @@
     content.appendChild(headingRow);
     content.appendChild(details);
 
+    var hasCjProduct =
+      product.variants.some(
+        function (variant) {
+          return Boolean(
+            variant.cjProductId &&
+            variant.cjVariantId
+          );
+        }
+      );
+
+    if (
+      hasCjProduct &&
+      !product.active
+    ) {
+      content.appendChild(
+        createCjDraftPriceForm(product)
+      );
+    }
+
+    if (hasCjProduct) {
+      var syncStockActions =
+        createElement(
+          "div",
+          "product-card-actions"
+        );
+
+      var syncStockButton =
+        createElement(
+          "button",
+          "product-card-button",
+          "Sync CJ Stock"
+        );
+
+      syncStockButton.type = "button";
+      syncStockButton.addEventListener(
+        "click",
+        function () {
+          syncCjProductStock(
+            product.id,
+            syncStockButton
+          );
+        }
+      );
+
+      syncStockActions.appendChild(
+        syncStockButton
+      );
+      content.appendChild(syncStockActions);
+    }
+
     if (product.description) {
       content.appendChild(
         createElement(
@@ -1043,6 +1280,56 @@
     card.appendChild(content);
 
     return card;
+  }
+
+  async function syncCjProductStock(
+    productId,
+    syncButton
+  ) {
+    syncButton.disabled = true;
+    syncButton.textContent = "Syncing CJ Stock...";
+
+    try {
+      await requestJson(
+        CJ_PRODUCTS_URL +
+          "/" +
+          encodeURIComponent(productId) +
+          "/sync-stock",
+        {
+          method: "POST",
+          headers:
+            getAdminHeaders(false)
+        }
+      );
+
+      var productsReloaded =
+        await loadProducts();
+
+      showMessage(
+        productsReloaded
+          ? "CJ stock was refreshed."
+          : "CJ stock was refreshed, but the product list did not reload. Use Refresh Products to see the changes.",
+        productsReloaded
+          ? "success"
+          : "error"
+      );
+    } catch (error) {
+      console.error(
+        "CJ stock sync failed.",
+        error
+      );
+
+      showMessage(
+        getRequestErrorMessage(
+          error,
+          "CJ stock could not be refreshed."
+        ),
+        "error"
+      );
+
+      syncButton.disabled = false;
+      syncButton.textContent = "Sync CJ Stock";
+    }
   }
 
   // ==========================================================
@@ -1388,6 +1675,282 @@
     }
   }
 
+  function getCjProductResults(data) {
+    return Array.isArray(data.products)
+      ? data.products
+      : [];
+  }
+
+  function getSafeCjImageUrl(value) {
+    try {
+      var imageUrl =
+        new URL(String(value || ""));
+
+      return imageUrl.protocol === "https:"
+        ? imageUrl.toString()
+        : "";
+    } catch (error) {
+      return "";
+    }
+  }
+
+  function renderCjProducts(cjProducts) {
+    var results =
+      getElement("cj-import-results");
+
+    if (!results) {
+      return;
+    }
+
+    results.replaceChildren();
+
+    if (!cjProducts.length) {
+      results.appendChild(
+        createElement(
+          "p",
+          "product-list-empty",
+          "No CJ products matched your search."
+        )
+      );
+      return;
+    }
+
+    cjProducts.forEach(function (product) {
+      var productId =
+        String(product.id || "");
+
+      if (!productId) {
+        return;
+      }
+
+      var card =
+        createElement(
+          "article",
+          "cj-import-card"
+        );
+
+      var imageUrl =
+        getSafeCjImageUrl(
+          product.bigImage
+        );
+
+      if (imageUrl) {
+        var image =
+          createElement("img");
+
+        image.src = imageUrl;
+        image.alt = "";
+        image.loading = "lazy";
+        card.appendChild(image);
+      }
+
+      card.appendChild(
+        createElement(
+          "h3",
+          "",
+          product.nameEn ||
+            product.name ||
+            "CJ product"
+        )
+      );
+
+      card.appendChild(
+        createElement(
+          "p",
+          "",
+          "CJ SKU: " +
+            String(product.sku || "Unavailable")
+        )
+      );
+
+      var sourcePrice =
+        Number(
+          product.nowPrice ||
+          product.sellPrice
+        );
+
+      if (
+        Number.isFinite(sourcePrice) &&
+        sourcePrice > 0
+      ) {
+        card.appendChild(
+          createElement(
+            "p",
+            "",
+            "CJ reference price: $" +
+              sourcePrice.toFixed(2)
+          )
+        );
+      }
+
+      var importButton =
+        createElement(
+          "button",
+          "",
+          "Import Hidden Draft"
+        );
+
+      importButton.type = "button";
+      importButton.addEventListener(
+        "click",
+        function () {
+          importCjProduct(
+            productId,
+            importButton
+          );
+        }
+      );
+
+      card.appendChild(importButton);
+      results.appendChild(card);
+    });
+  }
+
+  async function searchCjProducts(event) {
+    event.preventDefault();
+
+    var searchInput =
+      getElement("cj-product-search");
+
+    var searchButton =
+      getElement("cj-product-search-button");
+
+    var results =
+      getElement("cj-import-results");
+
+    var keyword =
+      String(
+        searchInput &&
+        searchInput.value ||
+        ""
+      ).trim();
+
+    if (keyword.length < 2) {
+      showMessage(
+        "Enter at least two characters to search CJ.",
+        "error"
+      );
+      return;
+    }
+
+    searchButton.disabled = true;
+    searchButton.textContent = "Searching...";
+
+    if (results) {
+      results.replaceChildren(
+        createElement(
+          "p",
+          "product-list-loading",
+          "Searching CJ catalog..."
+        )
+      );
+    }
+
+    try {
+      var data =
+        await requestJson(
+          CJ_PRODUCTS_URL +
+            "?search=" +
+            encodeURIComponent(keyword),
+          {
+            method: "GET",
+            headers:
+              getAdminHeaders(false)
+          }
+        );
+
+      renderCjProducts(
+        getCjProductResults(data)
+      );
+
+      showMessage(
+        "CJ catalog search completed.",
+        "success"
+      );
+    } catch (error) {
+      console.error(
+        "CJ product search failed.",
+        error
+      );
+
+      if (results) {
+        results.replaceChildren();
+      }
+
+      showMessage(
+        getRequestErrorMessage(
+          error,
+          "CJ products could not be searched."
+        ),
+        "error"
+      );
+    } finally {
+      searchButton.disabled = false;
+      searchButton.textContent = "Search CJ";
+    }
+  }
+
+  async function importCjProduct(
+    productId,
+    importButton
+  ) {
+    importButton.disabled = true;
+    importButton.textContent = "Importing...";
+
+    try {
+      var data =
+        await requestJson(
+          CJ_PRODUCTS_URL +
+            "/" +
+            encodeURIComponent(productId) +
+            "/import",
+          {
+            method: "POST",
+            headers:
+              getAdminHeaders(false)
+          }
+        );
+
+      var productsReloaded =
+        await loadProducts();
+
+      importButton.textContent = "Imported";
+
+      if (!productsReloaded) {
+        showMessage(
+          "CJ product imported, but the catalog list did not refresh. Use Refresh Products to reload it.",
+          "error"
+        );
+        return;
+      }
+
+      showMessage(
+        getErrorMessage(
+          data.message,
+          "CJ product imported as a hidden draft."
+        ),
+        "success"
+      );
+    } catch (error) {
+      console.error(
+        "CJ product import failed.",
+        error
+      );
+
+      showMessage(
+        getRequestErrorMessage(
+          error,
+          "The CJ product could not be imported."
+        ),
+        "error"
+      );
+
+      importButton.disabled = false;
+      importButton.textContent =
+        "Import Hidden Draft";
+    }
+  }
+
   // ==========================================================
   // OPTIONAL DIRECT DELETE SUPPORT
   // ==========================================================
@@ -1489,6 +2052,9 @@
   }
 
   function connectProductControls() {
+    var cjImportForm =
+      getElement("cj-import-form");
+
     var searchBox =
       getElement("searchBox");
 
@@ -1520,6 +2086,13 @@
       refreshButton.addEventListener(
         "click",
         loadProducts
+      );
+    }
+
+    if (cjImportForm) {
+      cjImportForm.addEventListener(
+        "submit",
+        searchCjProducts
       );
     }
   }

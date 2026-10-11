@@ -31,6 +31,7 @@ const db = require("./db");
 // ============================================================
 
 const checkoutRoutes = require("./routes/CheckoutRoutes");
+const cjDropshippingRoutes = require("./routes/CJDropshippingRoutes");
 const adminRoutes = require("./routes/AdminRoutes");
 const categoryRoutes = require("./routes/CategoryRoutes");
 const clientIntakeRoutes = require("./routes/ClientIntakeRoutes");
@@ -82,6 +83,7 @@ const RECOMMENDED_ENVIRONMENT_VARIABLES = [
   "FRONTEND_URL",
   "STRIPE_SECRET_KEY",
   "STRIPE_WEBHOOK_SECRET",
+  "CJ_API_KEY",
   "CLOUDINARY_CLOUD_NAME",
   "CLOUDINARY_API_KEY",
   "CLOUDINARY_API_SECRET",
@@ -566,6 +568,18 @@ app.use(
 app.use(
   "/",
   productRoutes
+);
+
+// ============================================================
+// CJDROPSHIPPING PRODUCT IMPORT
+//
+// CJ catalog search and import routes require administrator
+// authentication and the backend-only CJ_API_KEY.
+// ============================================================
+
+app.use(
+  "/",
+  cjDropshippingRoutes
 );
 
 // ============================================================

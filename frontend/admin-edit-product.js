@@ -407,6 +407,18 @@
             variant.imagePublicId ||
             variant.image_public_id ||
             ""
+          ),
+
+          cjProductId: String(
+            variant.cjProductId ||
+            variant.cj_product_id ||
+            ""
+          ),
+
+          cjVariantId: String(
+            variant.cjVariantId ||
+            variant.cj_variant_id ||
+            ""
           )
         };
       }

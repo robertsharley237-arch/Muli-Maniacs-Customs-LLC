@@ -31,7 +31,7 @@ const db = require("./db");
 // ============================================================
 
 const checkoutRoutes = require("./routes/CheckoutRoutes");
-const cjDropshippingRoutes = require("./routes/CJDropshippingRoutes");
+const dropshippingRoutes = require("./routes/DropshippingRoutes");
 const adminRoutes = require("./routes/AdminRoutes");
 const categoryRoutes = require("./routes/CategoryRoutes");
 const clientIntakeRoutes = require("./routes/ClientIntakeRoutes");
@@ -571,15 +571,15 @@ app.use(
 );
 
 // ============================================================
-// CJDROPSHIPPING PRODUCT IMPORT
+// DROPSHIPPING PROVIDER PRODUCT IMPORT
 //
-// CJ catalog search and import routes require administrator
-// authentication and the backend-only CJ_API_KEY.
+// Provider catalog and import routes require administrator
+// authentication and backend-only provider credentials.
 // ============================================================
 
 app.use(
   "/",
-  cjDropshippingRoutes
+  dropshippingRoutes
 );
 
 // ============================================================

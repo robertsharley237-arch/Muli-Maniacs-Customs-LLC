@@ -278,15 +278,32 @@ function normalizeOrderItem(
         150
       ),
 
-    cjProductId:
+    supplierProvider:
       cleanText(
+        input.supplierProvider ||
+        input.supplier_provider ||
+        (
+          input.cjProductId ||
+          input.cj_product_id
+            ? "cjdropshipping"
+            : ""
+        ),
+        100
+      ),
+
+    supplierProductId:
+      cleanText(
+        input.supplierProductId ||
+        input.supplier_product_id ||
         input.cjProductId ||
         input.cj_product_id,
         200
       ),
 
-    cjVariantId:
+    supplierVariantId:
       cleanText(
+        input.supplierVariantId ||
+        input.supplier_variant_id ||
         input.cjVariantId ||
         input.cj_variant_id,
         200

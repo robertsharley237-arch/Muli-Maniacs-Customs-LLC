@@ -88,18 +88,42 @@ async function requestJson(
     result.result !== true ||
     Number(result.code) !== 200
   ) {
+    const providerCode =
+      result && result.code;
+    const providerMessage =
+      result &&
+      typeof result.message === "string"
+        ? result.message.trim().slice(0, 300)
+        : "";
     const error =
       createCjError(
-        "CJdropshipping rejected the request.",
+        "CJdropshipping rejected the request" +
+          (
+            providerCode !== undefined
+              ? " (code " +
+                String(providerCode).slice(0, 40) +
+                ")"
+              : ""
+          ) +
+          (
+            providerMessage
+              ? ": " + providerMessage
+              : "."
+          ),
         502,
         "CJ_API_ERROR"
       );
 
-    error.cjCode =
-      result && result.code;
+    error.cjCode = providerCode;
 
     error.cjRequestId =
       result && result.requestId;
+
+    error.cjMessage =
+      providerMessage;
+
+    error.cjHttpStatus =
+      response.status;
 
     throw error;
   }
@@ -228,10 +252,15 @@ async function cjGet(path, query) {
 }
 
 function getProductResults(data) {
-  if (
-    !data ||
-    !Array.isArray(data.content)
-  ) {
+  if (!data) {
+    return [];
+  }
+
+  if (Array.isArray(data.list)) {
+    return data.list;
+  }
+
+  if (!Array.isArray(data.content)) {
     return [];
   }
 
@@ -271,7 +300,13 @@ async function searchProducts(keyword) {
     products:
       getProductResults(data),
     totalRecords:
-      Number(data && data.totalRecords) || 0
+      Number(
+        data &&
+        (
+          data.total ||
+          data.totalRecords
+        )
+      ) || 0
   };
 }
 

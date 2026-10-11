@@ -115,8 +115,12 @@
   var ADMIN_PRODUCTS_URL =
     BACKEND_URL + "/admin/products";
 
-  var CJ_PRODUCTS_URL =
-    BACKEND_URL + "/admin/cj/products";
+  var DROPSHIPPING_URL =
+    BACKEND_URL + "/admin/dropshipping";
+
+  var dropshippingProviders = [];
+
+  var selectedProviderId = "";
 
   var PRODUCTS_URL =
     BACKEND_URL + "/products";
@@ -583,12 +587,16 @@
         source.image || ""
       ),
 
-      cjProductId: String(
-        source.cjProductId || ""
+      supplierProvider: String(
+        source.supplierProvider || ""
       ),
 
-      cjVariantId: String(
-        source.cjVariantId || ""
+      supplierProductId: String(
+        source.supplierProductId || ""
+      ),
+
+      supplierVariantId: String(
+        source.supplierVariantId || ""
       )
     };
   }
@@ -828,11 +836,11 @@
     );
   }
 
-  function createCjDraftPriceForm(product) {
+  function createSupplierDraftPriceForm(product) {
     var form =
       createElement(
         "form",
-        "cj-draft-price-form"
+        "supplier-draft-price-form"
       );
 
     form.appendChild(
@@ -850,7 +858,7 @@
         var label =
           createElement(
             "label",
-            "cj-draft-price-row"
+            "supplier-draft-price-row"
           );
 
         label.appendChild(
@@ -974,11 +982,16 @@
             }
           );
 
-          await loadProducts();
+          var productsReloaded =
+            await loadProducts();
 
           showMessage(
-            "Variant prices saved and the product is now published.",
-            "success"
+            productsReloaded
+              ? "Variant prices saved and the product is now published."
+              : "Variant prices were saved and the product published, but the product list did not reload. Use Refresh Products to see the changes.",
+            productsReloaded
+              ? "success"
+              : "error"
           );
         } catch (error) {
           console.error(
@@ -1150,26 +1163,37 @@
     content.appendChild(headingRow);
     content.appendChild(details);
 
-    var hasCjProduct =
-      product.variants.some(
+    var supplierProviderId =
+      product.variants.length > 0
+        ? product.variants[0].supplierProvider
+        : "";
+
+    var hasSupplierProduct =
+      Boolean(
+        supplierProviderId &&
+        product.variants.length > 0
+      ) &&
+      product.variants.every(
         function (variant) {
           return Boolean(
-            variant.cjProductId &&
-            variant.cjVariantId
+            variant.supplierProvider ===
+              supplierProviderId &&
+            variant.supplierProductId &&
+            variant.supplierVariantId
           );
         }
       );
 
     if (
-      hasCjProduct &&
+      hasSupplierProduct &&
       !product.active
     ) {
       content.appendChild(
-        createCjDraftPriceForm(product)
+        createSupplierDraftPriceForm(product)
       );
     }
 
-    if (hasCjProduct) {
+    if (hasSupplierProduct) {
       var syncStockActions =
         createElement(
           "div",
@@ -1180,15 +1204,16 @@
         createElement(
           "button",
           "product-card-button",
-          "Sync CJ Stock"
+          "Sync Provider Stock"
         );
 
       syncStockButton.type = "button";
       syncStockButton.addEventListener(
         "click",
         function () {
-          syncCjProductStock(
+          syncSupplierProductStock(
             product.id,
+            supplierProviderId,
             syncStockButton
           );
         }
@@ -1282,16 +1307,20 @@
     return card;
   }
 
-  async function syncCjProductStock(
+  async function syncSupplierProductStock(
     productId,
+    providerId,
     syncButton
   ) {
     syncButton.disabled = true;
-    syncButton.textContent = "Syncing CJ Stock...";
+    syncButton.textContent = "Syncing Provider Stock...";
 
     try {
       await requestJson(
-        CJ_PRODUCTS_URL +
+        DROPSHIPPING_URL +
+          "/" +
+          encodeURIComponent(providerId) +
+          "/products" +
           "/" +
           encodeURIComponent(productId) +
           "/sync-stock",
@@ -1307,28 +1336,29 @@
 
       showMessage(
         productsReloaded
-          ? "CJ stock was refreshed."
-          : "CJ stock was refreshed, but the product list did not reload. Use Refresh Products to see the changes.",
+          ? "Provider stock was refreshed."
+          : "Provider stock was refreshed, but the product list did not reload. Use Refresh Products to see the changes.",
         productsReloaded
           ? "success"
           : "error"
       );
     } catch (error) {
       console.error(
-        "CJ stock sync failed.",
+        "Provider stock sync failed.",
         error
       );
 
       showMessage(
         getRequestErrorMessage(
           error,
-          "CJ stock could not be refreshed."
+          "Provider stock could not be refreshed."
         ),
         "error"
       );
 
       syncButton.disabled = false;
-      syncButton.textContent = "Sync CJ Stock";
+      syncButton.textContent =
+        "Sync Provider Stock";
     }
   }
 
@@ -1675,13 +1705,13 @@
     }
   }
 
-  function getCjProductResults(data) {
+  function getProviderProductResults(data) {
     return Array.isArray(data.products)
       ? data.products
       : [];
   }
 
-  function getSafeCjImageUrl(value) {
+  function getSafeProviderImageUrl(value) {
     try {
       var imageUrl =
         new URL(String(value || ""));
@@ -1694,9 +1724,9 @@
     }
   }
 
-  function renderCjProducts(cjProducts) {
+  function renderProviderProducts(providerProducts) {
     var results =
-      getElement("cj-import-results");
+      getElement("provider-import-results");
 
     if (!results) {
       return;
@@ -1704,18 +1734,18 @@
 
     results.replaceChildren();
 
-    if (!cjProducts.length) {
+    if (!providerProducts.length) {
       results.appendChild(
         createElement(
           "p",
           "product-list-empty",
-          "No CJ products matched your search."
+          "No provider products matched your search."
         )
       );
       return;
     }
 
-    cjProducts.forEach(function (product) {
+    providerProducts.forEach(function (product) {
       var productId =
         String(product.id || "");
 
@@ -1726,12 +1756,12 @@
       var card =
         createElement(
           "article",
-          "cj-import-card"
+          "provider-import-card"
         );
 
       var imageUrl =
-        getSafeCjImageUrl(
-          product.bigImage
+        getSafeProviderImageUrl(
+          product.image
         );
 
       if (imageUrl) {
@@ -1748,9 +1778,8 @@
         createElement(
           "h3",
           "",
-          product.nameEn ||
-            product.name ||
-            "CJ product"
+          product.name ||
+          "Provider product"
         )
       );
 
@@ -1758,15 +1787,14 @@
         createElement(
           "p",
           "",
-          "CJ SKU: " +
+          "Provider SKU: " +
             String(product.sku || "Unavailable")
         )
       );
 
       var sourcePrice =
         Number(
-          product.nowPrice ||
-          product.sellPrice
+          product.referencePrice
         );
 
       if (
@@ -1777,7 +1805,7 @@
           createElement(
             "p",
             "",
-            "CJ reference price: $" +
+            "Provider reference price: $" +
               sourcePrice.toFixed(2)
           )
         );
@@ -1794,7 +1822,7 @@
       importButton.addEventListener(
         "click",
         function () {
-          importCjProduct(
+          importProviderProduct(
             productId,
             importButton
           );
@@ -1806,17 +1834,100 @@
     });
   }
 
-  async function searchCjProducts(event) {
+  async function loadDropshippingProviders() {
+    var providerSelect =
+      getElement("provider-select");
+
+    if (!providerSelect) {
+      return false;
+    }
+
+    try {
+      var data =
+        await requestJson(
+          DROPSHIPPING_URL +
+            "/providers",
+          {
+            method: "GET",
+            headers:
+              getAdminHeaders(false)
+          }
+        );
+
+      dropshippingProviders =
+        Array.isArray(data.providers)
+          ? data.providers
+          : [];
+
+      providerSelect.replaceChildren();
+
+      dropshippingProviders.forEach(
+        function (provider) {
+          var option =
+            createElement(
+              "option",
+              "",
+              provider.name
+            );
+
+          option.value = provider.id;
+          providerSelect.appendChild(option);
+        }
+      );
+
+      selectedProviderId =
+        dropshippingProviders.length
+          ? dropshippingProviders[0].id
+          : "";
+
+      providerSelect.disabled =
+        !selectedProviderId;
+
+      var searchButton =
+        getElement("provider-search-button");
+
+      if (searchButton) {
+        searchButton.disabled =
+          !selectedProviderId;
+      }
+
+      if (!selectedProviderId) {
+        showMessage(
+          "No dropshipping providers are configured.",
+          "error"
+        );
+      }
+
+      return Boolean(selectedProviderId);
+    } catch (error) {
+      console.error(
+        "Dropshipping providers could not be loaded.",
+        error
+      );
+
+      showMessage(
+        getRequestErrorMessage(
+          error,
+          "Dropshipping providers could not be loaded."
+        ),
+        "error"
+      );
+
+      return false;
+    }
+  }
+
+  async function searchProviderProducts(event) {
     event.preventDefault();
 
     var searchInput =
-      getElement("cj-product-search");
+      getElement("provider-product-search");
 
     var searchButton =
-      getElement("cj-product-search-button");
+      getElement("provider-search-button");
 
     var results =
-      getElement("cj-import-results");
+      getElement("provider-import-results");
 
     var keyword =
       String(
@@ -1827,7 +1938,21 @@
 
     if (keyword.length < 2) {
       showMessage(
-        "Enter at least two characters to search CJ.",
+        "Enter at least two characters to search a provider catalog.",
+        "error"
+      );
+      return;
+    }
+
+    selectedProviderId =
+      String(
+        getElement("provider-select").value ||
+        ""
+      );
+
+    if (!selectedProviderId) {
+      showMessage(
+        "Select a dropshipping provider first.",
         "error"
       );
       return;
@@ -1841,7 +1966,7 @@
         createElement(
           "p",
           "product-list-loading",
-          "Searching CJ catalog..."
+          "Searching provider catalog..."
         )
       );
     }
@@ -1849,7 +1974,10 @@
     try {
       var data =
         await requestJson(
-          CJ_PRODUCTS_URL +
+          DROPSHIPPING_URL +
+            "/" +
+            encodeURIComponent(selectedProviderId) +
+            "/products" +
             "?search=" +
             encodeURIComponent(keyword),
           {
@@ -1859,17 +1987,17 @@
           }
         );
 
-      renderCjProducts(
-        getCjProductResults(data)
+      renderProviderProducts(
+        getProviderProductResults(data)
       );
 
       showMessage(
-        "CJ catalog search completed.",
+        "Provider catalog search completed.",
         "success"
       );
     } catch (error) {
       console.error(
-        "CJ product search failed.",
+        "Provider product search failed.",
         error
       );
 
@@ -1880,17 +2008,17 @@
       showMessage(
         getRequestErrorMessage(
           error,
-          "CJ products could not be searched."
+          "Provider products could not be searched."
         ),
         "error"
       );
     } finally {
       searchButton.disabled = false;
-      searchButton.textContent = "Search CJ";
+      searchButton.textContent = "Search Provider";
     }
   }
 
-  async function importCjProduct(
+  async function importProviderProduct(
     productId,
     importButton
   ) {
@@ -1900,7 +2028,10 @@
     try {
       var data =
         await requestJson(
-          CJ_PRODUCTS_URL +
+          DROPSHIPPING_URL +
+            "/" +
+            encodeURIComponent(selectedProviderId) +
+            "/products" +
             "/" +
             encodeURIComponent(productId) +
             "/import",
@@ -1918,7 +2049,7 @@
 
       if (!productsReloaded) {
         showMessage(
-          "CJ product imported, but the catalog list did not refresh. Use Refresh Products to reload it.",
+          "Provider product imported, but the catalog list did not refresh. Use Refresh Products to reload it.",
           "error"
         );
         return;
@@ -1927,20 +2058,20 @@
       showMessage(
         getErrorMessage(
           data.message,
-          "CJ product imported as a hidden draft."
+          "Provider product imported as a hidden draft."
         ),
         "success"
       );
     } catch (error) {
       console.error(
-        "CJ product import failed.",
+        "Provider product import failed.",
         error
       );
 
       showMessage(
         getRequestErrorMessage(
           error,
-          "The CJ product could not be imported."
+          "The provider product could not be imported."
         ),
         "error"
       );
@@ -2052,8 +2183,11 @@
   }
 
   function connectProductControls() {
-    var cjImportForm =
-      getElement("cj-import-form");
+    var providerImportForm =
+      getElement("provider-import-form");
+
+    var providerSelect =
+      getElement("provider-select");
 
     var searchBox =
       getElement("searchBox");
@@ -2089,10 +2223,20 @@
       );
     }
 
-    if (cjImportForm) {
-      cjImportForm.addEventListener(
+    if (providerImportForm) {
+      providerImportForm.addEventListener(
         "submit",
-        searchCjProducts
+        searchProviderProducts
+      );
+    }
+
+    if (providerSelect) {
+      providerSelect.addEventListener(
+        "change",
+        function () {
+          selectedProviderId =
+            String(providerSelect.value || "");
+        }
       );
     }
   }
@@ -2113,6 +2257,7 @@
       return;
     }
 
+    await loadDropshippingProviders();
     await loadProducts();
 
     console.log(

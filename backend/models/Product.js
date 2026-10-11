@@ -308,19 +308,36 @@ function normalizeVariant(
         500
       ),
 
-    cjProductId:
+    supplierProvider:
       cleanText(
+        sourceVariant.supplierProvider ||
+        sourceVariant.supplier_provider ||
+        (
+          sourceVariant.cjProductId ||
+          sourceVariant.cj_product_id
+            ? "cjdropshipping"
+            : ""
+        ),
+        100
+      ),
+
+    supplierProductId:
+      cleanText(
+        sourceVariant.supplierProductId ||
+        sourceVariant.supplier_product_id ||
         sourceVariant.cjProductId ||
         sourceVariant.cj_product_id,
         200
       ),
 
-    cjVariantId:
+    supplierVariantId:
       cleanText(
+        sourceVariant.supplierVariantId ||
+        sourceVariant.supplier_variant_id ||
         sourceVariant.cjVariantId ||
         sourceVariant.cj_variant_id,
         200
-      )
+      ),
   };
 }
 
@@ -1443,8 +1460,9 @@ async function runTransaction(
   }
 }
 
-async function updateCjProductInventory(
+async function updateSupplierInventory(
   productId,
+  supplierProvider,
   stockByVariantId
 ) {
   const normalizedId =
@@ -1457,7 +1475,7 @@ async function updateCjProductInventory(
     typeof stockByVariantId !== "object"
   ) {
     throw new TypeError(
-      "CJ variant stock must be provided as a map."
+      "Supplier variant stock must be provided as a map."
     );
   }
 
@@ -1500,18 +1518,20 @@ async function updateCjProductInventory(
         variants.length === 0 ||
         variants.some(
           function (variant) {
-            return !variant.cjVariantId;
+            return variant.supplierProvider !==
+                supplierProvider ||
+              !variant.supplierVariantId;
           }
         )
       ) {
         const error =
           new Error(
-            "This product does not have a complete CJ variant mapping."
+            "This product does not have a complete mapping to the selected supplier."
           );
 
         error.statusCode = 409;
         error.code =
-          "CJ_VARIANT_MAPPING_MISSING";
+          "SUPPLIER_VARIANT_MAPPING_MISSING";
 
         throw error;
       }
@@ -1520,7 +1540,7 @@ async function updateCjProductInventory(
         function (variant) {
           const stock =
             stockByVariantId[
-              variant.cjVariantId
+              variant.supplierVariantId
             ];
 
           if (
@@ -1529,14 +1549,14 @@ async function updateCjProductInventory(
           ) {
             const error =
               new Error(
-                "CJ inventory is missing or invalid for variant " +
+                "Supplier inventory is missing or invalid for variant " +
                 variant.sku +
                 "."
               );
 
             error.statusCode = 422;
             error.code =
-              "CJ_VARIANT_INVENTORY_MISSING";
+              "SUPPLIER_VARIANT_INVENTORY_MISSING";
 
             throw error;
           }
@@ -1774,8 +1794,8 @@ module.exports = {
   updateProductStock:
     updateProductStock,
 
-  updateCjProductInventory:
-    updateCjProductInventory,
+  updateSupplierInventory:
+    updateSupplierInventory,
 
   updateVariantStock:
     updateVariantStock,

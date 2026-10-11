@@ -409,13 +409,28 @@
             ""
           ),
 
-          cjProductId: String(
+          supplierProvider: String(
+            variant.supplierProvider ||
+            variant.supplier_provider ||
+            (
+              variant.cjProductId ||
+              variant.cj_product_id
+                ? "cjdropshipping"
+                : ""
+            )
+          ),
+
+          supplierProductId: String(
+            variant.supplierProductId ||
+            variant.supplier_product_id ||
             variant.cjProductId ||
             variant.cj_product_id ||
             ""
           ),
 
-          cjVariantId: String(
+          supplierVariantId: String(
+            variant.supplierVariantId ||
+            variant.supplier_variant_id ||
             variant.cjVariantId ||
             variant.cj_variant_id ||
             ""

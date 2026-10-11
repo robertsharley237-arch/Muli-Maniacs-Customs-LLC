@@ -483,9 +483,11 @@ async function buildVerifiedItems(
 
     let variantName = "";
 
-    let cjProductId = "";
+    let supplierProvider = "";
 
-    let cjVariantId = "";
+    let supplierProductId = "";
+
+    let supplierVariantId = "";
 
 
     let availableStock =
@@ -547,14 +549,19 @@ async function buildVerifiedItems(
         variant.sku ||
         product.sku;
 
-      cjProductId =
+      supplierProvider =
         String(
-          variant.cjProductId || ""
+          variant.supplierProvider || ""
         );
 
-      cjVariantId =
+      supplierProductId =
         String(
-          variant.cjVariantId || ""
+          variant.supplierProductId || ""
+        );
+
+      supplierVariantId =
+        String(
+          variant.supplierVariantId || ""
         );
 
 
@@ -684,11 +691,14 @@ async function buildVerifiedItems(
       variantName:
         variantName,
 
-      cjProductId:
-        cjProductId || "",
+      supplierProvider:
+        supplierProvider || "",
 
-      cjVariantId:
-        cjVariantId || "",
+      supplierProductId:
+        supplierProductId || "",
+
+      supplierVariantId:
+        supplierVariantId || "",
 
       image:
         itemImage,

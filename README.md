@@ -16,14 +16,15 @@ database used by the backend:
   application's default values; the product catalog starts empty.
 - `003_create_categories.sql` creates the categories table used by the
   dashboard's category-management tools.
+- `004_create_orders.sql` creates order records, payment/order status fields,
+  Stripe identifiers, and JSON order items.
+- `005_create_client_intakes.sql` creates client project request records and
+  their review statuses.
 
 After creating the admin table, configure `ADMIN_BOOTSTRAP_KEY` in the
 backend environment and use the one-time `POST /admin/bootstrap` endpoint to
 create the first super administrator. Set a strong administrator password;
 do not insert a plaintext password into the database.
-
-Features that use orders or client intakes still require those tables to be
-created as well.
 
 ## Dropshipping provider integrations
 

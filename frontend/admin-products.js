@@ -1049,14 +1049,14 @@
           );
         } catch (error) {
           console.error(
-            "CJ draft pricing failed.",
+            "Supplier draft pricing failed.",
             error
           );
 
           showMessage(
             getRequestErrorMessage(
               error,
-              "The CJ draft could not be priced and published."
+              "The supplier draft could not be priced and published."
             ),
             "error"
           );

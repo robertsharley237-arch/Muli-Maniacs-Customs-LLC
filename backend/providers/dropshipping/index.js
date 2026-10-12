@@ -4,6 +4,10 @@ const providers = new Map([
   [
     "cjdropshipping",
     require("./cjdropshipping")
+  ],
+  [
+    "silverbene",
+    require("./silverbene")
   ]
 ]);
 

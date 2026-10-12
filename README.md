@@ -38,13 +38,18 @@ Admins can choose and upload a JPG, PNG, WEBP, or GIF photo from each product
 card to replace the product's main image.
 Products also support multiple photos, including additional photo URLs
 returned during dropshipping imports. Add photos while creating a product or
-use the product-card gallery uploader to add photos to an existing product.
+use the product-card gallery uploader to add multiple photos to an existing
+product. Imported supplier drafts let admins set their own selling price for
+each variant before publishing.
 Apply migration `006_add_product_images.sql` after the existing migrations
 before using the multi-photo catalog.
 
-CJdropshipping is currently the first configured provider. Set `CJ_API_KEY`
-in the backend host's environment variables; never put provider credentials
-in frontend configuration or commit them.
+CJdropshipping and Silverbene are available providers. Set `CJ_API_KEY` for
+CJdropshipping. For Silverbene, set `SILVERBENE_API_BASE_URL` to the API
+origin (the Silverbene endpoint notes provide relative paths but omit the
+host) and `SILVERBENE_API_TOKEN` to the account token. Keep provider
+credentials in the backend host's environment variables; never put them in
+frontend configuration or commit them.
 Image uploads require the backend-only Cloudinary settings:
 `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, and
 `CLOUDINARY_API_SECRET`.
@@ -55,8 +60,8 @@ Each provider adapter implements product search, normalized product details
 for import, and inventory lookup. The shared protected routes in
 [`backend/routes/DropshippingRoutes.js`](./backend/routes/DropshippingRoutes.js)
 handle catalog search, importing selected products as hidden drafts, and
-stock synchronization. A new provider can be added as an adapter and
-registered without changing the product-management workflow. Provider order
-submission can likewise be implemented behind provider adapters; retaining
-the provider identifiers in order items prepares for that step, but paid
-orders are not yet forwarded automatically.
+stock synchronization. Customer orders are not submitted to providers
+automatically. The administrator order page displays each item's supplier
+product and variant references for placing provider orders manually. A new
+provider can be added as an adapter and registered without changing the
+product-management workflow.

@@ -772,6 +772,27 @@
           ""
         ),
 
+      supplierProvider:
+        String(
+          source.supplierProvider ||
+          source.supplier_provider ||
+          ""
+        ),
+
+      supplierProductId:
+        String(
+          source.supplierProductId ||
+          source.supplier_product_id ||
+          ""
+        ),
+
+      supplierVariantId:
+        String(
+          source.supplierVariantId ||
+          source.supplier_variant_id ||
+          ""
+        ),
+
       quantity:
         normalizeQuantity(
           source.quantity
@@ -1335,6 +1356,52 @@
               )
             )
           );
+        }
+
+        if (
+          item.supplierProvider ||
+          item.supplierProductId ||
+          item.supplierVariantId
+        ) {
+          information.appendChild(
+            createOrderElement(
+              "p",
+              "supplier-order-reference",
+              "Manual supplier order reference"
+            )
+          );
+
+          if (item.supplierProvider) {
+            information.appendChild(
+              createOrderElement(
+                "p",
+                "supplier-order-reference",
+                "Provider: " + item.supplierProvider
+              )
+            );
+          }
+
+          if (item.supplierProductId) {
+            information.appendChild(
+              createOrderElement(
+                "p",
+                "supplier-order-reference",
+                "Supplier product ID: " +
+                  item.supplierProductId
+              )
+            );
+          }
+
+          if (item.supplierVariantId) {
+            information.appendChild(
+              createOrderElement(
+                "p",
+                "supplier-order-reference",
+                "Supplier variant/option ID: " +
+                  item.supplierVariantId
+              )
+            );
+          }
         }
 
         information.appendChild(

@@ -2513,7 +2513,413 @@
 
 
   }
-    // ==========================================================
+  function createProductCard(product) {
+    var card =
+      createElement("article", "product-card");
+    var content =
+      createElement("div", "product-card-content");
+    var stockDisplay =
+      getStockDisplay(product);
+    var actions =
+      createElement("div", "product-card-actions");
+    var productUrl =
+      "product.html?id=" +
+      encodeURIComponent(product.id);
+    var viewProductLink =
+      createElement(
+        "a",
+        "product-action view-product-action",
+        "View Product"
+      );
+    var addButton =
+      createElement(
+        "button",
+        "product-action add-product-action",
+        "Add to Cart"
+      );
+
+    viewProductLink.href =
+      productUrl;
+    addButton.type =
+      "button";
+
+    if (!storeOpen) {
+      addButton.disabled = true;
+      addButton.textContent = "Shop Closed";
+    } else if (!isProductAvailable(product)) {
+      addButton.disabled = true;
+      addButton.textContent = "Out of Stock";
+    } else if (product.variants.length > 0) {
+      addButton.textContent = "Choose Options";
+      addButton.addEventListener(
+        "click",
+        function () {
+          window.location.assign(productUrl);
+        }
+      );
+    } else {
+      addButton.addEventListener(
+        "click",
+        function () {
+          try {
+            addButton.disabled = true;
+            addSimpleProductToCart(product);
+            showMessage(
+              product.name + " was added to your cart.",
+              "success"
+            );
+          } catch (error) {
+            showMessage(
+              getErrorMessage(
+                error,
+                "The product could not be added."
+              ),
+              "error"
+            );
+          } finally {
+            addButton.disabled = false;
+            addButton.textContent = "Add to Cart";
+          }
+        }
+      );
+    }
+
+    content.appendChild(
+      createElement("p", "product-category", product.category)
+    );
+    content.appendChild(
+      createElement("h2", "product-name", product.name)
+    );
+
+    if (product.description) {
+      content.appendChild(
+        createElement(
+          "p",
+          "product-description",
+          product.description
+        )
+      );
+    }
+
+    content.appendChild(
+      createElement(
+        "p",
+        "product-price",
+        getPriceText(product)
+      )
+    );
+    content.appendChild(
+      createElement(
+        "p",
+        stockDisplay.className,
+        stockDisplay.text
+      )
+    );
+    actions.appendChild(viewProductLink);
+    actions.appendChild(addButton);
+    content.appendChild(actions);
+    card.appendChild(createProductImage(product));
+    card.appendChild(content);
+
+    return card;
+  }
+
+  function populateCategories() {
+    var categorySelect =
+      getElement("shop-category-filter");
+
+    if (!categorySelect) {
+      return;
+    }
+
+    var previousValue =
+      categorySelect.value || "all";
+    var categories = [];
+
+    shopProducts.forEach(function (product) {
+      if (categories.indexOf(product.category) === -1) {
+        categories.push(product.category);
+      }
+    });
+
+    categories.sort(function (first, second) {
+      return first.localeCompare(second);
+    });
+
+    categorySelect.replaceChildren();
+    var allCategoriesOption =
+      createElement("option", "", "All Categories");
+    allCategoriesOption.value = "all";
+    categorySelect.appendChild(allCategoriesOption);
+
+    categories.forEach(function (category) {
+      var option =
+        createElement("option", "", category);
+      option.value = category;
+      categorySelect.appendChild(option);
+    });
+
+    categorySelect.value =
+      categories.indexOf(previousValue) >= 0
+        ? previousValue
+        : "all";
+  }
+
+  function getFilteredProducts() {
+    var searchInput =
+      getElement("shop-search");
+    var categorySelect =
+      getElement("shop-category-filter");
+    var sortSelect =
+      getElement("shop-sort");
+    var searchQuery =
+      searchInput
+        ? searchInput.value.trim().toLowerCase()
+        : "";
+    var selectedCategory =
+      categorySelect ? categorySelect.value : "all";
+    var selectedSort =
+      sortSelect ? sortSelect.value : "name-ascending";
+
+    var filteredProducts =
+      shopProducts.filter(function (product) {
+        var searchableText = [
+          product.name,
+          product.sku,
+          product.category,
+          product.description
+        ].join(" ").toLowerCase();
+
+        return (
+          (!searchQuery ||
+            searchableText.indexOf(searchQuery) >= 0) &&
+          (selectedCategory === "all" ||
+            product.category === selectedCategory)
+        );
+      });
+
+    filteredProducts.sort(function (first, second) {
+      if (selectedSort === "name-descending") {
+        return second.name.localeCompare(first.name);
+      }
+      if (selectedSort === "price-low") {
+        return getStartingPrice(first) - getStartingPrice(second);
+      }
+      if (selectedSort === "price-high") {
+        return getStartingPrice(second) - getStartingPrice(first);
+      }
+      return first.name.localeCompare(second.name);
+    });
+
+    return filteredProducts;
+  }
+
+  function renderProducts() {
+    var shopGrid =
+      getElement("shop-grid");
+
+    if (!shopGrid) {
+      return;
+    }
+
+    var filteredProducts =
+      getFilteredProducts();
+    var resultCount =
+      getElement("shop-result-count");
+
+    shopGrid.replaceChildren();
+    shopGrid.setAttribute("aria-busy", "false");
+
+    if (resultCount) {
+      resultCount.textContent =
+        filteredProducts.length === 1
+          ? "1 product"
+          : filteredProducts.length + " products";
+    }
+
+    if (filteredProducts.length === 0) {
+      shopGrid.appendChild(
+        createElement(
+          "p",
+          "shop-empty",
+          "No products match your filters."
+        )
+      );
+      return;
+    }
+
+    filteredProducts.forEach(function (product) {
+      shopGrid.appendChild(createProductCard(product));
+    });
+  }
+
+  async function loadStoreSettings() {
+    var closedNotice =
+      getElement("shop-closed-notice");
+
+    try {
+      var response =
+        await fetchWithTimeout(SETTINGS_URL, {
+          method: "GET",
+          headers: { Accept: "application/json" }
+        });
+
+      if (!response.ok) {
+        return;
+      }
+
+      var data =
+        await readResponse(response);
+      var settings =
+        data.settings || data;
+
+      if (settings.storeOpen !== undefined) {
+        storeOpen = settings.storeOpen !== false;
+      } else if (settings.store_open !== undefined) {
+        storeOpen = settings.store_open !== false;
+      }
+
+      if (closedNotice) {
+        closedNotice.hidden = storeOpen;
+        closedNotice.textContent = String(
+          settings.closedStoreMessage ||
+            settings.closed_store_message ||
+            "The online shop is temporarily unavailable."
+        );
+      }
+    } catch (error) {
+      console.warn("Shop settings could not be loaded.", error);
+    }
+  }
+
+  async function loadProducts() {
+    var shopGrid =
+      getElement("shop-grid");
+    var refreshButton =
+      getElement("refresh-shop-button");
+
+    if (shopGrid) {
+      shopGrid.setAttribute("aria-busy", "true");
+      shopGrid.replaceChildren(
+        createElement(
+          "p",
+          "shop-loading",
+          "Loading shop products..."
+        )
+      );
+    }
+
+    if (refreshButton) {
+      refreshButton.disabled = true;
+      refreshButton.textContent = "Refreshing...";
+    }
+
+    try {
+      var response =
+        await fetchWithTimeout(PRODUCTS_URL, {
+          method: "GET",
+          headers: { Accept: "application/json" }
+        });
+      var data =
+        await readResponse(response);
+
+      if (!response.ok) {
+        throw new Error(
+          getErrorMessage(
+            data.error || data.message || data,
+            "Products could not be loaded."
+          )
+        );
+      }
+
+      var productList =
+        Array.isArray(data)
+          ? data
+          : (Array.isArray(data.products) ? data.products : []);
+
+      shopProducts =
+        productList
+          .map(normalizeProduct)
+          .filter(function (product) {
+            return product.id && product.active;
+          });
+
+      populateCategories();
+      renderProducts();
+      showMessage("", "information");
+    } catch (error) {
+      console.error("Shop products could not be loaded.", error);
+      shopProducts = [];
+
+      if (shopGrid) {
+        shopGrid.setAttribute("aria-busy", "false");
+        shopGrid.replaceChildren(
+          createElement(
+            "p",
+            "shop-empty",
+            "Shop products could not be loaded."
+          )
+        );
+      }
+
+      var resultCount =
+        getElement("shop-result-count");
+
+      if (resultCount) {
+        resultCount.textContent = "0 products";
+      }
+
+      showMessage(
+        error && error.name === "AbortError"
+          ? "The product request took too long. Please try again."
+          : getErrorMessage(
+              error,
+              "Shop products could not be loaded."
+            ),
+        "error"
+      );
+    } finally {
+      if (refreshButton) {
+        refreshButton.disabled = false;
+        refreshButton.textContent = "Refresh Shop";
+      }
+    }
+  }
+
+  async function initializeShop() {
+    var searchInput =
+      getElement("shop-search");
+    var categorySelect =
+      getElement("shop-category-filter");
+    var sortSelect =
+      getElement("shop-sort");
+    var refreshButton =
+      getElement("refresh-shop-button");
+
+    if (searchInput) {
+      searchInput.addEventListener("input", renderProducts);
+    }
+    if (categorySelect) {
+      categorySelect.addEventListener("change", renderProducts);
+    }
+    if (sortSelect) {
+      sortSelect.addEventListener("change", renderProducts);
+    }
+    if (refreshButton) {
+      refreshButton.addEventListener("click", async function () {
+        await loadStoreSettings();
+        await loadProducts();
+      });
+    }
+
+    await loadStoreSettings();
+    await loadProducts();
+
+    console.log("MMC shop initialized.");
+    console.log("MMC shop backend URL:", BACKEND_URL);
+  }
+
+  // ==========================================================
   // GLOBAL SUPPORT FUNCTIONS
   // ==========================================================
 

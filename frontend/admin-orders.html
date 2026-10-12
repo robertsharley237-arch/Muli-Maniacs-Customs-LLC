@@ -492,6 +492,11 @@
       overflow-wrap: anywhere;
     }
 
+    .order-item .supplier-order-reference {
+      color: var(--admin-black, #000000);
+      font-weight: 800;
+    }
+
     .order-item-total {
       color: var(--admin-black, #000000);
       font-weight: 900;
@@ -855,6 +860,12 @@
         Review Stripe orders, client contact information,
         purchased products, order totals, payment status, and
         order progress.
+      </p>
+      <p class="page-description">
+        Dropshipping orders are not sent to providers automatically.
+        After a customer order is paid, use the supplier references on
+        each item and the customer shipping address to place the provider
+        order yourself.
       </p>
 
       <!-- ====================================================

@@ -31,10 +31,14 @@ function sendProviderError(
     {
       provider: providerId,
       code: error.code,
-      providerCode: error.cjCode,
-      providerMessage: error.cjMessage,
-      providerHttpStatus: error.cjHttpStatus,
-      requestId: error.cjRequestId
+      providerCode:
+        error.cjCode || error.silverbeneCode,
+      providerMessage:
+        error.cjMessage || error.silverbeneMessage,
+      providerHttpStatus:
+        error.cjHttpStatus || error.silverbeneHttpStatus,
+      requestId:
+        error.cjRequestId
     }
   );
 
@@ -63,7 +67,9 @@ function sendProviderError(
       code:
         error.code || undefined,
       providerCode:
-        error.cjCode || undefined,
+        error.cjCode ||
+        error.silverbeneCode ||
+        undefined,
       requestId:
         error.cjRequestId || undefined
     });

@@ -599,6 +599,12 @@
         source.image || ""
       ),
 
+      imagePublicId: String(
+        source.imagePublicId ||
+        source.image_public_id ||
+        ""
+      ),
+
       supplierProvider: String(
         source.supplierProvider || ""
       ),
@@ -677,6 +683,42 @@
       image: String(
         source.image || ""
       ),
+
+      imagePublicId: String(
+        source.imagePublicId ||
+        source.image_public_id ||
+        ""
+      ),
+
+      images:
+        Array.isArray(source.images)
+          ? source.images.map(
+              function (image) {
+                return {
+                  url: String(
+                    image &&
+                    typeof image === "object"
+                      ? image.url ||
+                        image.image ||
+                        ""
+                      : image || ""
+                  ),
+                  publicId: String(
+                    image &&
+                    typeof image === "object"
+                      ? image.publicId ||
+                        image.public_id ||
+                        image.imagePublicId ||
+                        image.image_public_id ||
+                        ""
+                      : ""
+                  )
+                };
+              }
+            ).filter(function (image) {
+              return Boolean(image.url);
+            })
+          : [],
 
       active:
         source.active !== false,
@@ -1374,9 +1416,61 @@
       }
     );
 
+    var galleryLabel =
+      createElement(
+        "label",
+        "",
+        "Add photos to this product"
+      );
+
+    var galleryFileInput =
+      createElement("input");
+
+    galleryFileInput.type = "file";
+    galleryFileInput.multiple = true;
+    galleryFileInput.accept =
+      ALLOWED_PRODUCT_IMAGE_TYPES.join(",");
+
+    var galleryUploadButton =
+      createElement(
+        "button",
+        "product-card-button",
+        "Add Photos to Gallery"
+      );
+
+    galleryUploadButton.type = "button";
+    galleryUploadButton.disabled = true;
+
+    galleryFileInput.addEventListener(
+      "change",
+      function () {
+        galleryUploadButton.disabled =
+          !galleryFileInput.files ||
+          galleryFileInput.files.length === 0;
+      }
+    );
+
+    galleryUploadButton.addEventListener(
+      "click",
+      function () {
+        uploadProductCardImage(
+          product,
+          galleryFileInput,
+          galleryUploadButton,
+          true
+        );
+      }
+    );
+
+    galleryLabel.appendChild(
+      galleryFileInput
+    );
+
     label.appendChild(fileInput);
     uploadSection.appendChild(label);
     uploadSection.appendChild(uploadButton);
+    uploadSection.appendChild(galleryLabel);
+    uploadSection.appendChild(galleryUploadButton);
 
     uploadSection.appendChild(
       createElement(
@@ -1392,40 +1486,47 @@
   async function uploadProductCardImage(
     product,
     fileInput,
-    uploadButton
+    uploadButton,
+    appendToGallery
   ) {
-    var imageFile =
-      fileInput.files &&
-      fileInput.files[0];
+    var imageFiles =
+      fileInput.files
+        ? Array.prototype.slice.call(
+            fileInput.files
+          )
+        : [];
 
-    if (!imageFile) {
+    if (imageFiles.length === 0) {
       showMessage(
-        "Choose an image file before uploading.",
+        "Choose one or more image files before uploading.",
         "error"
       );
       return;
     }
 
-    if (
-      !ALLOWED_PRODUCT_IMAGE_TYPES.includes(
-        imageFile.type
-      )
-    ) {
-      showMessage(
-        "Choose a JPG, PNG, WEBP, or GIF image.",
-        "error"
-      );
-      return;
-    }
+    var validationError = "";
 
-    if (
-      imageFile.size >
-      MAX_PRODUCT_IMAGE_SIZE
-    ) {
-      showMessage(
-        "The product photo must be 10 MB or smaller.",
-        "error"
-      );
+    imageFiles.some(function (imageFile) {
+      if (
+        !ALLOWED_PRODUCT_IMAGE_TYPES.includes(
+          imageFile.type
+        )
+      ) {
+        validationError =
+          "Choose JPG, PNG, WEBP, or GIF photos.";
+      } else if (
+        imageFile.size >
+        MAX_PRODUCT_IMAGE_SIZE
+      ) {
+        validationError =
+          "Each product photo must be 10 MB or smaller.";
+      }
+
+      return Boolean(validationError);
+    });
+
+    if (validationError) {
+      showMessage(validationError, "error");
       return;
     }
 
@@ -1434,59 +1535,86 @@
 
     uploadButton.disabled = true;
     uploadButton.textContent =
-      "Uploading Photo...";
+      "Uploading Photos...";
 
     try {
-      var formData =
-        new FormData();
+      var uploadedImages = [];
 
-      formData.append(
-        "image",
-        imageFile
-      );
-
-      var uploadResult =
-        await requestJson(
-          PRODUCT_IMAGE_UPLOAD_URL,
-          {
-            method: "POST",
-            headers:
-              getAdminHeaders(false),
-            body: formData
-          }
-        );
-
-      var imageUrl =
-        String(
-          uploadResult.url ||
-          uploadResult.secure_url ||
-          ""
-        ).trim();
-
-      if (!imageUrl) {
-        throw new Error(
-          "The image service did not return a photo URL."
-        );
-      }
-
-      var parsedImageUrl =
-        new URL(imageUrl);
-
-      if (
-        parsedImageUrl.protocol !==
-        "https:"
+      for (
+        var index = 0;
+        index < imageFiles.length;
+        index += 1
       ) {
-        throw new Error(
-          "The image service returned an insecure photo URL."
+        var formData =
+          new FormData();
+
+        formData.append(
+          "image",
+          imageFiles[index]
         );
+
+        var uploadResult =
+          await requestJson(
+            PRODUCT_IMAGE_UPLOAD_URL,
+            {
+              method: "POST",
+              headers:
+                getAdminHeaders(false),
+              body: formData
+            }
+          );
+
+        var imageUrl =
+          String(
+            uploadResult.url ||
+            uploadResult.secure_url ||
+            ""
+          ).trim();
+
+        if (!imageUrl) {
+          throw new Error(
+            "The image service did not return a photo URL."
+          );
+        }
+
+        var parsedImageUrl =
+          new URL(imageUrl);
+
+        if (
+          parsedImageUrl.protocol !== "https:"
+        ) {
+          throw new Error(
+            "The image service returned an insecure photo URL."
+          );
+        }
+
+        uploadedImages.push({
+          url: imageUrl,
+          publicId: String(
+            uploadResult.publicId ||
+            uploadResult.public_id ||
+            ""
+          ).trim()
+        });
       }
 
-      var imagePublicId =
-        String(
-          uploadResult.publicId ||
-          uploadResult.public_id ||
-          ""
-        ).trim();
+      var existingImages =
+        product.images.length > 0
+          ? product.images
+          : product.image
+            ? [{
+                url: product.image,
+                publicId:
+                  product.imagePublicId || ""
+              }]
+            : [];
+
+      var nextImages =
+        appendToGallery
+          ? existingImages.concat(uploadedImages)
+          : uploadedImages.concat(
+              existingImages.slice(1)
+            );
 
       await requestJson(
         ADMIN_PRODUCTS_URL +
@@ -1497,9 +1625,16 @@
           headers:
             getAdminHeaders(true),
           body: JSON.stringify({
-            image: imageUrl,
+            image:
+              nextImages[0]
+                ? nextImages[0].url
+                : "",
             imagePublicId:
-              imagePublicId
+              nextImages[0]
+                ? nextImages[0].publicId
+                : "",
+            images:
+              nextImages
           })
         }
       );
@@ -1511,10 +1646,18 @@
 
       showMessage(
         productsReloaded
-          ? "Your photo was uploaded and saved to " +
+          ? (
+              appendToGallery
+                ? "Photos were added to "
+                : "Your main photo was replaced for "
+            ) +
             product.name +
             "."
-          : "Your photo was saved to " +
+          : (
+              appendToGallery
+                ? "Photos were added to "
+                : "Your main photo was replaced for "
+            ) +
             product.name +
             ", but the product list did not reload. Use Refresh Products to see it.",
         productsReloaded
@@ -1535,6 +1678,7 @@
         "error"
       );
     } finally {
+      fileInput.value = "";
       uploadButton.disabled =
         !fileInput.files ||
         fileInput.files.length === 0;

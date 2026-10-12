@@ -264,6 +264,8 @@ router.post(
           price: 0,
           image:
             importedProduct.image,
+          images:
+            importedProduct.images,
           stock: 0,
           variants:
             variants,

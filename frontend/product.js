@@ -785,6 +785,13 @@
           "images/mmc-logo.png"
         ).trim(),
 
+      images:
+        normalizeProductImages(
+          sourceProduct.images,
+          sourceProduct.image ||
+            sourceProduct.imageUrl
+        ),
+
       price:
         normalizeMoney(
           sourceProduct.price
@@ -802,6 +809,44 @@
           normalizeVariant
         )
     };
+  }
+
+  function normalizeProductImages(
+    images,
+    mainImage
+  ) {
+    var normalizedImages =
+      Array.isArray(images)
+        ? images.map(
+            function (image) {
+              return String(
+                image &&
+                typeof image === "object"
+                  ? image.url ||
+                    image.image ||
+                    ""
+                  : image || ""
+              ).trim();
+            }
+          )
+        : [];
+
+    var primaryImage =
+      String(mainImage || "").trim();
+
+    if (
+      primaryImage &&
+      normalizedImages[0] !== primaryImage
+    ) {
+      normalizedImages.unshift(primaryImage);
+    }
+
+    return normalizedImages.filter(
+      function (image, index) {
+        return Boolean(image) &&
+          normalizedImages.indexOf(image) === index;
+      }
+    );
   }
 
 
@@ -828,7 +873,8 @@
 
   function setProductImage(
     imageUrl,
-    altText
+    altText,
+    images
   ) {
 
     var container =
@@ -841,44 +887,95 @@
     }
 
 
-    container.innerHTML = "";
+    function displayImage(selectedUrl) {
+      container.replaceChildren();
 
+      var image =
+        document.createElement("img");
 
-    var image =
-      document.createElement(
-        "img"
-      );
-
-
-    image.className =
-      "product-image";
-
-
-    image.src =
-      imageUrl ||
-      "images/mmc-logo.png";
-
-
-    image.alt =
-      altText ||
-      "Multi-Maniacs Customs product";
-
-
-    image.loading =
-      "lazy";
-
-
-    image.onerror =
-      function () {
-
-        image.src =
-          "images/mmc-logo.png";
-
+      image.className = "product-image";
+      image.src =
+        selectedUrl ||
+        "images/mmc-logo.png";
+      image.alt =
+        altText ||
+        "Multi-Maniacs Customs product";
+      image.loading = "lazy";
+      image.onerror = function () {
+        image.src = "images/mmc-logo.png";
       };
 
+      container.appendChild(image);
+    }
 
-    container.appendChild(
-      image
+    var photoUrls =
+      normalizeProductImages(
+        images,
+        imageUrl
+      );
+
+    displayImage(photoUrls[0]);
+
+    var thumbnails =
+      getElement(
+        "product-image-thumbnails"
+      );
+
+    if (!thumbnails) {
+      return;
+    }
+
+    thumbnails.replaceChildren();
+
+    if (photoUrls.length < 2) {
+      return;
+    }
+
+    photoUrls.forEach(
+      function (photoUrl, index) {
+        var button =
+          document.createElement("button");
+
+        button.type = "button";
+        button.className =
+          "product-image-thumbnail";
+        button.setAttribute(
+          "aria-label",
+          "Show product photo " +
+            String(index + 1)
+        );
+        button.setAttribute(
+          "aria-pressed",
+          index === 0 ? "true" : "false"
+        );
+
+        var thumbnail =
+          document.createElement("img");
+
+        thumbnail.src = photoUrl;
+        thumbnail.alt = "";
+        thumbnail.loading = "lazy";
+        button.appendChild(thumbnail);
+
+        button.addEventListener(
+          "click",
+          function () {
+            displayImage(photoUrl);
+            thumbnails
+              .querySelectorAll("button")
+              .forEach(function (thumbnailButton) {
+                thumbnailButton.setAttribute(
+                  "aria-pressed",
+                  thumbnailButton === button
+                    ? "true"
+                    : "false"
+                );
+              });
+          }
+        );
+
+        thumbnails.appendChild(button);
+      }
     );
   }
 
@@ -932,7 +1029,8 @@
 
     setProductImage(
       currentProduct.image,
-      currentProduct.name
+      currentProduct.name,
+      currentProduct.images
     );
 
 

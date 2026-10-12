@@ -397,6 +397,92 @@ function parseVariants(
   return [];
 }
 
+function normalizeProductImages(
+  images
+) {
+  if (!Array.isArray(images)) {
+    return [];
+  }
+
+  return images
+    .map(function (image) {
+      const sourceImage =
+        image &&
+        typeof image === "object"
+          ? image
+          : {
+              url: image
+            };
+
+      return {
+        url:
+          cleanText(
+            sourceImage.url ||
+            sourceImage.image,
+            2000
+          ),
+        publicId:
+          cleanText(
+            sourceImage.publicId ||
+            sourceImage.public_id ||
+            sourceImage.imagePublicId ||
+            sourceImage.image_public_id,
+            500
+          )
+      };
+    })
+    .filter(function (image) {
+      return Boolean(image.url);
+    });
+}
+
+function parseProductImages(
+  value,
+  primaryImage,
+  primaryImagePublicId
+) {
+  let images = value;
+
+  if (
+    typeof images === "string" &&
+    images.trim()
+  ) {
+    try {
+      images = JSON.parse(images);
+    } catch (error) {
+      console.warn(
+        "A product contained invalid image JSON:",
+        error.message
+      );
+      images = [];
+    }
+  }
+
+  const normalizedImages =
+    normalizeProductImages(images);
+
+  if (normalizedImages.length > 0) {
+    return normalizedImages;
+  }
+
+  const legacyImage =
+    cleanText(
+      primaryImage,
+      2000
+    );
+
+  return legacyImage
+    ? [{
+        url: legacyImage,
+        publicId:
+          cleanText(
+            primaryImagePublicId,
+            500
+          )
+      }]
+    : [];
+}
+
 // ============================================================
 // PRODUCT FORMATTING
 // ============================================================
@@ -416,6 +502,13 @@ function formatProduct(
   const variants =
     parseVariants(
       databaseRow.variants
+    );
+
+  const images =
+    parseProductImages(
+      databaseRow.images,
+      databaseRow.image,
+      databaseRow.image_public_id
     );
 
   return {
@@ -440,8 +533,12 @@ function formatProduct(
       ),
 
     image:
-      databaseRow.image ||
-      "",
+      images.length > 0
+        ? images[0].url
+        : databaseRow.image || "",
+
+    images:
+      images,
 
     imagePublicId:
       databaseRow
@@ -633,6 +730,15 @@ function validateProductData(
   ) {
     validationErrors.push(
       "Product variants must be an array."
+    );
+  }
+
+  if (
+    data.images !== undefined &&
+    !Array.isArray(data.images)
+  ) {
+    validationErrors.push(
+      "Product images must be an array."
     );
   }
 
@@ -1033,16 +1139,29 @@ async function createProduct(
     );
 
   const image =
+    normalizeProductImages(
+      data.images
+    )[0]?.url ||
     cleanText(
       data.image,
       2000
     );
 
   const imagePublicId =
+    normalizeProductImages(
+      data.images
+    )[0]?.publicId ||
     cleanText(
       data.imagePublicId ||
       data.image_public_id,
       500
+    );
+
+  const images =
+    parseProductImages(
+      data.images,
+      image,
+      imagePublicId
     );
 
   const stock =
@@ -1094,6 +1213,7 @@ async function createProduct(
           price,
           image,
           image_public_id,
+          images,
           stock,
           variants,
           low_stock_warning,
@@ -1109,12 +1229,13 @@ async function createProduct(
           $3,
           $4,
           $5,
-          $6,
+          $6::jsonb,
           $7::jsonb,
           $8,
           $9,
           $10,
           $11,
+          $12,
           NOW(),
           NOW()
         )
@@ -1126,6 +1247,7 @@ async function createProduct(
         price,
         image,
         imagePublicId,
+        JSON.stringify(images),
         stock,
         JSON.stringify(
           variants
@@ -1202,15 +1324,44 @@ async function updateProduct(
       : existingProduct.price;
 
   const image =
-    data.image !== undefined
+    data.images !== undefined
+      ? (
+          normalizeProductImages(
+            data.images
+          )[0]?.url || ""
+        )
+      : data.image !== undefined
       ? cleanText(
           data.image,
           2000
         )
       : existingProduct.image;
 
+  const images =
+    data.images !== undefined
+      ? normalizeProductImages(
+          data.images
+        )
+      : data.image !== undefined
+        ? [{
+            url:
+              cleanText(
+                data.image,
+                2000
+              ),
+            publicId:
+              cleanText(
+                data.imagePublicId ||
+                data.image_public_id,
+                500
+              )
+          }].concat(
+            existingProduct.images.slice(1)
+          )
+        : existingProduct.images;
+
   let imagePublicId =
-    existingProduct.imagePublicId;
+    images[0]?.publicId || "";
 
   if (
     data.imagePublicId !==
@@ -1303,14 +1454,15 @@ async function updateProduct(
           price = $3,
           image = $4,
           image_public_id = $5,
-          stock = $6,
-          variants = $7::jsonb,
-          low_stock_warning = $8,
-          category = $9,
-          description = $10,
-          active = $11,
+          images = $6::JSONB,
+          stock = $7,
+          variants = $8::JSONB,
+          low_stock_warning = $9,
+          category = $10,
+          description = $11,
+          active = $12,
           updated_at = NOW()
-        WHERE id = $12
+        WHERE id = $13
         RETURNING *
       `,
       [
@@ -1319,6 +1471,7 @@ async function updateProduct(
         price,
         image,
         imagePublicId,
+        JSON.stringify(images),
         stock,
         JSON.stringify(
           variants

@@ -359,6 +359,46 @@
       object-fit: contain;
     }
 
+    .product-image-list {
+      display: grid;
+      grid-template-columns:
+        repeat(auto-fill, minmax(150px, 1fr));
+      gap: 12px;
+      margin-top: 18px;
+    }
+
+    .product-image-item {
+      min-width: 0;
+      padding: 10px;
+      background: var(--admin-white, #ffffff);
+      border: 2px solid var(--admin-black, #000000);
+      border-radius: 8px;
+    }
+
+    .product-image-item img {
+      display: block;
+      width: 100%;
+      height: 120px;
+      object-fit: contain;
+    }
+
+    .product-image-item p {
+      overflow-wrap: anywhere;
+      font-size: 12px;
+    }
+
+    .product-image-item button {
+      width: 100%;
+      min-height: 38px;
+      color: #ffffff;
+      background: #9b123f;
+      border: 2px solid #000000;
+      border-radius: 6px;
+      font: inherit;
+      font-weight: 800;
+      cursor: pointer;
+    }
+
     .variant-entry-grid {
       display: grid;
       grid-template-columns:
@@ -1067,12 +1107,12 @@
           aria-labelledby="product-image-heading"
         >
           <h2 id="product-image-heading">
-            Product Image
+            Product Photos
           </h2>
 
           <div class="form-field">
             <label for="p-image">
-              Image URL
+              Main Photo URL
 
               <span
                 class="required-marker"
@@ -1097,22 +1137,47 @@
               id="p-image-help"
               class="field-help"
             >
-              Enter an existing image URL or upload an image
-              below. A successful upload should place the
-              Cloudinary URL in this field automatically.
+              The first photo is the main product photo. Add
+              additional photos below; product images from a
+              dropshipping provider are also included when available.
             </p>
           </div>
 
           <div class="image-upload-row">
             <div class="form-field">
+              <label for="p-additional-image-url">
+                Additional Photo URL
+              </label>
+
+              <input
+                id="p-additional-image-url"
+                type="url"
+                inputmode="url"
+                autocomplete="url"
+                placeholder="https://example.com/another-product-photo.jpg"
+              >
+            </div>
+
+            <button
+              id="add-product-image-url-button"
+              class="upload-image-button"
+              type="button"
+            >
+              Add Photo URL
+            </button>
+          </div>
+
+          <div class="image-upload-row">
+            <div class="form-field">
               <label for="p-image-file">
-                Select Image File
+                Select Photo Files
               </label>
 
               <input
                 id="p-image-file"
                 name="imageFile"
                 type="file"
+                multiple
                 accept="image/jpeg,image/png,image/webp,image/gif"
                 aria-describedby="p-image-file-help"
               >
@@ -1121,8 +1186,8 @@
                 id="p-image-file-help"
                 class="field-help"
               >
-                JPG, PNG, WEBP, or GIF. Maximum file size:
-                10 MB.
+                Select multiple JPG, PNG, WEBP, or GIF photos.
+                Maximum file size: 10 MB per photo.
               </p>
             </div>
 
@@ -1131,7 +1196,7 @@
               class="upload-image-button"
               type="button"
             >
-              Upload Image
+              Upload &amp; Add Photos
             </button>
           </div>
 
@@ -1151,6 +1216,12 @@
               alt="Product image preview"
             >
           </section>
+
+          <div
+            id="product-image-list"
+            class="product-image-list"
+            aria-live="polite"
+          ></div>
         </section>
 
         <!-- ==================================================

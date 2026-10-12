@@ -32,6 +32,9 @@
   var productVariants =
     [];
 
+  var additionalProductImages =
+    [];
+
   var uploadedImagePublicId =
     "";
 
@@ -1283,10 +1286,12 @@
       fileInput.files.length ===
         0
     ) {
-      return null;
+      return [];
     }
 
-    return fileInput.files[0];
+    return Array.prototype.slice.call(
+      fileInput.files
+    );
   }
 
   function validateProductImage(
@@ -1389,18 +1394,18 @@
   }
 
   function previewSelectedProductImage() {
-    var imageFile =
+    var imageFiles =
       getSelectedProductImage();
 
     revokeLocalPreviewUrl();
 
-    if (!imageFile) {
+    if (imageFiles.length === 0) {
       return;
     }
 
     var validationError =
       validateProductImage(
-        imageFile
+        imageFiles[0]
       );
 
     if (validationError) {
@@ -1424,12 +1429,161 @@
 
     localPreviewUrl =
       URL.createObjectURL(
-        imageFile
+        imageFiles[0]
       );
 
     showProductImagePreview(
       localPreviewUrl
     );
+  }
+
+  function renderProductImageList() {
+    var imageList =
+      getElement(
+        "product-image-list"
+      );
+
+    if (!imageList) {
+      return;
+    }
+
+    imageList.replaceChildren();
+
+    var mainImage =
+      getValue("p-image");
+
+    if (mainImage) {
+      var mainItem =
+        document.createElement("article");
+
+      mainItem.className =
+        "product-image-item";
+
+      var mainPreview =
+        document.createElement("img");
+
+      mainPreview.src = mainImage;
+      mainPreview.alt = "Main product photo";
+      mainPreview.loading = "lazy";
+
+      var mainLabel =
+        document.createElement("p");
+
+      mainLabel.textContent = "Main photo";
+
+      mainItem.append(
+        mainPreview,
+        mainLabel
+      );
+
+      imageList.appendChild(mainItem);
+    }
+
+    additionalProductImages.forEach(
+      function (productImage, index) {
+        var item =
+          document.createElement("article");
+
+        item.className =
+          "product-image-item";
+
+        var preview =
+          document.createElement("img");
+
+        preview.src = productImage.url;
+        preview.alt =
+          "Additional product photo " +
+          String(index + 1);
+        preview.loading = "lazy";
+
+        var label =
+          document.createElement("p");
+
+        label.textContent =
+          "Additional photo " +
+          String(index + 1);
+
+        var removeButton =
+          document.createElement("button");
+
+        removeButton.type = "button";
+        removeButton.textContent = "Remove Photo";
+        removeButton.addEventListener(
+          "click",
+          function () {
+            additionalProductImages.splice(
+              index,
+              1
+            );
+            renderProductImageList();
+          }
+        );
+
+        item.append(
+          preview,
+          label,
+          removeButton
+        );
+
+        imageList.appendChild(item);
+      }
+    );
+  }
+
+  function addAdditionalProductImage(
+    url,
+    publicId
+  ) {
+    var normalizedUrl =
+      String(url || "").trim();
+
+    if (
+      !normalizedUrl ||
+      normalizedUrl === getValue("p-image") ||
+      additionalProductImages.some(
+        function (image) {
+          return image.url === normalizedUrl;
+        }
+      )
+    ) {
+      return;
+    }
+
+    additionalProductImages.push({
+      url: normalizedUrl,
+      publicId: String(publicId || "")
+    });
+
+    renderProductImageList();
+  }
+
+  function addProductImageUrl() {
+    var urlInput =
+      getElement(
+        "p-additional-image-url"
+      );
+
+    var imageUrl =
+      getValue(
+        "p-additional-image-url"
+      );
+
+    if (!isValidWebAddress(imageUrl)) {
+      showProductMessage(
+        "Enter a valid additional photo URL.",
+        "error"
+      );
+      return;
+    }
+
+    addAdditionalProductImage(
+      imageUrl,
+      ""
+    );
+
+    if (urlInput) {
+      urlInput.value = "";
+    }
   }
 
   function previewManualImageUrl() {
@@ -1466,13 +1620,27 @@
       return;
     }
 
-    var imageFile =
+    var imageFiles =
       getSelectedProductImage();
 
-    var validationError =
-      validateProductImage(
-        imageFile
+    if (imageFiles.length === 0) {
+      showProductMessage(
+        "Select one or more photos before uploading.",
+        "error"
       );
+      return;
+    }
+
+    var validationError = "";
+
+    imageFiles.some(
+      function (imageFile) {
+        validationError =
+          validateProductImage(imageFile);
+
+        return Boolean(validationError);
+      }
+    );
 
     if (validationError) {
       showProductMessage(
@@ -1483,93 +1651,102 @@
       return;
     }
 
-    var formData =
-      new FormData();
-
-    formData.append(
-      "image",
-      imageFile
-    );
-
     uploadingImage =
       true;
 
     setButtonLoading(
       "upload-product-image-button",
       true,
-      "Uploading Image...",
-      "Upload Image"
+      "Uploading Photos...",
+      "Upload & Add Photos"
     );
 
     showProductMessage(
-      "Uploading product image...",
+      "Uploading product photos...",
       "information"
     );
 
     try {
-      var responseData =
-        await requestJson(
-          UPLOAD_URL,
-          {
-            method:
-              "POST",
+      for (
+        var index = 0;
+        index < imageFiles.length;
+        index += 1
+      ) {
+        var formData =
+          new FormData();
 
-            headers:
-              getAdminHeaders(
-                false
-              ),
+        formData.append(
+          "image",
+          imageFiles[index]
+        );
 
-            body:
-              formData
+        var responseData =
+          await requestJson(
+            UPLOAD_URL,
+            {
+              method: "POST",
+              headers:
+                getAdminHeaders(false),
+              body: formData
+            }
+          );
+
+        var imageUrl =
+          String(
+            responseData.url ||
+            responseData.secure_url ||
+            (
+              responseData.image &&
+              responseData.image.url
+            ) ||
+            ""
+          );
+
+        if (!imageUrl) {
+          throw new Error(
+            "Cloudinary did not provide an image address."
+          );
+        }
+
+        var publicId =
+          String(
+            responseData.public_id ||
+            responseData.publicId ||
+            (
+              responseData.image &&
+              responseData.image.public_id
+            ) ||
+            ""
+          );
+
+        if (!getValue("p-image")) {
+          var imageUrlInput =
+            getElement("p-image");
+
+          if (imageUrlInput) {
+            imageUrlInput.value = imageUrl;
           }
-        );
 
-      var imageUrl =
-        String(
-          responseData.url ||
-          responseData.secure_url ||
-          (
-            responseData.image &&
-            responseData.image.url
-          ) ||
-          ""
-        );
-
-      if (!imageUrl) {
-        throw new Error(
-          "Cloudinary did not provide an image address."
-        );
+          uploadedImagePublicId = publicId;
+          showProductImagePreview(imageUrl);
+          renderProductImageList();
+        } else {
+          addAdditionalProductImage(
+            imageUrl,
+            publicId
+          );
+        }
       }
 
-      var imageUrlInput =
-        getElement(
-          "p-image"
-        );
+      var imageFileInput =
+        getElement("p-image-file");
 
-      if (imageUrlInput) {
-        imageUrlInput.value =
-          imageUrl;
+      if (imageFileInput) {
+        imageFileInput.value = "";
       }
-
-      uploadedImagePublicId =
-        String(
-          responseData.public_id ||
-          responseData.publicId ||
-          (
-            responseData.image &&
-            responseData.image.public_id
-          ) ||
-          ""
-        );
-
-      revokeLocalPreviewUrl();
-
-      showProductImagePreview(
-        imageUrl
-      );
 
       showProductMessage(
-        "Product image uploaded successfully.",
+        "Product photos uploaded successfully.",
         "success"
       );
     } catch (error) {
@@ -1585,7 +1762,7 @@
           ? "The image upload took too long. Please try again."
           : getErrorMessage(
               error,
-              "The product image could not be uploaded."
+              "The product photos could not be uploaded."
             );
 
       showProductMessage(
@@ -1593,14 +1770,27 @@
         "error"
       );
     } finally {
+      revokeLocalPreviewUrl();
+
+      showProductImagePreview(
+        getValue("p-image")
+      );
+
+      var uploadedFilesInput =
+        getElement("p-image-file");
+
+      if (uploadedFilesInput) {
+        uploadedFilesInput.value = "";
+      }
+
       uploadingImage =
         false;
 
       setButtonLoading(
         "upload-product-image-button",
         false,
-        "Uploading Image...",
-        "Upload Image"
+        "Uploading Photos...",
+        "Upload & Add Photos"
       );
     }
   }
@@ -1737,6 +1927,18 @@
 
       imagePublicId:
         uploadedImagePublicId,
+
+      images:
+        [
+          {
+            url:
+              getValue("p-image"),
+            publicId:
+              uploadedImagePublicId
+          }
+        ].concat(
+          additionalProductImages
+        ),
 
       variants:
         productVariants.map(
@@ -1942,6 +2144,9 @@
     productVariants =
       [];
 
+    additionalProductImages =
+      [];
+
     uploadedImagePublicId =
       "";
 
@@ -1951,6 +2156,7 @@
       ""
     );
 
+    renderProductImageList();
     renderVariants();
     updateDescriptionCount();
   }
@@ -2180,12 +2386,32 @@
     if (imageUrlInput) {
       imageUrlInput.addEventListener(
         "input",
+        function () {
+          uploadedImagePublicId = "";
+          renderProductImageList();
+        }
+      );
+
+      imageUrlInput.addEventListener(
+        "input",
         previewManualImageUrl
       );
 
       imageUrlInput.addEventListener(
         "blur",
         previewManualImageUrl
+      );
+    }
+
+    var addImageUrlButton =
+      getElement(
+        "add-product-image-url-button"
+      );
+
+    if (addImageUrlButton) {
+      addImageUrlButton.addEventListener(
+        "click",
+        addProductImageUrl
       );
     }
 
@@ -2197,6 +2423,7 @@
     }
 
     connectLogoutButtons();
+    renderProductImageList();
     renderVariants();
     updateDescriptionCount();
 

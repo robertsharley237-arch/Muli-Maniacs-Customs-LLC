@@ -20,6 +20,8 @@ database used by the backend:
   Stripe identifiers, and JSON order items.
 - `005_create_client_intakes.sql` creates client project request records and
   their review statuses.
+- `006_add_product_images.sql` adds a product photo gallery while preserving
+  each product's existing main image.
 
 After creating the admin table, configure `ADMIN_BOOTSTRAP_KEY` in the
 backend environment and use the one-time `POST /admin/bootstrap` endpoint to
@@ -34,6 +36,11 @@ Products store a provider ID and provider product/variant IDs with each
 variant, so order items retain fulfillment-provider references.
 Admins can choose and upload a JPG, PNG, WEBP, or GIF photo from each product
 card to replace the product's main image.
+Products also support multiple photos, including additional photo URLs
+returned during dropshipping imports. Add photos while creating a product or
+use the product-card gallery uploader to add photos to an existing product.
+Apply migration `006_add_product_images.sql` after the existing migrations
+before using the multi-photo catalog.
 
 CJdropshipping is currently the first configured provider. Set `CJ_API_KEY`
 in the backend host's environment variables; never put provider credentials

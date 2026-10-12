@@ -31,6 +31,75 @@ function getInventory(variant) {
   );
 }
 
+function getProductImages(product) {
+  const images = [];
+
+  function addImage(value) {
+    if (Array.isArray(value)) {
+      value.forEach(addImage);
+      return;
+    }
+
+    if (typeof value === "string") {
+      const trimmedValue = value.trim();
+
+      if (
+        trimmedValue.startsWith("[") ||
+        trimmedValue.startsWith("{")
+      ) {
+        try {
+          addImage(JSON.parse(trimmedValue));
+          return;
+        } catch (error) {
+          console.warn(
+            "CJdropshipping returned an invalid product image list."
+          );
+          return;
+        }
+      }
+    }
+
+    if (value && typeof value === "object") {
+      addImage(
+        value.url ||
+        value.imageUrl ||
+        value.image ||
+        value.bigImage
+      );
+      return;
+    }
+
+    const imageUrl =
+      cleanText(value, 2000);
+
+    if (
+      imageUrl &&
+      !images.includes(imageUrl)
+    ) {
+      images.push(imageUrl);
+    }
+  }
+
+  [
+    product.bigImage,
+    product.productImage,
+    product.productImageSet,
+    product.productImageList,
+    product.imageList,
+    product.images
+  ].forEach(addImage);
+
+  if (Array.isArray(product.variants)) {
+    product.variants.forEach(
+      function (variant) {
+        addImage(variant.variantImage);
+      }
+    );
+  }
+
+  return images;
+}
+
 function normalizeSearchProduct(product) {
   const sourcePrice =
     Number(
@@ -55,6 +124,8 @@ function normalizeSearchProduct(product) {
         product.bigImage,
         2000
       ),
+    images:
+      getProductImages(product),
     referencePrice:
       Number.isFinite(sourcePrice) &&
       sourcePrice > 0
@@ -101,6 +172,8 @@ async function getProductForImport(productId) {
       cleanText(details.productSku, 100),
     image:
       cleanText(details.bigImage, 2000),
+    images:
+      getProductImages(details),
     category:
       cleanText(details.categoryName, 150),
     description:
@@ -130,7 +203,11 @@ async function getProductForImport(productId) {
                 variant.variantImage ||
                 details.bigImage,
                 2000
-              )
+              ),
+            images:
+              getProductImages({
+                bigImage: variant.variantImage
+              })
           };
         }
       )

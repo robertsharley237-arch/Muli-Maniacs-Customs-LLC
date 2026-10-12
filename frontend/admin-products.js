@@ -17,6 +17,15 @@
   // ==========================================================
 
   var REQUEST_TIMEOUT_MS = 15000;
+  var MAX_PRODUCT_IMAGE_SIZE =
+    10 * 1024 * 1024;
+
+  var ALLOWED_PRODUCT_IMAGE_TYPES = [
+    "image/jpeg",
+    "image/png",
+    "image/webp",
+    "image/gif"
+  ];
 
   var products = [];
   var productRequestActive = false;
@@ -124,6 +133,9 @@
 
   var PRODUCTS_URL =
     BACKEND_URL + "/products";
+
+  var PRODUCT_IMAGE_UPLOAD_URL =
+    BACKEND_URL + "/upload/image";
 
   var ADMIN_SESSION_URL =
     BACKEND_URL + "/admin/me";
@@ -1163,6 +1175,10 @@
     content.appendChild(headingRow);
     content.appendChild(details);
 
+    content.appendChild(
+      createProductImageUpload(product)
+    );
+
     var supplierProviderId =
       product.variants.length > 0
         ? product.variants[0].supplierProvider
@@ -1305,6 +1321,226 @@
     card.appendChild(content);
 
     return card;
+  }
+
+  function createProductImageUpload(product) {
+    var uploadSection =
+      createElement(
+        "div",
+        "product-image-upload"
+      );
+
+    var label =
+      createElement(
+        "label",
+        "",
+        "Choose your own product photo"
+      );
+
+    var fileInput =
+      createElement("input");
+
+    fileInput.type = "file";
+    fileInput.accept =
+      ALLOWED_PRODUCT_IMAGE_TYPES.join(",");
+
+    var uploadButton =
+      createElement(
+        "button",
+        "product-card-button",
+        "Upload and Use Photo"
+      );
+
+    uploadButton.type = "button";
+    uploadButton.disabled = true;
+
+    fileInput.addEventListener(
+      "change",
+      function () {
+        uploadButton.disabled =
+          !fileInput.files ||
+          fileInput.files.length === 0;
+      }
+    );
+
+    uploadButton.addEventListener(
+      "click",
+      function () {
+        uploadProductCardImage(
+          product,
+          fileInput,
+          uploadButton
+        );
+      }
+    );
+
+    label.appendChild(fileInput);
+    uploadSection.appendChild(label);
+    uploadSection.appendChild(uploadButton);
+
+    uploadSection.appendChild(
+      createElement(
+        "p",
+        "product-image-upload-help",
+        "JPG, PNG, WEBP, or GIF; 10 MB maximum."
+      )
+    );
+
+    return uploadSection;
+  }
+
+  async function uploadProductCardImage(
+    product,
+    fileInput,
+    uploadButton
+  ) {
+    var imageFile =
+      fileInput.files &&
+      fileInput.files[0];
+
+    if (!imageFile) {
+      showMessage(
+        "Choose an image file before uploading.",
+        "error"
+      );
+      return;
+    }
+
+    if (
+      !ALLOWED_PRODUCT_IMAGE_TYPES.includes(
+        imageFile.type
+      )
+    ) {
+      showMessage(
+        "Choose a JPG, PNG, WEBP, or GIF image.",
+        "error"
+      );
+      return;
+    }
+
+    if (
+      imageFile.size >
+      MAX_PRODUCT_IMAGE_SIZE
+    ) {
+      showMessage(
+        "The product photo must be 10 MB or smaller.",
+        "error"
+      );
+      return;
+    }
+
+    var originalButtonText =
+      uploadButton.textContent;
+
+    uploadButton.disabled = true;
+    uploadButton.textContent =
+      "Uploading Photo...";
+
+    try {
+      var formData =
+        new FormData();
+
+      formData.append(
+        "image",
+        imageFile
+      );
+
+      var uploadResult =
+        await requestJson(
+          PRODUCT_IMAGE_UPLOAD_URL,
+          {
+            method: "POST",
+            headers:
+              getAdminHeaders(false),
+            body: formData
+          }
+        );
+
+      var imageUrl =
+        String(
+          uploadResult.url ||
+          uploadResult.secure_url ||
+          ""
+        ).trim();
+
+      if (!imageUrl) {
+        throw new Error(
+          "The image service did not return a photo URL."
+        );
+      }
+
+      var parsedImageUrl =
+        new URL(imageUrl);
+
+      if (
+        parsedImageUrl.protocol !==
+        "https:"
+      ) {
+        throw new Error(
+          "The image service returned an insecure photo URL."
+        );
+      }
+
+      var imagePublicId =
+        String(
+          uploadResult.publicId ||
+          uploadResult.public_id ||
+          ""
+        ).trim();
+
+      await requestJson(
+        ADMIN_PRODUCTS_URL +
+          "/" +
+          encodeURIComponent(product.id),
+        {
+          method: "PUT",
+          headers:
+            getAdminHeaders(true),
+          body: JSON.stringify({
+            image: imageUrl,
+            imagePublicId:
+              imagePublicId
+          })
+        }
+      );
+
+      fileInput.value = "";
+
+      var productsReloaded =
+        await loadProducts();
+
+      showMessage(
+        productsReloaded
+          ? "Your photo was uploaded and saved to " +
+            product.name +
+            "."
+          : "Your photo was saved to " +
+            product.name +
+            ", but the product list did not reload. Use Refresh Products to see it.",
+        productsReloaded
+          ? "success"
+          : "error"
+      );
+    } catch (error) {
+      console.error(
+        "Product photo upload or save failed.",
+        error
+      );
+
+      showMessage(
+        getRequestErrorMessage(
+          error,
+          "Your product photo could not be uploaded and saved."
+        ),
+        "error"
+      );
+    } finally {
+      uploadButton.disabled =
+        !fileInput.files ||
+        fileInput.files.length === 0;
+      uploadButton.textContent =
+        originalButtonText;
+    }
   }
 
   async function syncSupplierProductStock(

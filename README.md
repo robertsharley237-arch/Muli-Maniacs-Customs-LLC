@@ -32,10 +32,15 @@ The administrator product page uses a provider-neutral catalog search,
 selected-product import, hidden-draft pricing, and stock-sync workflow.
 Products store a provider ID and provider product/variant IDs with each
 variant, so order items retain fulfillment-provider references.
+Admins can choose and upload a JPG, PNG, WEBP, or GIF photo from each product
+card to replace the product's main image.
 
 CJdropshipping is currently the first configured provider. Set `CJ_API_KEY`
 in the backend host's environment variables; never put provider credentials
 in frontend configuration or commit them.
+Image uploads require the backend-only Cloudinary settings:
+`CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, and
+`CLOUDINARY_API_SECRET`.
 
 Providers are registered in
 [`backend/providers/dropshipping/index.js`](./backend/providers/dropshipping/index.js).

@@ -14,14 +14,15 @@ database used by the backend:
 - `002_create_products_and_settings.sql` creates the product catalog and
   store-settings tables. It seeds the single settings row with the
   application's default values; the product catalog starts empty.
+- `003_create_categories.sql` creates the categories table used by the
+  dashboard's category-management tools.
 
 After creating the admin table, configure `ADMIN_BOOTSTRAP_KEY` in the
 backend environment and use the one-time `POST /admin/bootstrap` endpoint to
 create the first super administrator. Set a strong administrator password;
 do not insert a plaintext password into the database.
 
-These migrations do not create every table used by the application. Features
-that use orders, categories, or client intakes require those tables to be
+Features that use orders or client intakes still require those tables to be
 created as well.
 
 ## Dropshipping provider integrations

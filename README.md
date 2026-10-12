@@ -2,6 +2,28 @@
 
 Official website for Multi-Maniacs Customs LLC.
 
+## Database setup
+
+Run the SQL files in `backend/migrations/` in numeric order against the Neon
+database used by the backend:
+
+- `001_create_admins.sql` creates the administrator table expected by login
+  and role-based authorization. It stores bcrypt password hashes, supports
+  the `admin` and `super_admin` roles, and enforces case-insensitive username
+  uniqueness.
+- `002_create_products_and_settings.sql` creates the product catalog and
+  store-settings tables. It seeds the single settings row with the
+  application's default values; the product catalog starts empty.
+
+After creating the admin table, configure `ADMIN_BOOTSTRAP_KEY` in the
+backend environment and use the one-time `POST /admin/bootstrap` endpoint to
+create the first super administrator. Set a strong administrator password;
+do not insert a plaintext password into the database.
+
+These migrations do not create every table used by the application. Features
+that use orders, categories, or client intakes require those tables to be
+created as well.
+
 ## Dropshipping provider integrations
 
 The administrator product page uses a provider-neutral catalog search,
